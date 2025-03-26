@@ -44,6 +44,7 @@ frontend/build
 .env.production.local
 .idea
 
+db_wallet/
 frontend/package-lock.json
 frontend/npm-debug.log*
 frontend/yarn-debug.log*
