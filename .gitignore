@@ -35,6 +35,7 @@ frontend/coverage
 
 # production
 frontend/build
+frontend/dist
 
 # misc
 .DS_Store
