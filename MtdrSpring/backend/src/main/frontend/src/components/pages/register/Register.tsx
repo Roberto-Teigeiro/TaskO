@@ -28,9 +28,9 @@ export default function Register() {
   
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    
+
     if (!isLoaded) return;
-    
+
     const formData = new FormData(e.currentTarget);
     const firstName = formData.get("firstName") as string;
     const lastName = formData.get("lastName") as string;
@@ -38,45 +38,43 @@ export default function Register() {
     const email = formData.get("email") as string;
     const password = formData.get("password") as string;
     const confirmPassword = formData.get("confirmPassword") as string;
-    
+
     if (password !== confirmPassword) {
       alert("Passwords do not match");
       return;
     }
-    
+
     try {
-      // Create sign up without lastName which is causing the error
+      // Only include required fields in the signUp.create() call
       const result = await signUp.create({
         firstName,
-        username,
+        lastName,
         emailAddress: email,
-        password
+        password: password,
+        username: username,
       });
-      
+
       if (result.status === "complete") {
-        // Store the additional user data in localStorage for compatibility with existing code
+        // Store optional fields (firstName, lastName) in localStorage or update user profile later
         const userData = {
           firstName,
           lastName,
           username,
           email,
-          profilePicture: ""
+          profilePicture: "",
         };
         localStorage.setItem("userData", JSON.stringify(userData));
-        
+
         await setActive({ session: result.createdSessionId });
         navigate("/Dashboard");
-      } else {
-        // Handle email verification if needed
-        if (result.status === "missing_requirements") {
-          const missingFields = result.missingFields || [];
-          // Check if email verification is required
-          if (missingFields.includes("email_address")) {
-            alert("Please verify your email address");
-          } else {
-            // Handle other missing requirements
-            alert("Please complete the missing requirements");
-          }
+      } else if (result.status === "missing_requirements") {
+        const missingFields = result.missingFields || [];
+        if (missingFields.includes("email_address")) {
+          alert("Please verify your email address");
+        } else {
+          // Show exactly which fields are missing
+          alert(`Please complete the following: ${missingFields.join(", ")}`);
+          console.log("Missing fields:", missingFields);
         }
       }
     } catch (error: any) {
@@ -160,7 +158,7 @@ export default function Register() {
               <Input
                 type="email"
                 name="email"
-                placeholder="Enter Email"
+                placeholder="Enter Email" 
                 className="pl-10 py-6 rounded-md"
                 required
               />
