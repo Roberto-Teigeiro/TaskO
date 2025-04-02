@@ -31,8 +31,8 @@ public class TaskItem {
     @Column(name = "DESCRIPTION")
     private String description;
     @Type(type = "uuid-binary") // Correct mapping for RAW(16)
-    @Column(name = "ASSIGNEE", columnDefinition = "RAW(16)")
-    private UUID asignee;
+    @Column(name = "ASSIGNEE")
+    private String asignee;
     @Column(name = "STATUS")
     private Status status;
     @Column(name = "STARTDATE")
@@ -46,7 +46,7 @@ public class TaskItem {
 
     public TaskItem(){
     }
-    public TaskItem(UUID projectId, UUID sprintId, UUID taskId, String title, String description, UUID asignee, Status status, OffsetDateTime startDate, OffsetDateTime endDate, String comments, int storyPoints) {
+    public TaskItem(UUID projectId, UUID sprintId, UUID taskId, String title, String description, String asignee, Status status, OffsetDateTime startDate, OffsetDateTime endDate, String comments, int storyPoints) {
         this.projectId = projectId;
         this.sprintId = sprintId;
         this.taskId = taskId;
@@ -100,11 +100,11 @@ public class TaskItem {
         this.description = description;
     }
 
-    public UUID getAsignee() {
+    public String getAsignee() {
         return asignee;
     }
 
-    public void setAsignee(UUID asignee) {
+    public void setAsignee(String asignee) {
         this.asignee = asignee;
     }
 
