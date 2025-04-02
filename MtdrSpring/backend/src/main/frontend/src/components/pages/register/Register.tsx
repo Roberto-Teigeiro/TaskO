@@ -7,13 +7,14 @@ import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 import { Mail, Lock, User, AlertCircle, Loader2 } from "lucide-react"
-import { useSignUp, useUser } from "@clerk/react-router"
+import { useSignUp, useUser, useAuth } from "@clerk/react-router"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 
 export default function Register() {
   const navigate = useNavigate();
   const { isSignedIn } = useUser();
   const { signUp, setActive, isLoaded } = useSignUp();
+  const { getToken } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
@@ -77,6 +78,31 @@ export default function Register() {
         localStorage.setItem("userData", JSON.stringify(userData));
 
         await setActive({ session: result.createdSessionId });
+        const template = 'TaskO'
+        // Get the JWT token after successful authentication
+        const token = await getToken({template});
+        console.log("user token: "+token)
+        // Send the JWT token to your backend
+        if (token) {
+          try {
+            const response = await fetch('http://localhost:8080/newuser', {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+              }
+            });
+            
+            if (response.ok) {
+              console.log('User registered in backend successfully');
+            } else {
+              console.error('Failed to register user in backend:', await response.text());
+            }
+          } catch (error) {
+            console.error('Error registering user in backend:', error);
+          }
+        }
+        
         navigate("/Dashboard");
       } else if (result.status === "missing_requirements") {
         const missingFields = result.missingFields || [];
