@@ -17,8 +17,7 @@ export default function Register() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { getToken } = useAuth();
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  
   
   useEffect(() => {
     // Redirect to dashboard if already signed in
@@ -131,14 +130,11 @@ export default function Register() {
     setError(null);
     
     try {
-      // Create a redirect URL to the dashboard
-      const redirectUrl = `${window.location.origin}/Dashboard`;
-      
-      // Use redirectUrl and redirectUrlComplete instead of fallbackRedirectUrl
+      // Add a parameter to indicate this is a new user
       await signUp.authenticateWithRedirect({
         strategy: provider,
-        redirectUrl: redirectUrl,
-        redirectUrlComplete: redirectUrl
+        redirectUrl: `${window.location.origin}/sso-callback?new_user=true`,
+        redirectUrlComplete: `${window.location.origin}/dashboard`
       });
     } catch (error: any) {
       console.error(`Error signing up with ${provider}:`, error);

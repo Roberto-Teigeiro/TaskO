@@ -87,18 +87,17 @@ export default function Login() {
     }
   };
 
-  // Corrected OAuth handler using redirectUrl parameter
   const signInWithOAuth = async (provider: "oauth_github" | "oauth_google") => {
     if (!isLoaded) return;
     setLoading(true);
     setError(null);
     
     try {
-      // Usa rutas absolutas y asegúrate de que coincidan con las configuradas en Clerk
+      // Use the correct path to your SSO callback component
       await signIn.authenticateWithRedirect({
         strategy: provider,
-        redirectUrl: `${window.location.origin}/sso-callback`, // Ruta específica para callback
-        redirectUrlComplete: `${window.location.origin}/dashboard` // Ruta final después de autenticación
+        redirectUrl: `${window.location.origin}/sso-callback`,
+        redirectUrlComplete: `${window.location.origin}/dashboard`
       });
     } catch (error: any) {
       console.error(`Error signing in with ${provider}:`, error);
@@ -106,7 +105,6 @@ export default function Login() {
       setLoading(false);
     }
   };
-  
 
   const toRegister = (e: React.MouseEvent) => {
     e.preventDefault();
