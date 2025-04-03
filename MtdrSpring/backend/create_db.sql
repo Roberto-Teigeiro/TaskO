@@ -1,7 +1,7 @@
 -- Create USERS table first as it is referenced by other tables
 CREATE TABLE ADMIN.USERS 
     ( 
-     USERID RAW (16) DEFAULT SYS_GUID() , 
+     USERID VARCHAR2 (50) DEFAULT SYS_GUID() , 
      NAME   VARCHAR2 (255) , 
      EMAIL  VARCHAR2 (255) 
     ) 
@@ -119,7 +119,7 @@ CREATE TABLE ADMIN.TASKS
      TASKID      RAW (16) DEFAULT SYS_GUID() , 
      TITLE       VARCHAR2 (255) , 
      DESCRIPTION VARCHAR2 (255) , 
-     ASSIGNEE    RAW (16) , 
+     ASSIGNEE    VARCHAR2 (50) , 
      STATUS      VARCHAR2 (255) , 
      STARTDATE   DATE , 
      ENDDATE     DATE , 
