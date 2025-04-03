@@ -8,11 +8,11 @@ import Settings from "./components/pages/home/Settings";
 import CalendarPage from './components/pages/home/Calendar';
 import Sprints from './components/pages/home/Sprints';
 import { ChatButton } from './components/ChatBot';
-import SSOCallback from './components/pages/callback/SsoCallback';
+import SSOCallback from './components/SSOCallback'; // Import the SSOCallback component
 
 function App() {
   const clerkPubKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
-  
+
   return (
     <ClerkProvider publishableKey={clerkPubKey} signInUrl="/login" signUpUrl="/">
       <div>
@@ -20,7 +20,7 @@ function App() {
           {/* Public Routes */}
           <Route path="/" element={<Register />} />
           <Route path="/login" element={<Login />} />
-          <Route path="/callback" element={<SSOCallback/>} />
+          
           {/* Protected Routes */}
           <Route
             path="/dashboard"
@@ -77,6 +77,7 @@ function App() {
           
           {/* Fallback Route */}
           <Route path="*" element={<Register />} />
+      
         </Routes>
         <ChatButton />
       </div>

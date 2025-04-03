@@ -1,3 +1,4 @@
+///Users/santosa/Documents/GitHub/TaskO/MtdrSpring/backend/src/main/frontend/src/components/ui/button.tsx
 import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
 import { cva, type VariantProps } from "class-variance-authority"
@@ -34,25 +35,31 @@ const buttonVariants = cva(
   }
 )
 
-function Button({
+// Fix the Button component to properly implement forwardRef
+const Button = React.forwardRef<
+  HTMLButtonElement, 
+  React.ComponentProps<"button"> & 
+  VariantProps<typeof buttonVariants> & {
+    asChild?: boolean 
+  }
+>(({
   className,
   variant,
   size,
   asChild = false,
   ...props
-}: React.ComponentProps<"button"> &
-  VariantProps<typeof buttonVariants> & {
-    asChild?: boolean
-  }) {
+}, ref) => {
   const Comp = asChild ? Slot : "button"
 
   return (
     <Comp
+      ref={ref}
       data-slot="button"
       className={cn(buttonVariants({ variant, size, className }))}
       {...props}
     />
   )
-}
+})
+Button.displayName = "Button"
 
 export { Button, buttonVariants }
