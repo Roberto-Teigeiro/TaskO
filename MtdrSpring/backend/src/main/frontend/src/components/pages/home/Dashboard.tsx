@@ -1,7 +1,6 @@
-///Users/santosa/Documents/GitHub/oraclefront/src/components/pages/home/Dashboard.tsx
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { CircleDot, Plus } from "lucide-react";
@@ -12,52 +11,17 @@ import { ProgressCircle } from "@/components/ui/Progress-circle";
 import { useUser } from "@clerk/react-router";
 
 export default function Dashboard() {
+  console.log("Dashboard component rendered");
   const { user, isLoaded } = useUser();
-  const [userData, setUserData] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    profilePicture: "",
-  });
 
   useEffect(() => {
-    const loadUserData = () => {
-      // Check if Clerk is loaded
-      if (isLoaded) {
-        if (user) {
-          const clerkUserData = {
-            firstName: user.firstName ?? "",
-            lastName: user.lastName ?? "",
-            email: user.emailAddresses[0]?.emailAddress ?? "",
-            profilePicture: user.imageUrl ?? "",
-          };
-
-          setUserData(clerkUserData);
-
-          // Sync with localStorage
-          localStorage.setItem("userData", JSON.stringify(clerkUserData));
-          return;
-        }
-      }
-
-      // Fallback to localStorage if Clerk data isn't available
-      const storedData = localStorage.getItem("userData");
-      if (storedData) {
-        try {
-          setUserData(JSON.parse(storedData));
-        } catch (e) {
-          console.error("Error parsing userData from localStorage", e);
-        }
-      }
-    };
-
-    loadUserData();
-    window.addEventListener("userDataUpdated", loadUserData);
-
-    return () => {
-      window.removeEventListener("userDataUpdated", loadUserData);
-    };
+    // No need for the localStorage-related code anymore
   }, [user, isLoaded]);
+
+  // Show a loading state while Clerk is initializing
+  if (!isLoaded) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className="min-h-screen bg-[#f8f8fb] flex flex-col">
@@ -74,16 +38,13 @@ export default function Dashboard() {
           {/* Welcome Section */}
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-bold">
-              Welcome back, {userData.firstName} {userData.lastName} 👋
+              Welcome back, {user ? user.firstName : ''} {user ? user.lastName : ''} 👋
             </h2>
             <div className="flex items-center gap-2">
               <div className="flex -space-x-2">
                 <Avatar className="border-2 border-white w-8 h-8">
-                  <AvatarImage src={userData.profilePicture || "/placeholder.svg?height=32&width=32"} />
-                  <AvatarFallback>
-                    {userData.firstName.charAt(0) ?? "U"}
-                    {userData.lastName.charAt(0) ?? "S"}
-                  </AvatarFallback>
+                  <AvatarImage src={user?.imageUrl || "/placeholder.svg?height=32&width=32"} />
+                  <AvatarFallback>{user?.firstName?.charAt(0) || 'U'}</AvatarFallback>
                 </Avatar>
                 {[...Array(4)].map((_, i) => (
                   <Avatar key={i} className="border-2 border-white w-8 h-8">
