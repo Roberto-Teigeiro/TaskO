@@ -5,10 +5,16 @@ import { Button } from "@/components/ui/button";
 import { CircleDot, LayoutGrid, LogOut, Settings } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@clerk/clerk-react"; // Importar Clerk's useAuth para manejar la sesión
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { CircleDot, LayoutGrid, LogOut, Settings } from "lucide-react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { useAuth } from "@clerk/clerk-react"; // Importar Clerk's useAuth para manejar la sesión
 
 export function Sidebar() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { signOut } = useAuth(); // Clerk's signOut para cerrar sesión
   const { signOut } = useAuth(); // Clerk's signOut para cerrar sesión
   const [userData, setUserData] = useState({
     firstName: "",

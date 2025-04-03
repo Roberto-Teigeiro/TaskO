@@ -14,6 +14,8 @@ export default function Register() {
   const navigate = useNavigate();
   const { isSignedIn } = useUser();
   const { signUp, setActive, isLoaded } = useSignUp();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const { getToken } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -122,39 +124,28 @@ export default function Register() {
     }
   };
 
-  // OAuth handlers - Fixed version
-// OAuth handlers - Enhanced version with better debugging
-const signUpWithOAuth = async (provider: "oauth_github" | "oauth_google") => {
-  if (!isLoaded) {
-    console.log("Clerk not loaded yet, aborting OAuth");
-    return;
-  }
-  
-  try {
-    console.log(`Starting ${provider} authentication flow...`);
+  // Corrected OAuth handler using correct parameters
+  const signUpWithOAuth = async (provider: "oauth_github" | "oauth_google") => {
+    if (!isLoaded) return;
+    setLoading(true);
+    setError(null);
     
-    // Make sure these URLs match your application routes AND Clerk's allowed callback URLs
-    const fallbackRedirectUrl = `${window.location.origin}/sso-callback`;
-    const redirectUrlComplete = `${window.location.origin}/Dashboard`;
-    
-    console.log(`OAuth configuration:`, {
-      strategy: provider,
-      fallbackRedirectUrl,
-      redirectUrlComplete,
-    });
-    
-    await signUp.authenticateWithRedirect({
-      strategy: provider,
-      redirectUrl: fallbackRedirectUrl, // Using deprecated property but TypeScript-compatible
-      redirectUrlComplete,
-    });
-
-    // This code won't execute immediately due to redirect
-  } catch (error) {
-    console.error(`Error in ${provider} authentication:`, error);
-    alert(`Failed to sign up with ${provider}. Please try again.`);
-  }
-};
+    try {
+      // Create a redirect URL to the dashboard
+      const redirectUrl = `${window.location.origin}/Dashboard`;
+      
+      // Use redirectUrl and redirectUrlComplete instead of fallbackRedirectUrl
+      await signUp.authenticateWithRedirect({
+        strategy: provider,
+        redirectUrl: redirectUrl,
+        redirectUrlComplete: redirectUrl
+      });
+    } catch (error: any) {
+      console.error(`Error signing up with ${provider}:`, error);
+      setError(`Failed to sign up with ${provider}. Please try again.`);
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-r from-red-500 to-red-600 flex items-center justify-center p-4">
