@@ -21,6 +21,9 @@ function App() {
           <Route path="/" element={<Register />} />
           <Route path="/login" element={<Login />} />
           
+          {/* Callback Route */}
+          <Route path="/sso-callback" element={<SSOCallback />} />
+
           {/* Protected Routes */}
           <Route
             path="/dashboard"
