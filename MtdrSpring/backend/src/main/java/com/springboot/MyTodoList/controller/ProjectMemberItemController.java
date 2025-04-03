@@ -11,13 +11,14 @@ import java.util.List;
 import java.util.UUID;
 
 
+
 @RestController
 public class ProjectMemberItemController {
     @Autowired
     private ProjectMemberItemService projectMemberItemService;
 
-    @GetMapping(value = "/isinproject/{userId}")
-    public ResponseEntity<Boolean> getSprintItemById(@PathVariable String userId) {
+    @GetMapping(value = "/projects/{userId}/any")
+    public ResponseEntity<Boolean> checkIfUserInProject(@PathVariable String userId) {
         try {
             Boolean userExists = projectMemberItemService.checkIfUserExists(userId);
             return new ResponseEntity<>(userExists, HttpStatus.OK);
@@ -25,6 +26,16 @@ public class ProjectMemberItemController {
             return new ResponseEntity<>(false, HttpStatus.NOT_FOUND);
         }
     }
+    @GetMapping("/projects/{userId}")
+    public ResponseEntity<ProjectMemberItem> getUserProjectData(@PathVariable String userId) {
+        try {
+            // Directly return the ResponseEntity from the service
+            return projectMemberItemService.getProjectMemberItemById(userId);
+        } catch (Exception e) {
+            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+    
 
 
 }
