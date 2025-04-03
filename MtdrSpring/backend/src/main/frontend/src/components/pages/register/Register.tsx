@@ -133,8 +133,8 @@ export default function Register() {
       // Add a parameter to indicate this is a new user
       await signUp.authenticateWithRedirect({
         strategy: provider,
-        redirectUrl: `${window.location.origin}/sso-callback?new_user=true`,
-        redirectUrlComplete: `${window.location.origin}/dashboard`
+        redirectUrl: `http://localhost:8080/sso-callback`, // Use exact URL, not window.location.origin
+        redirectUrlComplete: `http://localhost:8080/dashboard`
       });
     } catch (error: any) {
       console.error(`Error signing up with ${provider}:`, error);
