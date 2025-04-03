@@ -2,6 +2,7 @@
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Bell, Search } from "lucide-react"
+import { ProjectDropdown } from "./pages/home/AddProject"
 
 interface HeaderProps {
   date: string
@@ -18,7 +19,7 @@ export function Header({ date, day , title, titleSpan}: HeaderProps) {
     <h1 className="text-2xl font-bold">
       <span className="text-[#ff6767]">{title}</span>-{titleSpan}
     </h1>
-
+    <ProjectDropdown />
     <div className="flex-1 max-w-xl mx-8">
       <div className="relative">
         <Input placeholder="Search your task here..." className="pl-4 pr-10 py-2 rounded-full border-gray-200" />
