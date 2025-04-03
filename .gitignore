@@ -33,6 +33,10 @@ frontend/.pnp
 # testing
 frontend/coverage
 
+
+#logs
+logs.*
+
 # production
 frontend/build
 frontend/dist
