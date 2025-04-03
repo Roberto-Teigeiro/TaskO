@@ -1,3 +1,4 @@
+///Users/santosa/Documents/GitHub/TaskO/MtdrSpring/backend/src/main/frontend/src/components/pages/home/Dashboard.tsx
 "use client";
 
 import { useEffect } from "react";
@@ -8,11 +9,46 @@ import { Header } from "@/components/Header";
 import { Sidebar } from "@/components/Sidebar";
 import { TaskItem, CompletedTaskItem } from "@/components/ui/Task-item";
 import { ProgressCircle } from "@/components/ui/Progress-circle";
-import { useUser } from "@clerk/react-router";
+import { useUser, useAuth } from "@clerk/react-router";
+
 
 export default function Dashboard() {
   console.log("Dashboard component rendered");
-  const { user, isLoaded } = useUser();
+  const { user, isLoaded, isSignedIn } = useUser(); // Add isSignedIn here
+  const { getToken } = useAuth(); // Add getToken from useAuth
+
+
+  // Add this to your Dashboard.tsx component or similar
+useEffect(() => {
+  async function registerUserIfNeeded() {
+    // Check if this was a new OAuth user
+    const urlParams = new URLSearchParams(window.location.search);
+    const isNewUser = urlParams.get('new_user') === 'true';
+    
+    if (isNewUser && isSignedIn) {
+      const token = await getToken({template: 'TaskO'});
+      if (token) {
+        try {
+          const response = await fetch('http://localhost:8080/api/newuser', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          });
+          
+          if (response.ok) {
+            console.log('User registered in backend successfully');
+          }
+        } catch (error) {
+          console.error('Error registering user in backend:', error);
+        }
+      }
+    }
+  }
+  
+  registerUserIfNeeded();
+}, [isSignedIn]);
 
   useEffect(() => {
     // No need for the localStorage-related code anymore
@@ -37,21 +73,24 @@ export default function Dashboard() {
         <div className="p-6 flex-1">
           {/* Welcome Section */}
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold">
-              Welcome back, {user ? user.firstName : ''} {user ? user.lastName : ''} 👋
-            </h2>
+          <h2 className="text-2xl font-bold">
+  Welcome back, {user?.firstName ?? ''} {user?.lastName ?? ''} 👋
+</h2>
             <div className="flex items-center gap-2">
               <div className="flex -space-x-2">
                 <Avatar className="border-2 border-white w-8 h-8">
                   <AvatarImage src={user?.imageUrl || "/placeholder.svg?height=32&width=32"} />
                   <AvatarFallback>{user?.firstName?.charAt(0) || 'U'}</AvatarFallback>
                 </Avatar>
-                {[...Array(4)].map((_, i) => (
-                  <Avatar key={i} className="border-2 border-white w-8 h-8">
-                    <AvatarImage src="/placeholder.svg?height=32&width=32" />
-                    <AvatarFallback>U{i + 2}</AvatarFallback>
-                  </Avatar>
-                ))}
+              
+                {[...Array(4)].map((_, i) => {
+  const uniqueKey = `avatar-${i}-${Date.now()}`; // Better approach is to have real IDs
+  return (
+    <Avatar key={uniqueKey} className="border-2 border-white w-8 h-8">
+<AvatarImage src="/placeholder.svg?height=32&width=32" />
+<AvatarFallback>U{i + 2}</AvatarFallback>    </Avatar>
+  );
+})}
               </div>
               <Button
                 variant="outline"
