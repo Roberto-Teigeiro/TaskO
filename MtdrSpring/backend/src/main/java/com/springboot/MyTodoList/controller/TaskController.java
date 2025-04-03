@@ -13,6 +13,7 @@ import java.util.List;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
+@RequestMapping("/api")
 
 @RestController
 public class TaskController {

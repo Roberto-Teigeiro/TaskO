@@ -57,15 +57,6 @@ export default function Register() {
 
       if (result.status === "complete") {
         // Store optional fields (firstName, lastName) in localStorage or update user profile later
-        const userData = {
-          firstName,
-          lastName,
-          username,
-          email,
-          profilePicture: "",
-        };
-        localStorage.setItem("userData", JSON.stringify(userData));
-
         await setActive({ session: result.createdSessionId });
         const template = 'TaskO'
         // Get the JWT token after successful authentication
@@ -74,7 +65,7 @@ export default function Register() {
         // Send the JWT token to your backend
         if (token) {
           try {
-            const response = await fetch('http://localhost:8080/newuser', {
+            const response = await fetch('http://localhost:8080/api/newuser', {
               method: 'POST',
               headers: {
                 'Authorization': `Bearer ${token}`,
@@ -110,24 +101,38 @@ export default function Register() {
   };
 
   // OAuth handlers - Fixed version
-  const signUpWithOAuth = async (provider: "oauth_github" | "oauth_google") => {
-    if (!isLoaded) return;
+// OAuth handlers - Enhanced version with better debugging
+const signUpWithOAuth = async (provider: "oauth_github" | "oauth_google") => {
+  if (!isLoaded) {
+    console.log("Clerk not loaded yet, aborting OAuth");
+    return;
+  }
+  
+  try {
+    console.log(`Starting ${provider} authentication flow...`);
     
-    try {
-      // Make sure these URLs match your application routes
-      const redirectUrl = `${window.location.origin}/Dashboard`;
-      const redirectUrlComplete = `${window.location.origin}/Dashboard`;
-      
-      await signUp.authenticateWithRedirect({
-        strategy: provider,
-        redirectUrl,
-        redirectUrlComplete
-      });
-    } catch (error) {
-      console.error(`Error signing up with ${provider}:`, error);
-      alert(`Failed to sign up with ${provider}. Please try again.`);
-    }
-  };
+    // Make sure these URLs match your application routes AND Clerk's allowed callback URLs
+    const fallbackRedirectUrl = `${window.location.origin}/sso-callback`;
+    const redirectUrlComplete = `${window.location.origin}/Dashboard`;
+    
+    console.log(`OAuth configuration:`, {
+      strategy: provider,
+      fallbackRedirectUrl,
+      redirectUrlComplete,
+    });
+    
+    await signUp.authenticateWithRedirect({
+      strategy: provider,
+      redirectUrl: fallbackRedirectUrl, // Using deprecated property but TypeScript-compatible
+      redirectUrlComplete,
+    });
+
+    // This code won't execute immediately due to redirect
+  } catch (error) {
+    console.error(`Error in ${provider} authentication:`, error);
+    alert(`Failed to sign up with ${provider}. Please try again.`);
+  }
+};
 
   return (
     <div className="min-h-screen bg-[#ff6767] flex items-center justify-center p-4 bg-pattern">
