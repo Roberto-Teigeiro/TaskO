@@ -19,7 +19,7 @@ import com.springboot.MyTodoList.util.BotMessages;
 @SpringBootApplication
 public class MyTodoListApplication implements CommandLineRunner {
 
-    private static final Logger logger = LoggerFactory.getLogger(MyTodoListApplication.class);
+    //private static final Logger logger = LoggerFactory.getLogger(MyTodoListApplication.class);
 
     @Autowired
     private TaskItemService taskItemService;
@@ -42,12 +42,12 @@ public class MyTodoListApplication implements CommandLineRunner {
         try {
             TelegramBotsApi telegramBotsApi = new TelegramBotsApi(DefaultBotSession.class);
             telegramBotsApi.registerBot(new ToDoItemBotController(telegramBotToken, botName, taskItemService));
-            logger.info(BotMessages.BOT_REGISTERED_STARTED.getMessage());
+            //logger.info(BotMessages.BOT_REGISTERED_STARTED.getMessage());
         } catch (TelegramApiException e) {
             e.printStackTrace();
         }
 
         // Test database connection
-        sprintItemService.testDatabaseConnection();
+        //sprintItemService.testDatabaseConnection();
     }
 }
