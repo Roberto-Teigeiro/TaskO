@@ -15,7 +15,6 @@ interface AddSprintDialogProps {
 }
 
 export function AddSprintDialog({ onAddSprint }: AddSprintDialogProps) {
-  const [sprintId, setSprintId] = useState(1)
   const [open, setOpen] = useState(false)
   const [name, setName] = useState("")
   const [startDate, setStartDate] = useState<Date>()
@@ -23,32 +22,49 @@ export function AddSprintDialog({ onAddSprint }: AddSprintDialogProps) {
   const [progress, setProgress] = useState<number>(0)
   const [status, setStatus] = useState("Not Started")
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const newSprint = {
-      id: sprintId,
       name,
-      startDate: startDate ? format(startDate, "dd/MM/yyyy") : "",
-      endDate: endDate ? format(endDate, "dd/MM/yyyy") : "",
+      startDate: startDate ? format(startDate, "yyyy-MM-dd") : "",
+      endDate: endDate ? format(endDate, "yyyy-MM-dd") : "",
       progress,
       status,
       tasks: [],
     }
-
-    if (onAddSprint) {
-      onAddSprint(newSprint)
+  
+    try {
+      const response = await fetch("http://localhost:8000", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(newSprint),
+      });
+  
+      if (!response.ok) {
+        throw new Error("Failed to create sprint");
+      }
+  
+      const createdSprint = await response.json();
+  
+      if (onAddSprint) {
+        onAddSprint(createdSprint);
+      }
+  
+      // Reset form
+      setName("");
+      setStartDate(undefined);
+      setEndDate(undefined);
+      setProgress(0);
+      setStatus("Not Started");
+  
+      // Close dialog
+      setOpen(false);
+    } catch (error) {
+      console.error("Error creating sprint:", error);
     }
-    setSprintId(sprintId + 1)
-
-    // Reset form
-    setName("")
-    setStartDate(undefined)
-    setEndDate(undefined)
-    setProgress(0)
-    setStatus("Not Started")
-
-    // Close dialog
-    setOpen(false)
-  }
+  };
+  
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>

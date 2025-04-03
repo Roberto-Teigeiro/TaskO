@@ -77,7 +77,7 @@ function App() {
           {/* Fallback Route */}
           <Route path="*" element={<Register />} />
         </Routes>
-        <ChatButton />
+        {/*<ChatButton />*/}
       </div>
     </ClerkProvider>
   );

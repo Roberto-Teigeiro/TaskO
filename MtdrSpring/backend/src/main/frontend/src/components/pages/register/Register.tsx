@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 ///Users/santosa/Documents/GitHub/oraclefront/src/components/pages/register/Register.tsx
 "use client"
 import { useNavigate } from "react-router-dom" 
