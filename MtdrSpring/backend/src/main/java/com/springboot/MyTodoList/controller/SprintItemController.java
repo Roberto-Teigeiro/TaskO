@@ -30,4 +30,13 @@ public class SprintItemController {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
+    @PostMapping(value = "/sprint/add")
+    public ResponseEntity<SprintItem> addSprintItem(@RequestBody SprintItem sprintItem) {
+        try {
+            SprintItem newSprintItem = sprintItemService.addSprintItem(sprintItem);
+            return new ResponseEntity<>(newSprintItem, HttpStatus.CREATED);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 }
