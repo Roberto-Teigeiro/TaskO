@@ -111,20 +111,20 @@ const signUpWithOAuth = async (provider: "oauth_github" | "oauth_google") => {
   try {
     console.log(`Starting ${provider} authentication flow...`);
     
-    // Make sure these URLs match your application routes AND Clerk's allowed callback URLs
-    const fallbackRedirectUrl = `${window.location.origin}/sso-callback`;
-    const redirectUrlComplete = `${window.location.origin}/Dashboard`;
+    // Since frontend and backend are on the same port
+    const callbackUrl = `${window.location.origin}/callback`;
+    const dashboardUrl = `${window.location.origin}/dashboard`;
     
     console.log(`OAuth configuration:`, {
       strategy: provider,
-      fallbackRedirectUrl,
-      redirectUrlComplete,
+      redirectUrl: callbackUrl,
+      redirectUrlComplete: dashboardUrl,
     });
     
     await signUp.authenticateWithRedirect({
       strategy: provider,
-      redirectUrl: fallbackRedirectUrl, // Using deprecated property but TypeScript-compatible
-      redirectUrlComplete,
+      redirectUrl: callbackUrl,
+      redirectUrlComplete: dashboardUrl,
     });
 
     // This code won't execute immediately due to redirect
