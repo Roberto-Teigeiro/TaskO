@@ -20,7 +20,7 @@ public class ProjectMemberItemService {
         return projectMemberItemRepository.findAll();
     }
 
-    public ResponseEntity<ProjectMemberItem> getItemById(String id) {
+    public ResponseEntity<ProjectMemberItem> getProjectMemberItemById(String id) {
         Optional<ProjectMemberItem> projectData = projectMemberItemRepository.findById(id);
         if (projectData.isPresent()) {
             return new ResponseEntity<>(projectData.get(), HttpStatus.OK);
