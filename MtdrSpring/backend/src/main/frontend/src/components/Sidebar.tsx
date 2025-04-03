@@ -4,13 +4,13 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { CircleDot, LayoutGrid, LogOut, Settings } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { useAuth } from "@clerk/clerk-react"; // Importar Clerk's useAuth para manejar la sesión
-
+import { useAuth, useUser } from "@clerk/clerk-react"; // Importar useAuth y useUser de Clerk
 
 export function Sidebar() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { signOut } = useAuth(); // Clerk's signOut para cerrar sesión
+  const { signOut } = useAuth(); // Clerk's signOut para manejar la sesión
+  const { user, isLoaded } = useUser(); // Obtener datos del usuario de Clerk
   const [userData, setUserData] = useState({
     firstName: "",
     lastName: "",
@@ -19,25 +19,22 @@ export function Sidebar() {
   });
 
   useEffect(() => {
+    // Actualizar los datos del usuario cuando Clerk carga o cambia el usuario
+    if (isLoaded && user) {
       setUserData({
-        firstName: "user.firstName",
-        lastName: "user.lastName",
-        email: "user.email",
-        profilePicture: "user.profilePicture",
+        firstName: user.firstName || "",
+        lastName: user.lastName || "",
+        email: user.emailAddresses[0]?.emailAddress || "",
+        profilePicture: user.imageUrl || "",
       });
-    
-  }, []);
+    }
+  }, [user, isLoaded]);
 
   const handleLogout = async () => {
     try {
-      // Eliminar sesión de Clerk
-      await signOut();
-
-      // Limpiar localStorage
-      localStorage.removeItem("userData");
-
-      // Redirigir al usuario a la página de inicio (login)
-      navigate("/");
+      await signOut(); // Cerrar sesión
+      localStorage.removeItem("userData"); // Limpiar localStorage
+      navigate("/"); // Redirigir al login
     } catch (error) {
       console.error("Error during logout:", error);
       alert("An error occurred while logging out. Please try again.");
@@ -73,7 +70,7 @@ export function Sidebar() {
             alt={`${userData.firstName} ${userData.lastName}`}
           />
           <AvatarFallback>
-            {userData.firstName.charAt(0)}{userData.lastName.charAt(0)}
+            {userData.firstName.charAt(0) || "?"}{userData.lastName.charAt(0) || "?"}
           </AvatarFallback>
         </Avatar>
         <h3 className="mt-2 font-semibold text-lg">{userData.firstName} {userData.lastName}</h3>
