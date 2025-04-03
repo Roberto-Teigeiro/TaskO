@@ -16,21 +16,14 @@ export function Sidebar() {
   });
 
   useEffect(() => {
-    const loadUserData = () => {
-      const storedData = localStorage.getItem("userData");
-      if (storedData) {
-        setUserData(JSON.parse(storedData));
-      }
-    };
-
-    loadUserData();
-    window.addEventListener("userDataUpdated", loadUserData);
-
-    return () => {
-      window.removeEventListener("userDataUpdated", loadUserData);
-    };
+      setUserData({
+        firstName: "user.firstName",
+        lastName: "user.lastName",
+        email: "user.email",
+        profilePicture: "user.profilePicture",
+      });
+    
   }, []);
-
   const handleLogout = () => {
     navigate("/");
   };
