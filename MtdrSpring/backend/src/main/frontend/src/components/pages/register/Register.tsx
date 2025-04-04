@@ -10,6 +10,25 @@ import { Mail, Lock, User, AlertCircle, Loader2 } from "lucide-react"
 import { useSignUp, useUser, useAuth } from "@clerk/react-router"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 
+// Defino interfaces para el tipo de los datos
+interface UserData {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  username: string;
+  profilePicture?: string;
+  createdAt?: string;
+  lastLogin?: string;
+}
+
+// Interfaz para los resultados de autenticación
+interface SignUpResult {
+  status: string | null;
+  createdSessionId?: string | null;
+  missingFields?: string[];
+}
+
 export default function Register() {
   const navigate = useNavigate();
   const { isSignedIn } = useUser();
@@ -17,7 +36,6 @@ export default function Register() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { getToken } = useAuth();
-  
   
   useEffect(() => {
     // Redirect to dashboard if already signed in
@@ -31,12 +49,13 @@ export default function Register() {
     navigate("/Login");
   };
   
+  // Refactored handleSubmit to reduce cognitive complexity
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
     setLoading(true);
 
-    if (!isLoaded) {
+    if (!isLoaded || !signUp) { // Validar que signUp no sea undefined
       setLoading(false);
       return;
     }
@@ -56,64 +75,15 @@ export default function Register() {
     }
 
     try {
-      // Only include required fields in the signUp.create() call
-      const result = await signUp.create({
-        firstName,
-        lastName,
-        emailAddress: email,
-        password: password,
-        username: username,
+      const result = await createUserAccount({
+        firstName, lastName, email, password, username
       });
-
+      
       if (result.status === "complete") {
-        // Store optional fields (firstName, lastName) in localStorage or update user profile later
-        const userData = {
-          firstName,
-          lastName,
-          username,
-          email,
-          profilePicture: "",
-          createdAt: new Date().toISOString(),
-          lastLogin: new Date().toISOString(),
-        };
-        localStorage.setItem("userData", JSON.stringify(userData));
-
-        await setActive({ session: result.createdSessionId });
-        const template = 'TaskO'
-        // Get the JWT token after successful authentication
-        const token = await getToken({template});
-        console.log("user token: "+token)
-        // Send the JWT token to your backend
-        if (token) {
-          try {
-            const response = await fetch('http://localhost:8080/api/newuser', {
-              method: 'POST',
-              headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-              }
-            });
-            
-            if (response.ok) {
-              console.log('User registered in backend successfully');
-            } else {
-              console.error('Failed to register user in backend:', await response.text());
-            }
-          } catch (error) {
-            console.error('Error registering user in backend:', error);
-          }
-        }
-        
+        await handleSuccessfulSignup(result, {firstName, lastName, username, email, password});
         navigate("/Dashboard");
       } else if (result.status === "missing_requirements") {
-        const missingFields = result.missingFields || [];
-        if (missingFields.includes("email_address")) {
-          setError("Please verify your email address");
-        } else {
-          // Show exactly which fields are missing
-          setError(`Please complete the following: ${missingFields.join(", ")}`);
-          console.log("Missing fields:", missingFields);
-        }
+        handleMissingRequirements(result);
       }
     } catch (error: any) {
       console.error("Error during registration:", error);
@@ -122,18 +92,83 @@ export default function Register() {
       setLoading(false);
     }
   };
+  
+  // Helper function to create user account
+  const createUserAccount = async ({firstName, lastName, email, password, username}: UserData): Promise<SignUpResult> => {
+    if (!signUp) {
+      throw new Error("Authentication not initialized");
+    }
+    return await signUp.create({
+      firstName,
+      lastName,
+      emailAddress: email,
+      password,
+      username,
+    });
+  };
+  
+  // Helper function to handle successful signup
+  const handleSuccessfulSignup = async (result: SignUpResult, userData: UserData): Promise<void> => {
+    // Store user data in localStorage
+    const userDataToStore = {
+      ...userData,
+      password: undefined, // No almacenar la contraseña en localStorage
+      profilePicture: "",
+      createdAt: new Date().toISOString(),
+      lastLogin: new Date().toISOString(),
+    };
+    localStorage.setItem("userData", JSON.stringify(userDataToStore));
 
-  // Corrected OAuth handler using correct parameters
+    if (result.createdSessionId && setActive) {
+      await setActive({ session: result.createdSessionId });
+    }
+    
+    // Get token and register user in backend
+    const template = 'TaskO';
+    const token = await getToken({template});
+    
+    if (token) {
+      try {
+        const response = await fetch('http://localhost:8080/api/newuser', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (response.ok) {
+          console.log('User registered in backend successfully');
+        } else {
+          console.error('Failed to register user in backend:', await response.text());
+        }
+      } catch (error) {
+        console.error('Error registering user in backend:', error);
+      }
+    }
+  };
+  
+  // Helper function to handle missing requirements
+  const handleMissingRequirements = (result: SignUpResult): void => {
+    const missingFields = result.missingFields || [];
+    if (missingFields.includes("email_address")) {
+      setError("Please verify your email address");
+    } else {
+      setError(`Please complete the following: ${missingFields.join(", ")}`);
+      console.log("Missing fields:", missingFields);
+    }
+  };
+
+  // OAuth handler
   const signUpWithOAuth = async (provider: "oauth_github" | "oauth_google") => {
-    if (!isLoaded) return;
+    if (!isLoaded || !signUp) return;
     setLoading(true);
     setError(null);
     
     try {
-      // Add a parameter to indicate this is a new user
       await signUp.authenticateWithRedirect({
         strategy: provider,
-        redirectUrl: `http://localhost:8080/sso-callback`, // Use exact URL, not window.location.origin
+        redirectUrl: `http://localhost:8080/sso-callback`,
         redirectUrlComplete: `http://localhost:8080/dashboard`
       });
     } catch (error: any) {
@@ -150,7 +185,7 @@ export default function Register() {
         <div className="hidden md:flex md:w-1/2 bg-gradient-to-br from-red-100 to-red-200 items-center justify-center p-8">
           <div className="text-center">
             <img
-              src="/placeholder.svg?height=300&width=300"
+              src="https://via.placeholder.com/300"
               alt="Oracle Project Management"
               className="max-w-full h-auto mb-6"
             />
