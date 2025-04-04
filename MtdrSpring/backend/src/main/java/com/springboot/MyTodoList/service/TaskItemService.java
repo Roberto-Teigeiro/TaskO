@@ -39,6 +39,16 @@ public class TaskItemService {
             return false;
         }
     }
+
+    public List<TaskItem> getTaskItemsByAssignee(String assignee) {
+        List<TaskItem> tasks = toDoItemRepository.findByAssignee(assignee);
+        if (tasks.isEmpty()) {
+            return null; // or throw an exception if you prefer
+        } else {
+            return tasks;
+        }
+    }
+
     public TaskItem updateTaskItem(UUID id, TaskItem t){
         Optional<TaskItem> toDoItemData = toDoItemRepository.findById(id);
         if(toDoItemData.isPresent()){

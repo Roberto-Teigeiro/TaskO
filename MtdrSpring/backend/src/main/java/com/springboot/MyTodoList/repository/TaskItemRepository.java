@@ -25,5 +25,9 @@ public interface TaskItemRepository extends JpaRepository<TaskItem,UUID> {
     List<TaskItem> findByStartDate(OffsetDateTime startDate);
 
 
+    @Query("SELECT t FROM TaskItem t WHERE t.assignee = ?1")
+    List<TaskItem> findByAssignee(String assignee);
+
+
 
 }
