@@ -19,15 +19,35 @@ export function ProjectDropdown() {
   const [isOpen, setIsOpen] = useState(false); // Dropdown open state
   const [isModalOpen, setIsModalOpen] = useState(false); // Modal open state
 
-  const handleAddProject = () => {
+  const handleAddProject = async () => {
     if (newProjectName.trim() === "") return;
+
     const newProject: Project = {
       id: crypto.randomUUID(), // Simulating backend-generated ID
       name: newProjectName,
     };
-    setProjects([...projects, newProject]);
-    setNewProjectName(""); // Reset the input field
-    setIsModalOpen(false); // Close the modal after adding the project
+
+    try {
+      // Post the new project to the backend
+      const response = await fetch("http://localhost:8080/api/project/new", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(newProject),
+      });
+      console.log("project posted")
+      if (!response.ok) {
+        throw new Error("Failed to add project to the backend");
+      }
+
+      // Add the new project to the local state
+      setProjects([...projects, newProject]);
+      setNewProjectName(""); // Reset the input field
+      setIsModalOpen(false); // Close the modal after adding the project
+    } catch (error) {
+      console.error("Error adding project:", error);
+    }
   };
 
   return (

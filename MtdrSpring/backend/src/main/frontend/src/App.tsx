@@ -7,7 +7,6 @@ import Login from './components/pages/login/Login';
 import Settings from "./components/pages/home/Settings";
 import CalendarPage from './components/pages/home/Calendar';
 import Sprints from './components/pages/home/Sprints';
-import { ChatButton } from './components/ChatBot';
 
 function App() {
   const clerkPubKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;

@@ -9,6 +9,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { format } from "date-fns"
 import { CalendarIcon, Plus } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { useEffect } from "react"
+import { useUser } from "@clerk/clerk-react"; // Importa el hook de Clerk
 
 interface AddSprintDialogProps {
   onAddSprint?: (sprint: any) => void
@@ -21,6 +23,33 @@ export function AddSprintDialog({ onAddSprint }: AddSprintDialogProps) {
   const [endDate, setEndDate] = useState<Date>()
   const [progress, setProgress] = useState<number>(0)
   const [status, setStatus] = useState("Not Started")
+  const { user } = useUser(); // Obtén el usuario autenticado
+
+  useEffect(() => {
+    console.log("montado")
+    const fetchProjectId = async () => {
+      
+      try {
+        
+        if (!user) return; // Asegúrate de que el usuario esté autenticado
+        console.log(user.id)
+        const userId = user.id; // Obtén el userId del usuario autenticado
+        const response = await fetch(`http://localhost:8080/api/projects/${userId}`);
+        
+        if (!response.ok) {
+          throw new Error("Failed to fetch project data");
+        }
+
+        const data = await response.json();
+        console.log(data); // Maneja los datos del proyecto aquí
+      } catch (error) {
+        console.error("Error fetching project data:", error);
+      }
+    };
+
+    fetchProjectId();
+  }, [user]); // Ejecuta el efecto cuando el usuario cambie
+
 
   const handleSubmit = async () => {
     const newSprint = {
@@ -31,16 +60,18 @@ export function AddSprintDialog({ onAddSprint }: AddSprintDialogProps) {
       status,
       tasks: [],
     }
+
+    
   
     try {
-      const response = await fetch("http://localhost:8000", {
+      const response = await fetch("http://localhost:8080/api/sprint/add", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(newSprint),
       });
-  
+      
       if (!response.ok) {
         throw new Error("Failed to create sprint");
       }
