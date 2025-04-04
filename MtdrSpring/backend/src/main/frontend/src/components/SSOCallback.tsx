@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 ///Users/santosa/Documents/GitHub/TaskO/MtdrSpring/backend/src/main/frontend/src/components/SSOCallback.tsx
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";

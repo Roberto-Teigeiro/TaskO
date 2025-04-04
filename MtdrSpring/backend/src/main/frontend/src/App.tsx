@@ -7,7 +7,6 @@ import Login from './components/pages/login/Login';
 import Settings from "./components/pages/home/Settings";
 import CalendarPage from './components/pages/home/Calendar';
 import Sprints from './components/pages/home/Sprints';
-import { ChatButton } from './components/ChatBot';
 import SSOCallback from './components/SSOCallback'; // Import the SSOCallback component
 
 function App() {
@@ -82,7 +81,7 @@ function App() {
           <Route path="*" element={<Register />} />
       
         </Routes>
-        <ChatButton />
+       {/* <ChatButton />*/}
       </div>
     </ClerkProvider>
   );
