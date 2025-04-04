@@ -53,6 +53,10 @@ public class UserItemService {
         }
     }
 
+    public List<UserItem> findByTelegramUsername(String telegramUsername) {
+        return userItemRepository.findByTelegramUsername(telegramUsername);
+    }
+
     public boolean deleteTaskItem(String id){
         try{
             userItemRepository.deleteById(id);
@@ -151,7 +155,7 @@ public class UserItemService {
                 }
                 
                 // Create and return a UserItem object
-                return new UserItem(userId, fullName, email);
+                return new UserItem(userId, fullName, email, null);
             } catch (Exception e) {
                 System.err.println("Error decoding JWT header: " + e.getMessage());
                 e.printStackTrace();

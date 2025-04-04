@@ -22,6 +22,7 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.Keyboard
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import com.springboot.MyTodoList.model.TaskItem;
+import com.springboot.MyTodoList.model.UserItem;
 import com.springboot.MyTodoList.service.TaskItemService;
 import com.springboot.MyTodoList.service.UserItemService;
 import com.springboot.MyTodoList.util.BotCommands;
@@ -74,6 +75,47 @@ public class ToDoItemBotController extends TelegramLongPollingBot {
                 }
             }
 
+            else if (messageTextFromTelegram.startsWith(BotCommands.GETMYTASKS.getCommand())) {
+                // "/getmytasks"
+                SendMessage messageToTelegram = new SendMessage();
+                String telegramUserName = update.getMessage().getFrom().getUserName(); // Obtener el nombre de usuario de Telegram
+                logger.info("Fetching tasks for Telegram username: " + telegramUserName);
+
+                try {
+                    // Busca el usuario registrado por su Telegram username
+                    UserItem user = userItemService.findByTelegramUsername(telegramUserName).get(0);
+                    System.out.println("User found: " + user);
+                    if (user == null) {
+                        messageToTelegram.setChatId(chatId);
+                        messageToTelegram.setText("You are not registered. Please register first using /register <user_id>.");
+                    } else {
+                        // Busca las tareas asociadas al usuario
+                        List<TaskItem> myTasks = taskItemService.getTaskItemsByAssignee(user.getUserId());
+                        System.out.println("Tasks found: " + myTasks);
+                        if (myTasks.isEmpty()) {
+                            messageToTelegram.setChatId(chatId);
+                            messageToTelegram.setText("No tasks found for your account.");
+                        } else {
+                            StringBuilder tasksList = new StringBuilder("Your tasks:\n");
+                            for (TaskItem task : myTasks) {
+                                tasksList.append("- ").append(task.getDescription()).append("\n");
+                            }
+                            messageToTelegram.setChatId(chatId);
+                            messageToTelegram.setText(tasksList.toString());
+                        }
+                    }
+                } catch (Exception e) {
+                    logger.error("Error retrieving tasks for Telegram username: " + telegramUserName, e);
+                    messageToTelegram.setChatId(chatId);
+                    messageToTelegram.setText("An error occurred while retrieving your tasks. Please try again later.");
+                }
+
+                try {
+                    execute(messageToTelegram);
+                } catch (TelegramApiException e) {
+                    logger.error("Error while sending message: " + e.getMessage(), e);
+                }
+            }
 
             else if (messageTextFromTelegram.equals(BotCommands.START_COMMAND.getCommand())
                     || messageTextFromTelegram.equals(BotLabels.SHOW_MAIN_SCREEN.getLabel())) {

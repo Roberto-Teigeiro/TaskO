@@ -5,6 +5,7 @@ import com.springboot.MyTodoList.model.TaskItem;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -27,7 +28,5 @@ public interface TaskItemRepository extends JpaRepository<TaskItem,UUID> {
 
     @Query("SELECT t FROM TaskItem t WHERE t.assignee = ?1")
     List<TaskItem> findByAssignee(String assignee);
-
-
 
 }
