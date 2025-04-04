@@ -90,6 +90,7 @@ public class ToDoItemBotController extends TelegramLongPollingBot {
                         messageToTelegram.setText("You are not registered. Please register first using /register <user_id>.");
                     } else {
                         // Busca las tareas asociadas al usuario
+                        System.out.println("Fetching tasks for user: " + user.getUserId());
                         List<TaskItem> myTasks = taskItemService.getTaskItemsByAssignee(user.getUserId());
                         System.out.println("Tasks found: " + myTasks);
                         if (myTasks.isEmpty()) {
@@ -161,7 +162,7 @@ public class ToDoItemBotController extends TelegramLongPollingBot {
 
                 try {
                     TaskItem item = getTaskItemById(id).getBody();
-                    item.setStatus(TaskItem.Status.COMPLETED); // Changed from "DONE" string to enum
+                    item.setStatus("COMPLETED"); // Changed from "DONE" string to enum
                     updateTaskItem(item, id);
                     BotHelper.sendMessageToTelegram(chatId, BotMessages.ITEM_DONE.getMessage(), this);
                 } catch (Exception e) {
@@ -176,7 +177,7 @@ public class ToDoItemBotController extends TelegramLongPollingBot {
 
                 try {
                     TaskItem item = getTaskItemById(id).getBody();
-                    item.setStatus(TaskItem.Status.TODO); // Changed from "TODO" string to enum
+                    item.setStatus("TODO"); // Changed from "TODO" string to enum
                     updateTaskItem(item, id);
                     BotHelper.sendMessageToTelegram(chatId, BotMessages.ITEM_UNDONE.getMessage(), this);
                 } catch (Exception e) {
@@ -224,7 +225,7 @@ public class ToDoItemBotController extends TelegramLongPollingBot {
 
                 // 3. Third update - filtering active items
                 List<TaskItem> activeItems = allItems.stream()
-                    .filter(item -> item.getStatus() != TaskItem.Status.COMPLETED) // Changed from string comparison
+                    .filter(item -> item.getStatus() != "COMPLETED") // Changed from string comparison
                     .collect(Collectors.toList());
 
                 for (TaskItem item : activeItems) {
@@ -236,7 +237,7 @@ public class ToDoItemBotController extends TelegramLongPollingBot {
 
                 // 4. Fourth update - filtering done items
                 List<TaskItem> doneItems = allItems.stream()
-                    .filter(item -> item.getStatus() == TaskItem.Status.COMPLETED) // Changed from string comparison
+                    .filter(item -> item.getStatus() == "COMPLETED") // Changed from string comparison
                     .collect(Collectors.toList());
 
                 for (TaskItem item : doneItems) {
@@ -290,7 +291,7 @@ public class ToDoItemBotController extends TelegramLongPollingBot {
                     TaskItem newItem = new TaskItem();
                     newItem.setDescription(messageTextFromTelegram);
                     newItem.setStartDate(OffsetDateTime.now());
-                    newItem.setStatus(TaskItem.Status.TODO); // Changed from "TODO" string to enum
+                    newItem.setStatus("TODO"); // Changed from "TODO" string to enum
                     ResponseEntity entity = addTaskItem(newItem);
 
                     SendMessage messageToTelegram = new SendMessage();

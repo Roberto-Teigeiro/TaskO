@@ -12,9 +12,7 @@ import org.hibernate.annotations.Type;
 @Entity
 @Table(name = "TASKS")
 public class TaskItem {
-    public enum Status {
-        TODO, IN_PROGRESS, COMPLETED
-    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Type(type = "uuid-binary") // Correct mapping for RAW(16)
@@ -30,11 +28,10 @@ public class TaskItem {
     private String title;
     @Column(name = "DESCRIPTION")
     private String description;
-    @Type(type = "uuid-binary") // Correct mapping for RAW(16)
     @Column(name = "ASSIGNEE")
     private String assignee;
     @Column(name = "STATUS")
-    private Status status;
+    private String status;
     @Column(name = "STARTDATE")
     private OffsetDateTime startDate;
     @Column(name = "ENDDATE")
@@ -46,7 +43,7 @@ public class TaskItem {
 
     public TaskItem(){
     }
-    public TaskItem(UUID projectId, UUID sprintId, UUID taskId, String title, String description, String assignee, Status status, OffsetDateTime startDate, OffsetDateTime endDate, String comments, int storyPoints) {
+    public TaskItem(UUID projectId, UUID sprintId, UUID taskId, String title, String description, String assignee, String status, OffsetDateTime startDate, OffsetDateTime endDate, String comments, int storyPoints) {
         this.projectId = projectId;
         this.sprintId = sprintId;
         this.taskId = taskId;
@@ -108,11 +105,11 @@ public class TaskItem {
         this.assignee = assignee;
     }
 
-    public Status getStatus() {
+    public String getStatus() {
         return status;
     }
 
-    public void setStatus(Status status) {
+    public void setStatus(String status) {
         this.status = status;
     }
 

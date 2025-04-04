@@ -41,12 +41,9 @@ public class TaskItemService {
     }
 
     public List<TaskItem> getTaskItemsByAssignee(String assignee) {
+        // Never return null for collections - return empty list instead
         List<TaskItem> tasks = toDoItemRepository.findByAssignee(assignee);
-        if (tasks.isEmpty()) {
-            return null; // or throw an exception if you prefer
-        } else {
-            return tasks;
-        }
+        return tasks; // Return even if empty
     }
 
     public TaskItem updateTaskItem(UUID id, TaskItem t){
