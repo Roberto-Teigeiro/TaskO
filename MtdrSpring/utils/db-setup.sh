@@ -131,7 +131,7 @@ done
 # Order DB User, Objects
 while ! state_done TODO_USER; do
   echo "connecting to mtdr database"
-  U=$TODO_USER
+  U=ADMIN
   SVC=$MTDR_DB_SVC
   sqlplus /nolog <<!
 WHENEVER SQLERROR EXIT 1
@@ -140,12 +140,14 @@ CREATE USER $U IDENTIFIED BY "$DB_PASSWORD" DEFAULT TABLESPACE data QUOTA UNLIMI
 GRANT CREATE SESSION, CREATE VIEW, CREATE SEQUENCE, CREATE PROCEDURE TO $U;
 GRANT CREATE TABLE, CREATE TRIGGER, CREATE TYPE, CREATE MATERIALIZED VIEW TO $U;
 GRANT CONNECT, RESOURCE, pdb_dba, SODA_APP to $U;
-CREATE TABLE TODOUSER.todoitem (id NUMBER GENERATED ALWAYS AS IDENTITY, description VARCHAR2(4000), creation_ts TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP, done NUMBER(1,0) , PRIMARY KEY (id));
-insert into TODOUSER.todoitem  (description, done) values ('Manual item insert', 0);
 commit;
 !
+  
+  echo "executing create_db.sql script"
+  sqlplus ADMIN/"$DB_PASSWORD"@$SVC @$MTDRWORKSHOP_LOCATION/backend/create_db.sql
+  
   state_set_done TODO_USER
-  echo "finished connecting to database and creating attributes"
+  echo "finished connecting to database and creating tables"
 done
 # DB Setup Done
 state_set_done DB_SETUP
