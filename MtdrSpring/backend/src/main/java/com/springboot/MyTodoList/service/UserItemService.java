@@ -42,6 +42,17 @@ public class UserItemService {
         return userItemRepository.save(userItem);
     }
 
+    public UserItem addTelegramToUserItem(String id, String telegramUsername){
+        Optional<UserItem> existingUserItem = userItemRepository.findById(id);
+        if(existingUserItem.isPresent()){
+            UserItem updatedUserItem = existingUserItem.get();
+            updatedUserItem.setTelegramUsername(telegramUsername);
+            return userItemRepository.save(updatedUserItem);
+        }else{
+            return null;
+        }
+    }
+
     public boolean deleteTaskItem(String id){
         try{
             userItemRepository.deleteById(id);

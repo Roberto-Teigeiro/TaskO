@@ -23,23 +23,28 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import com.springboot.MyTodoList.model.TaskItem;
 import com.springboot.MyTodoList.service.TaskItemService;
+import com.springboot.MyTodoList.service.UserItemService;
 import com.springboot.MyTodoList.util.BotCommands;
 import com.springboot.MyTodoList.util.BotHelper;
 import com.springboot.MyTodoList.util.BotLabels;
 import com.springboot.MyTodoList.util.BotMessages;
 
+
+
 public class ToDoItemBotController extends TelegramLongPollingBot {
 
     private static final Logger logger = LoggerFactory.getLogger(ToDoItemBotController.class);
     private TaskItemService taskItemService;
+    private UserItemService userItemService;
     private String botName;
 
-    public ToDoItemBotController(String botToken, String botName, TaskItemService taskItemService) {
+    public ToDoItemBotController(String botToken, String botName, TaskItemService taskItemService, UserItemService userItemService) {
         super(botToken);
         logger.info("Bot Token: " + botToken);
         logger.info("Bot name: " + botName);
         this.taskItemService = taskItemService;
         this.botName = botName;
+        this.userItemService = userItemService;
     }
 
     @Override
@@ -50,7 +55,27 @@ public class ToDoItemBotController extends TelegramLongPollingBot {
             String messageTextFromTelegram = update.getMessage().getText();
             long chatId = update.getMessage().getChatId();
 
-            if (messageTextFromTelegram.equals(BotCommands.START_COMMAND.getCommand())
+            if(messageTextFromTelegram.startsWith(BotCommands.REGISTER.getCommand())){
+                //"/register <user_id>"
+                SendMessage messageToTelegram = new SendMessage();
+                String telegramUserName = update.getMessage().getFrom().getUserName();
+                String[] parts = messageTextFromTelegram.split(" ");
+                if (parts.length > 1) { // Ensure there is a second part
+                    String uid = parts[1]; // Extract the UID
+                    logger.info("Extracted UID: " + uid);
+                userItemService.addTelegramToUserItem(uid, telegramUserName);
+                }
+                messageToTelegram.setChatId(chatId);
+                messageToTelegram.setText("You have been registered successfully!");
+                try {
+                    execute(messageToTelegram);
+                } catch (TelegramApiException e) {
+                    logger.error("Error while sending message: " + e.getMessage(), e);
+                }
+            }
+
+
+            else if (messageTextFromTelegram.equals(BotCommands.START_COMMAND.getCommand())
                     || messageTextFromTelegram.equals(BotLabels.SHOW_MAIN_SCREEN.getLabel())) {
 
                 SendMessage messageToTelegram = new SendMessage();

@@ -16,13 +16,17 @@ public class UserItem {
     @Column(name = "EMAIL", length = 255)
     private String email;
 
+    @Column(name="TELEGRAM_USERNAME")
+    private String telegramUsername;
+
     public UserItem() {
     }
 
-    public UserItem(String userId, String name, String email) {
+    public UserItem(String userId, String name, String email, String telegramUsername) {
         this.userId = userId;
         this.name = name;
         this.email = email;
+        this.telegramUsername= telegramUsername;
     }
 
     public String getUserId() {
@@ -31,6 +35,12 @@ public class UserItem {
 
     public void setUserId(String userId) {
         this.userId = userId;
+    }
+    public void setTelegramUsername(String telegramUsername) {
+        this.telegramUsername = telegramUsername;
+    }
+    public String getTelegramUsername() {
+        return telegramUsername;
     }
 
     public String getName() {
@@ -55,6 +65,7 @@ public class UserItem {
                 "userId='" + userId + '\'' +
                 ", name='" + name + '\'' +
                 ", email='" + email + '\'' +
+                ", telegramUsername='" + telegramUsername + '\'' +
                 '}';
     }
 }
