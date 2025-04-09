@@ -16,7 +16,7 @@ public class UserItem {
     @Column(name = "EMAIL", length = 255)
     private String email;
 
-    @Column(name="TELEGRAM_USERNAME")
+    @Column(name="TELEGRAMUSERNAME")
     private String telegramUsername;
 
     public UserItem() {
