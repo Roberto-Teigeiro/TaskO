@@ -151,7 +151,7 @@ public class UserItemService {
                 }
                 
                 // Create and return a UserItem object
-                return new UserItem(userId, fullName, email);
+                return new UserItem(userId, fullName, email, null);
             } catch (Exception e) {
                 System.err.println("Error decoding JWT header: " + e.getMessage());
                 e.printStackTrace();
