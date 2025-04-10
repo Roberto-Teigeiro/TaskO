@@ -11,6 +11,9 @@ import { Lock, User, AlertCircle, Loader2 } from "lucide-react"
 import { useSignIn, useUser } from "@clerk/react-router"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 
+// Interfaz para los resultados de autenticación
+
+
 export default function Login() {
   const navigate = useNavigate();
   const { isSignedIn } = useUser();
@@ -18,34 +21,32 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
-  
+  // Check if user is already signed in
   useEffect(() => {
-    // Redirect to dashboard if already signed in
     if (isSignedIn) {
       navigate("/Dashboard");
     }
   }, [isSignedIn, navigate]);
 
-  // Add this useEffect to handle OAuth redirects
+  // Handle OAuth redirects
   useEffect(() => {
-    // Check if this is a redirect from OAuth (has hash params)
     if (window.location.hash && isLoaded) {
-      const urlParams = new URLSearchParams(window.location.hash.substring(1)); // Cambia de #? a #
+      const urlParams = new URLSearchParams(window.location.hash.substring(1));
       const redirectUrl = urlParams.get('redirect_url');
       
-      // Si hay un redirect_url, navega a esa ruta
       if (redirectUrl) {
         navigate(redirectUrl);
       }
     }
   }, [isLoaded, navigate]);
   
+  // Login form submission
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
     setLoading(true);
     
-    if (!isLoaded) {
+    if (!isLoaded || !signIn) {
       setLoading(false);
       return;
     }
@@ -62,20 +63,15 @@ export default function Login() {
       
       if (result.status === "complete") {
         // Update last login time in user data
-        const userData = localStorage.getItem("userData");
-        if (userData) {
-          const parsedData = JSON.parse(userData);
-          parsedData.lastLogin = new Date().toISOString();
-          localStorage.setItem("userData", JSON.stringify(parsedData));
-        }
+        updateLastLoginTime();
         
-        await setActive({ session: result.createdSessionId });
+        if (result.createdSessionId && setActive) {
+          await setActive({ session: result.createdSessionId });
+        }
         navigate("/Dashboard");
       } else if (result.status === "needs_second_factor") {
-        // Handle 2FA if implemented
         setError("Two-factor authentication required. Please check your authentication app.");
       } else {
-        // Handle other statuses
         setError("Sign in incomplete. Please try again.");
         console.log("Sign in status:", result.status);
       }
@@ -87,16 +83,30 @@ export default function Login() {
     }
   };
 
+  // Helper function to update last login time
+  const updateLastLoginTime = (): void => {
+    try {
+      const userData = localStorage.getItem("userData");
+      if (userData) {
+        const parsedData = JSON.parse(userData);
+        parsedData.lastLogin = new Date().toISOString();
+        localStorage.setItem("userData", JSON.stringify(parsedData));
+      }
+    } catch (error) {
+      console.error("Error updating last login time:", error);
+    }
+  };
+
+  // OAuth sign-in handler
   const signInWithOAuth = async (provider: "oauth_github" | "oauth_google") => {
-    if (!isLoaded) return;
+    if (!isLoaded || !signIn) return;
     setLoading(true);
     setError(null);
     
     try {
-      // Use the correct path to your SSO callback component
       await signIn.authenticateWithRedirect({
         strategy: provider,
-        redirectUrl: `http://localhost:8080/sso-callback`, // Use exact URL, not window.location.origin
+        redirectUrl: `http://localhost:8080/sso-callback`,
         redirectUrlComplete: `http://localhost:8080/dashboard`
       });
     } catch (error: any) {
@@ -106,6 +116,7 @@ export default function Login() {
     }
   };
 
+  // Navigation to register page
   const toRegister = (e: React.MouseEvent) => {
     e.preventDefault();
     navigate("/");
@@ -236,7 +247,11 @@ export default function Login() {
         {/* Right side - Illustration */}
         <div className="hidden md:flex md:w-1/2 bg-gradient-to-br from-red-100 to-red-200 items-center justify-center p-8">
           <div className="text-center">
-            <img src="/placeholder.svg?height=300&width=300" alt="Project Management" className="max-w-full h-auto mb-6" />
+            <img 
+              src="https://via.placeholder.com/300" 
+              alt="Project Management" 
+              className="max-w-full h-auto mb-6" 
+            />
             <h2 className="text-2xl font-bold text-red-600 mb-2">Oracle Project Management</h2>
             <p className="text-gray-600">Boost your team's productivity with our cloud-native task management solution.</p>
             <div className="mt-6 bg-white bg-opacity-50 p-4 rounded-lg">
