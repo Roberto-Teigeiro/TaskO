@@ -128,20 +128,11 @@ while ! state_done MTDR_DB_PASSWORD_SET; do
 done
 
 
-# Order DB User, Objects
 while ! state_done TODO_USER; do
   echo "connecting to mtdr database"
-  U=ADMIN
   SVC=$MTDR_DB_SVC
-  sqlplus /nolog <<!
-WHENEVER SQLERROR EXIT 1
-connect admin/"$DB_PASSWORD"@$SVC
-CREATE USER $U IDENTIFIED BY "$DB_PASSWORD" DEFAULT TABLESPACE data QUOTA UNLIMITED ON data;
-GRANT CREATE SESSION, CREATE VIEW, CREATE SEQUENCE, CREATE PROCEDURE TO $U;
-GRANT CREATE TABLE, CREATE TRIGGER, CREATE TYPE, CREATE MATERIALIZED VIEW TO $U;
-GRANT CONNECT, RESOURCE, pdb_dba, SODA_APP to $U;
-commit;
-!
+  
+  # Skip the user creation part since ADMIN already exists
   
   echo "executing create_db.sql script"
   sqlplus ADMIN/"$DB_PASSWORD"@$SVC @$MTDRWORKSHOP_LOCATION/backend/create_db.sql
