@@ -31,6 +31,8 @@ fi
 echo "Authentication successful."
 
 # Base image name and version
+export NAMESPACE=axuo1dsetmvp
+export REPO_NAME=todoapp
 export BASE_NAME=todolistapp-springboot
 export IMAGE_VERSION=0.1
 
@@ -38,7 +40,7 @@ export IMAGE_VERSION=0.1
 echo "Building api-service..."
 cd api-service
 mvn clean package spring-boot:repackage
-export API_IMAGE=${DOCKER_REGISTRY}/${BASE_NAME}-api:${IMAGE_VERSION}
+export API_IMAGE=${DOCKER_REGISTRY}/${NAMESPACE}/${REPO_NAME}/${BASE_NAME}-api:${IMAGE_VERSION}
 docker build -f Dockerfile -t $API_IMAGE .
 docker push $API_IMAGE
 if [ $? -eq 0 ]; then
@@ -54,7 +56,7 @@ cd ..
 echo "Building bot-service..."
 cd bot-service
 mvn clean package spring-boot:repackage
-export BOT_IMAGE=${DOCKER_REGISTRY}/${BASE_NAME}-bot:${IMAGE_VERSION}
+export BOT_IMAGE=${DOCKER_REGISTRY}/${NAMESPACE}/${REPO_NAME}/${BASE_NAME}-bot:${IMAGE_VERSION}
 docker build -f Dockerfile -t $BOT_IMAGE .
 docker push $BOT_IMAGE
 if [ $? -eq 0 ]; then
@@ -70,7 +72,7 @@ cd ..
 echo "Building frontend-service..."
 cd frontend-service
 mvn clean package
-export FRONTEND_IMAGE=${DOCKER_REGISTRY}/${BASE_NAME}-frontend:${IMAGE_VERSION}
+export FRONTEND_IMAGE=${DOCKER_REGISTRY}/${NAMESPACE}/${REPO_NAME}/${BASE_NAME}-frontend:${IMAGE_VERSION}
 docker build -f Dockerfile -t $FRONTEND_IMAGE .
 docker push $FRONTEND_IMAGE
 if [ $? -eq 0 ]; then
