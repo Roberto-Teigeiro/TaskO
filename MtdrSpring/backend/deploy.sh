@@ -58,7 +58,6 @@ if [ -z "$BOT_USERNAME" ]; then
 fi
 
 echo "Creating springboot deployments and services"
-export CURRENTTIME=$( date '+%F_%H:%M:%S' )
 echo CURRENTTIME is $CURRENTTIME  ...this will be appended to generated deployment yaml
 cp src/main/resources/todolistapp-springboot.yaml todolistapp-springboot-$CURRENTTIME.yaml
 
