@@ -86,7 +86,7 @@ export default function Register() {
         // Send the JWT token to your backend
         if (token) {
           try {
-            const response = await fetch('http://localhost:8080/api/newuser', {
+            const response = await fetch('/api/newuser', {
               method: 'POST',
               headers: {
                 'Authorization': `Bearer ${token}`,
@@ -133,8 +133,8 @@ export default function Register() {
       // Add a parameter to indicate this is a new user
       await signUp.authenticateWithRedirect({
         strategy: provider,
-        redirectUrl: `http://localhost:8080/sso-callback`, // Use exact URL, not window.location.origin
-        redirectUrlComplete: `http://localhost:8080/dashboard`
+        redirectUrl: `/sso-callback`, // Use exact URL, not window.location.origin
+        redirectUrlComplete: `/dashboard`
       });
     } catch (error: any) {
       console.error(`Error signing up with ${provider}:`, error);

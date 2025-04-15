@@ -96,8 +96,8 @@ export default function Login() {
       // Use the correct path to your SSO callback component
       await signIn.authenticateWithRedirect({
         strategy: provider,
-        redirectUrl: `http://localhost:8080/sso-callback`, // Use exact URL, not window.location.origin
-        redirectUrlComplete: `http://localhost:8080/dashboard`
+        redirectUrl: `/sso-callback`, // Use exact URL, not window.location.origin
+        redirectUrlComplete: `/dashboard`
       });
     } catch (error: any) {
       console.error(`Error signing in with ${provider}:`, error);

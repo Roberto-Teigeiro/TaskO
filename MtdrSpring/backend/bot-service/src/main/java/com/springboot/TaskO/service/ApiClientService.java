@@ -35,45 +35,45 @@ public class ApiClientService {
     // Task operations
     public List<TaskItem> getAllTasks() {
         TaskItem[] tasks = restTemplate.getForObject(
-                apiBaseUrl + "/api/tasks", 
+                apiBaseUrl + "/tasks", 
                 TaskItem[].class);
         return Arrays.asList(tasks != null ? tasks : new TaskItem[0]);
     }
     
     public TaskItem createTask(TaskItem task) {
         return restTemplate.postForObject(
-                apiBaseUrl + "/api/tasks",
+                apiBaseUrl + "/tasks",
                 task,
                 TaskItem.class);
     }
     
     public TaskItem addTask(TaskItem task) {
         return restTemplate.postForObject(
-                apiBaseUrl + "/api/tasks",
+                apiBaseUrl + "/tasks",
                 task,
                 TaskItem.class);
     }
     
     public TaskItem getTaskById(UUID id) {
         return restTemplate.getForObject(
-                apiBaseUrl + "/api/tasks/{id}", 
+                apiBaseUrl + "/tasks/{id}", 
                 TaskItem.class,
                 id);
     }
     
     public void updateTask(TaskItem task, UUID id) {
-        restTemplate.put(apiBaseUrl + "/api/tasks/{id}", task, id);
+        restTemplate.put(apiBaseUrl + "/tasks/{id}", task, id);
     }
     
     public void deleteTask(UUID id) {
-        restTemplate.delete(apiBaseUrl + "/api/tasks/{id}", id);
+        restTemplate.delete(apiBaseUrl + "/tasks/{id}", id);
     }
     
     // User operations
     public UserItem registerUser(String username, String telegramId) {
         try {
             return restTemplate.postForObject(
-                    apiBaseUrl + "/api/users/register",
+                    apiBaseUrl + "/users/register",
                     Map.of("username", username, "telegramId", telegramId),
                     UserItem.class);
         } catch (Exception e) {
@@ -84,7 +84,7 @@ public class ApiClientService {
     
     public List<UserItem> getAllUsers() {
         UserItem[] users = restTemplate.getForObject(
-                apiBaseUrl + "/api/users",
+                apiBaseUrl + "/users",
                 UserItem[].class);
         return Arrays.asList(users != null ? users : new UserItem[0]);
     }
@@ -92,7 +92,7 @@ public class ApiClientService {
     // Project operations
     public List<ProjectItem> getAllProjects() {
         ProjectItem[] projects = restTemplate.getForObject(
-                apiBaseUrl + "/api/projects",
+                apiBaseUrl + "/projects",
                 ProjectItem[].class);
         return Arrays.asList(projects != null ? projects : new ProjectItem[0]);
     }
@@ -100,7 +100,7 @@ public class ApiClientService {
     // Sprint operations
     public List<SprintItem> getActiveSprintsByProject(UUID projectId) {
         SprintItem[] sprints = restTemplate.getForObject(
-                apiBaseUrl + "/api/projects/{projectId}/sprints/active",
+                apiBaseUrl + "/projects/{projectId}/sprints/active",
                 SprintItem[].class,
                 projectId);
         return Arrays.asList(sprints != null ? sprints : new SprintItem[0]);
@@ -109,7 +109,7 @@ public class ApiClientService {
     // Project member operations
     public List<ProjectMemberItem> getProjectMembers(UUID projectId) {
         ProjectMemberItem[] members = restTemplate.getForObject(
-                apiBaseUrl + "/api/projects/{projectId}/members",
+                apiBaseUrl + "/projects/{projectId}/members",
                 ProjectMemberItem[].class,
                 projectId);
         return Arrays.asList(members != null ? members : new ProjectMemberItem[0]);

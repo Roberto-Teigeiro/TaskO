@@ -1,4 +1,4 @@
-package com.springboot.MyTodoList.security;
+package com.springboot.TaskO.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
