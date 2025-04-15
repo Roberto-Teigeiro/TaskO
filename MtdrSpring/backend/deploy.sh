@@ -59,7 +59,7 @@ fi
 
 echo "Creating springboot deployments and services"
 echo CURRENTTIME is $CURRENTTIME  ...this will be appended to generated deployment yaml
-cp src/main/resources/todolistapp-springboot.yaml todolistapp-springboot-$CURRENTTIME.yaml
+cp todolistapp-springboot.yaml todolistapp-springboot-$CURRENTTIME.yaml
 
 # Replace all variables in the YAML file
 sed -e "s|%DOCKER_REGISTRY%|${DOCKER_REGISTRY}|g" todolistapp-springboot-${CURRENTTIME}.yaml > /tmp/todolistapp-springboot-${CURRENTTIME}.yaml

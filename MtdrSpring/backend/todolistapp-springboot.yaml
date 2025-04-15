@@ -10,7 +10,7 @@ spec:
   ports:
     - port: 80
       protocol: TCP
-      targetPort: 8080
+      targetPort: 80
   selector:
     app: todolistapp-frontend
 ---
@@ -55,7 +55,7 @@ spec:
     spec:
       containers:
         - name: todolistapp-frontend
-          image: %DOCKER_REGISTRY%/todolistapp-springboot-frontend:0.1
+          image: %DOCKER_REGISTRY%/frontend-service:0.1
           imagePullPolicy: Always
           env:
             - name: OCI_REGION
@@ -96,7 +96,7 @@ spec:
     spec:
       containers:
         - name: todolistapp-api
-          image: %DOCKER_REGISTRY%/todolistapp-springboot-api:0.1
+          image: %DOCKER_REGISTRY%/api-service:0.1
           imagePullPolicy: Always
           env:
             - name: db_user
@@ -151,7 +151,7 @@ spec:
     spec:
       containers:
         - name: todolistapp-bot
-          image: %DOCKER_REGISTRY%/todolistapp-springboot-bot:0.1
+          image: %DOCKER_REGISTRY%/bot-service:0.1
           imagePullPolicy: Always
           env:
             - name: OCI_REGION

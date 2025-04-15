@@ -1,73 +1,67 @@
 #!/bin/bash
+# filepath: c:\Users\ID140\Documents\TaskO\MtdrSpring\backend\build.sh
+# Script to build and push api-service, bot-service, and frontend-service images
 
-# Version for all services
-export IMAGE_VERSION=0.1
-
+# Get Docker registry or exit if not available
 if [ -z "$DOCKER_REGISTRY" ]; then
     export DOCKER_REGISTRY=$(state_get DOCKER_REGISTRY)
-    echo "DOCKER_REGISTRY set."
+    echo "DOCKER_REGISTRY set from state."
 fi
 if [ -z "$DOCKER_REGISTRY" ]; then
     echo "Error: DOCKER_REGISTRY env variable needs to be set!"
     exit 1
 fi
 
-# Build and push frontend service
-echo "Building frontend service..."
-export FRONTEND_IMAGE_NAME=todolistapp-springboot-frontend
-export FRONTEND_IMAGE=${DOCKER_REGISTRY}/${FRONTEND_IMAGE_NAME}:${IMAGE_VERSION}
-mvn clean package spring-boot:repackage -f frontend-service/pom.xml
-docker build -f frontend-service/Dockerfile -t $FRONTEND_IMAGE frontend-service/
-docker push $FRONTEND_IMAGE
-if [ $? -eq 0 ]; then
-    docker rmi "$FRONTEND_IMAGE" #local
-fi
+# Version for all images
+export IMAGE_VERSION=0.1
+
+# Build all modules at once using parent POM
+echo "Building all modules..."
+mvn clean package
 
 # Build and push API service
-echo "Building API service..."
-export API_IMAGE_NAME=todolistapp-springboot-api
-export API_IMAGE=${DOCKER_REGISTRY}/${API_IMAGE_NAME}:${IMAGE_VERSION}
-mvn clean package spring-boot:repackage -f api-service/pom.xml
-docker build -f api-service/Dockerfile -t $API_IMAGE api-service/
+echo "Building and pushing api-service image..."
+cd api-service
+export API_IMAGE=${DOCKER_REGISTRY}/api-service:${IMAGE_VERSION}
+docker build -t $API_IMAGE .
 docker push $API_IMAGE
 if [ $? -eq 0 ]; then
-    docker rmi "$API_IMAGE" #local
+    echo "api-service image pushed successfully"
+    docker rmi "$API_IMAGE" #remove local image
+else
+    echo "Failed to push api-service image"
+    exit 1
 fi
+cd ..
 
-# Build and push bot service
-echo "Building bot service..."
-export BOT_IMAGE_NAME=todolistapp-springboot-bot
-export BOT_IMAGE=${DOCKER_REGISTRY}/${BOT_IMAGE_NAME}:${IMAGE_VERSION}
-mvn clean package spring-boot:repackage -f bot-service/pom.xml
-docker build -f bot-service/Dockerfile -t $BOT_IMAGE bot-service/
+# Build and push Bot service
+echo "Building and pushing bot-service image..."
+cd bot-service
+export BOT_IMAGE=${DOCKER_REGISTRY}/bot-service:${IMAGE_VERSION}
+docker build -t $BOT_IMAGE .
 docker push $BOT_IMAGE
 if [ $? -eq 0 ]; then
-    docker rmi "$BOT_IMAGE" #local
-fi
-
-echo "Creating springboot deployments and services"
-export CURRENTTIME=$( date '+%F_%H:%M:%S' )
-echo CURRENTTIME is $CURRENTTIME  ...this will be appended to generated deployment yaml
-
-# Create a simpler filename without timestamp or use a fixed name
-export DEPLOYMENT_FILE="todolistapp-springboot-latest.yaml"
-cp src/main/resources/todolistapp-springboot.yaml $DEPLOYMENT_FILE
-
-# Replace all variables in the YAML file
-sed -i -e "s|%DOCKER_REGISTRY%|${DOCKER_REGISTRY}|g" $DEPLOYMENT_FILE
-sed -i -e "s|%TODO_PDB_NAME%|${TODO_PDB_NAME}|g" $DEPLOYMENT_FILE
-sed -i -e "s|%OCI_REGION%|${OCI_REGION}|g" $DEPLOYMENT_FILE
-sed -i -e "s|%UI_USERNAME%|${UI_USERNAME}|g" $DEPLOYMENT_FILE
-sed -i -e "s|%BOT_TOKEN%|${BOT_TOKEN}|g" $DEPLOYMENT_FILE
-sed -i -e "s|%BOT_USERNAME%|${BOT_USERNAME}|g" $DEPLOYMENT_FILE
-
-# Apply the configuration
-if [ -z "$1" ]; then
-    kubectl apply -f $SCRIPT_DIR/$DEPLOYMENT_FILE -n mtdrworkshop
+    echo "bot-service image pushed successfully"
+    docker rmi "$BOT_IMAGE" #remove local image
 else
-    kubectl apply -f <(istioctl kube-inject -f $SCRIPT_DIR/$DEPLOYMENT_FILE) -n mtdrworkshop
+    echo "Failed to push bot-service image"
+    exit 1
 fi
+cd ..
 
-# Optionally, keep a timestamped copy for audit purposes
-cp $DEPLOYMENT_FILE todolistapp-springboot-$CURRENTTIME.yaml
-echo "All microservices built and pushed successfully."
+# Build and push Frontend service
+echo "Building and pushing frontend-service image..."
+cd frontend-service
+export FRONTEND_IMAGE=${DOCKER_REGISTRY}/frontend-service:${IMAGE_VERSION}
+docker build -t $FRONTEND_IMAGE .
+docker push $FRONTEND_IMAGE
+if [ $? -eq 0 ]; then
+    echo "frontend-service image pushed successfully"
+    docker rmi "$FRONTEND_IMAGE" #remove local image
+else
+    echo "Failed to push frontend-service image"
+    exit 1
+fi
+cd ..
+
+echo "All services built and pushed successfully!"
