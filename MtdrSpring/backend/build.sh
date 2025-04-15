@@ -10,6 +10,21 @@ if [ -z "$DOCKER_REGISTRY" ]; then
     exit 1
 fi
 
+# Check for Docker credentials
+if [ -z "$DOCKER_USERNAME" ] || [ -z "$DOCKER_PASSWORD" ]; then
+    echo "Error: DOCKER_USERNAME and DOCKER_PASSWORD environment variables must be set!"
+    exit 1
+fi
+
+# Authenticate with Docker registry
+echo "Authenticating with Docker registry..."
+echo "$DOCKER_PASSWORD" | docker login $DOCKER_REGISTRY -u $DOCKER_USERNAME --password-stdin
+if [ $? -ne 0 ]; then
+    echo "Docker login failed! Please check your credentials."
+    exit 1
+fi
+echo "Authentication successful."
+
 # Base image name and version
 export BASE_NAME=todolistapp-springboot
 export IMAGE_VERSION=0.1
@@ -61,5 +76,8 @@ else
     exit 1
 fi
 cd ..
+
+# Log out from Docker registry
+docker logout $DOCKER_REGISTRY
 
 echo "All services built and pushed successfully."
