@@ -6,12 +6,18 @@ if [ -z "$DOCKER_REGISTRY" ]; then
     echo "DOCKER_REGISTRY set to mx-queretaro-1.ocir.io"
 fi
 
-# Set Docker credentials for Oracle Cloud Infrastructure Registry
-export DOCKER_USERNAME="axuo1dsetmvp/a01643651"
-# You'll need an Auth Token from your Oracle Cloud account
-read -sp "Enter your Oracle Cloud Auth Token: " DOCKER_PASSWORD
-echo ""
-export DOCKER_PASSWORD
+# Check for Docker credentials in environment variables
+if [ -z "$DOCKER_USERNAME" ]; then
+    export DOCKER_USERNAME="axuo1dsetmvp/a01643651@tec.mx"
+    echo "DOCKER_USERNAME set from script"
+fi
+
+if [ -z "$DOCKER_PASSWORD" ]; then
+    echo "DOCKER_PASSWORD environment variable is not set!"
+    echo "Please export DOCKER_PASSWORD before running this script:"
+    echo "export DOCKER_PASSWORD=\"your-auth-token\""
+    exit 1
+fi
 
 # Authenticate with Docker registry
 echo "Authenticating with Docker registry..."
@@ -27,8 +33,6 @@ echo "Authentication successful."
 # Base image name and version
 export BASE_NAME=todolistapp-springboot
 export IMAGE_VERSION=0.1
-
-# Rest of your script remains unchanged
 
 # Build and push for api-service
 echo "Building api-service..."
@@ -77,8 +81,5 @@ else
     exit 1
 fi
 cd ..
-
-# Log out from Docker registry
-docker logout $DOCKER_REGISTRY
 
 echo "All services built and pushed successfully."
