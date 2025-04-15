@@ -59,11 +59,14 @@ build_service() {
     echo ""
 }
 
+# ...existing code...
+
 # Main execution
 echo "Starting build process for all services..."
 
-# Search for services in the backend directory
-BACKEND_DIR="c:/Users/ID140/Documents/TaskO/MtdrSpring/backend"
+# Use the current directory as the backend directory
+BACKEND_DIR=$(pwd)
+
 if [ -d "$BACKEND_DIR" ]; then
     # Process api-service if it exists
     if [ -d "$BACKEND_DIR/api-service" ]; then
@@ -79,7 +82,9 @@ if [ -d "$BACKEND_DIR" ]; then
         fi
     done
 else
-    echo "Backend directory not found at $BACKEND_DIR"
+    echo "Backend directory not found"
 fi
+
+# ...existing code...
 
 echo "Build process completed for all services"
