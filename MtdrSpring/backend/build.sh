@@ -1,5 +1,4 @@
 #!/bin/bash
-# filepath: c:\Users\ID140\Documents\TaskO\MtdrSpring\build-all.sh
 
 # Source environment variables
 if [ -f "$MTDRWORKSHOP_LOCATION/env.sh" ]; then
@@ -59,32 +58,17 @@ build_service() {
     echo ""
 }
 
-# ...existing code...
-
 # Main execution
 echo "Starting build process for all services..."
 
 # Use the current directory as the backend directory
 BACKEND_DIR=$(pwd)
 
-if [ -d "$BACKEND_DIR" ]; then
-    # Process api-service if it exists
-    if [ -d "$BACKEND_DIR/api-service" ]; then
-        build_service "$BACKEND_DIR/api-service"
+# Find and process all service directories in backend
+for service_dir in "$BACKEND_DIR"/*-service; do
+    if [ -d "$service_dir" ] && [ -f "$service_dir/pom.xml" ]; then
+        build_service "$service_dir"
     fi
-    
-    # Find and build all other direct service directories in backend
-    for service_dir in "$BACKEND_DIR"/*; do
-        if [ -d "$service_dir" ] && [ -f "$service_dir/pom.xml" ]; then
-            if [ "$(basename $service_dir)" != "api-service" ]; then  # Skip if already processed
-                build_service "$service_dir"
-            fi
-        fi
-    done
-else
-    echo "Backend directory not found"
-fi
-
-# ...existing code...
+done
 
 echo "Build process completed for all services"
