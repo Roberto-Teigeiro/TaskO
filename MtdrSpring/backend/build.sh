@@ -1,74 +1,65 @@
 #!/bin/bash
 
-# Source environment variables
-if [ -f "$MTDRWORKSHOP_LOCATION/env.sh" ]; then
-    source "$MTDRWORKSHOP_LOCATION/env.sh"
-fi
-
-# Set default values
-export IMAGE_VERSION=0.1
-
-# Check for Docker registry
+# Checking Docker registry configuration
 if [ -z "$DOCKER_REGISTRY" ]; then
     export DOCKER_REGISTRY=$(state_get DOCKER_REGISTRY)
-    echo "DOCKER_REGISTRY set from state."
+    echo "DOCKER_REGISTRY set."
 fi
 if [ -z "$DOCKER_REGISTRY" ]; then
     echo "Error: DOCKER_REGISTRY env variable needs to be set!"
     exit 1
 fi
 
-# Function to build and push a service
-build_service() {
-    local service_dir=$1
-    local service_name=$(basename $service_dir)
-    
-    echo "===== Building $service_name ====="
-    
-    # Navigate to service directory
-    cd $service_dir
-    
-    # Check if this is a Spring Boot project
-    if [ -f "pom.xml" ]; then
-        echo "Building Spring Boot application: $service_name"
-        mvn clean package spring-boot:repackage
-        
-        # Check if Dockerfile exists
-        if [ -f "Dockerfile" ]; then
-            local IMAGE=${DOCKER_REGISTRY}/${service_name}:${IMAGE_VERSION}
-            echo "Building Docker image: $IMAGE"
-            docker build -f Dockerfile -t $IMAGE .
-            
-            echo "Pushing Docker image: $IMAGE"
-            docker push $IMAGE
-            if [ $? -eq 0 ]; then
-                docker rmi "$IMAGE" # clean up local image
-                echo "Successfully built and pushed: $service_name"
-            else
-                echo "Failed to push image for: $service_name"
-            fi
-        else
-            echo "No Dockerfile found for $service_name, skipping Docker build"
-        fi
-    else
-        echo "Not a Spring Boot application, skipping: $service_name"
-    fi
-    
-    cd - > /dev/null # Return to previous directory
-    echo ""
-}
+# Base image name and version
+export BASE_NAME=todolistapp-springboot
+export IMAGE_VERSION=0.1
 
-# Main execution
-echo "Starting build process for all services..."
+# Build and push for api-service
+echo "Building api-service..."
+cd api-service
+mvn clean package spring-boot:repackage
+export API_IMAGE=${DOCKER_REGISTRY}/${BASE_NAME}-api:${IMAGE_VERSION}
+docker build -f Dockerfile -t $API_IMAGE .
+docker push $API_IMAGE
+if [ $? -eq 0 ]; then
+    docker rmi "$API_IMAGE" #local
+    echo "api-service image built and pushed successfully."
+else
+    echo "Failed to push api-service image."
+    exit 1
+fi
+cd ..
 
-# Use the current directory as the backend directory
-BACKEND_DIR=$(pwd)
+# Build and push for bot-service
+echo "Building bot-service..."
+cd bot-service
+mvn clean package spring-boot:repackage
+export BOT_IMAGE=${DOCKER_REGISTRY}/${BASE_NAME}-bot:${IMAGE_VERSION}
+docker build -f Dockerfile -t $BOT_IMAGE .
+docker push $BOT_IMAGE
+if [ $? -eq 0 ]; then
+    docker rmi "$BOT_IMAGE" #local
+    echo "bot-service image built and pushed successfully."
+else
+    echo "Failed to push bot-service image."
+    exit 1
+fi
+cd ..
 
-# Find and process all service directories in backend
-for service_dir in "$BACKEND_DIR"/*-service; do
-    if [ -d "$service_dir" ] && [ -f "$service_dir/pom.xml" ]; then
-        build_service "$service_dir"
-    fi
-done
+# Build and push for frontend-service
+echo "Building frontend-service..."
+cd frontend-service
+mvn clean package
+export FRONTEND_IMAGE=${DOCKER_REGISTRY}/${BASE_NAME}-frontend:${IMAGE_VERSION}
+docker build -f Dockerfile -t $FRONTEND_IMAGE .
+docker push $FRONTEND_IMAGE
+if [ $? -eq 0 ]; then
+    docker rmi "$FRONTEND_IMAGE" #local
+    echo "frontend-service image built and pushed successfully."
+else
+    echo "Failed to push frontend-service image."
+    exit 1
+fi
+cd ..
 
-echo "Build process completed for all services"
+echo "All services built and pushed successfully."
