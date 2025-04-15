@@ -22,7 +22,7 @@ spec:
         - containerPort: 8081
         env:
         - name: API_SERVICE_URL
-          value: "http://api-service:8080"
+          value: "http://todolistapp-api-service:8080"
         - name: BOT_TOKEN
           valueFrom:
             secretKeyRef:
