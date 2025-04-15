@@ -1,13 +1,10 @@
-FROM nginx:1.25-alpine
+FROM nginx:1.27-alpine-slim
 
-# Create directory for static files
+# Create directory for static files (if needed)
 RUN mkdir -p /usr/share/nginx/html
 
-# Copy the static files
-COPY target/classes/ /usr/share/nginx/html/
-
-# If you have specific static files location, adjust the path
-# COPY target/classes/static/ /usr/share/nginx/html/
+# Copy the already-built static files from Maven target directory
+COPY target/frontend-static/ /usr/share/nginx/html/
 
 # Copy nginx config
 COPY nginx.conf /etc/nginx/conf.d/default.conf
