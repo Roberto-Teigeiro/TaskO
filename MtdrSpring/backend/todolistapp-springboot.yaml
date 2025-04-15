@@ -1,51 +1,102 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: todolistapp-springboot-service
+  name: todolistapp-frontend-service
   annotations:
     oci.oraclecloud.com/loadbalancer-policy: "IP_HASH"
 spec:
   type: LoadBalancer
   externalTrafficPolicy: Local
-
   ports:
     - port: 80
       protocol: TCP
       targetPort: 8080
   selector:
-    app: todolistapp-springboot
+    app: todolistapp-frontend
 ---
-#this is new stuff for hosting on the load balancer
 apiVersion: v1
 kind: Service
 metadata:
-  name: todolistapp-backend-router
+  name: todolistapp-api-service
 spec:
-  selector:
-    app: todolistapp-springboot
   ports:
     - protocol: TCP
-      port: 80
-      targetPort: http
+      port: 8080
+      targetPort: 8080
+  selector:
+    app: todolistapp-api
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: todolistapp-bot-service
+spec:
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+  selector:
+    app: todolistapp-bot
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: todolistapp-springboot-deployment
+  name: todolistapp-frontend-deployment
 spec:
   selector:
     matchLabels:
-      app: todolistapp-springboot
+      app: todolistapp-frontend
   replicas: 2
   template:
     metadata:
       labels:
-        app: todolistapp-springboot
+        app: todolistapp-frontend
         version: v1
     spec:
       containers:
-        - name: todolistapp-springboot
-          image: %DOCKER_REGISTRY%/todolistapp-springboot:0.1
+        - name: todolistapp-frontend
+          image: %DOCKER_REGISTRY%/axuo1dsetmvp/todoapp/todolistapp-springboot-frontend:0.1
+          imagePullPolicy: Always
+          env:
+            - name: OCI_REGION
+              value: "%OCI_REGION%"
+            - name: ui_username
+              value: "%UI_USERNAME%"
+            - name: ui_password
+              valueFrom:
+                secretKeyRef:
+                  name: frontendadmin
+                  key: password
+                  optional: true
+          ports:
+            - containerPort: 8080
+      restartPolicy: Always
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: DoNotSchedule
+          labelSelector:
+            matchLabels:
+              app: todolistapp-frontend
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: todolistapp-api-deployment
+spec:
+  selector:
+    matchLabels:
+      app: todolistapp-api
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: todolistapp-api
+        version: v1
+    spec:
+      containers:
+        - name: todolistapp-api
+          image: %DOCKER_REGISTRY%/axuo1dsetmvp/todoapp/todolistapp-springboot-api:0.1
           imagePullPolicy: Always
           env:
             - name: db_user
@@ -64,19 +115,12 @@ spec:
                   name: dbuser
                   key: dbpassword
                   optional: true
-            - name: ui_username
-              value: "%UI_USERNAME%"
-            - name: ui_password
-              valueFrom:
-                secretKeyRef:
-                  name: frontendadmin
-                  key: password
-                  optional: true
           volumeMounts:
             - name: creds
               mountPath: /mtdrworkshop/creds
           ports:
             - containerPort: 8080
+              name: http
       restartPolicy: Always
       volumes:
         - name: creds
@@ -88,5 +132,42 @@ spec:
           whenUnsatisfiable: DoNotSchedule
           labelSelector:
             matchLabels:
-              app: todolistapp-springboot
+              app: todolistapp-api
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: todolistapp-bot-deployment
+spec:
+  selector:
+    matchLabels:
+      app: todolistapp-bot
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: todolistapp-bot
+        version: v1
+    spec:
+      containers:
+        - name: todolistapp-bot
+          image: %DOCKER_REGISTRY%/axuo1dsetmvp/todoapp/todolistapp-springboot-bot:0.1
+          imagePullPolicy: Always
+          env:
+            - name: OCI_REGION
+              value: "%OCI_REGION%"
+            - name: BOT_TOKEN
+              value: "%BOT_TOKEN%"
+            - name: BOT_USERNAME
+              value: "%BOT_USERNAME%"
+          ports:
+            - containerPort: 8080
+      restartPolicy: Always
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: DoNotSchedule
+          labelSelector:
+            matchLabels:
+              app: todolistapp-bot
 ---

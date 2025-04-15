@@ -1,87 +1,102 @@
 #!/bin/bash
+SCRIPT_DIR=$(pwd)
 
-# Checking Docker registry configuration
+#Validation
 if [ -z "$DOCKER_REGISTRY" ]; then
     export DOCKER_REGISTRY=mx-queretaro-1.ocir.io
     echo "DOCKER_REGISTRY set to mx-queretaro-1.ocir.io"
 fi
 
-# Check for Docker credentials in environment variables
-if [ -z "$DOCKER_USERNAME" ]; then
-    export DOCKER_USERNAME="axuo1dsetmvp/a01643651@tec.mx"
-    echo "DOCKER_USERNAME set from script"
+if [ -z "$TODO_PDB_NAME" ]; then
+    export TODO_PDB_NAME=$(state_get MTDR_DB_NAME)
+    echo "TODO_PDB_NAME set."
 fi
-
-if [ -z "$DOCKER_PASSWORD" ]; then
-    echo "DOCKER_PASSWORD environment variable is not set!"
-    echo "Please export DOCKER_PASSWORD before running this script:"
-    echo "export DOCKER_PASSWORD=\"your-auth-token\""
+if [ -z "$TODO_PDB_NAME" ]; then
+    echo "Error: TODO_PDB_NAME env variable needs to be set!"
     exit 1
 fi
 
-# Authenticate with Docker registry
-echo "Authenticating with Docker registry..."
-echo "$DOCKER_PASSWORD" | docker login $DOCKER_REGISTRY -u $DOCKER_USERNAME --password-stdin
-if [ $? -ne 0 ]; then
-    echo "Docker login failed! Please check your credentials."
-    echo "For Oracle Cloud, username should be: <tenancy-namespace>/<username>"
-    echo "Password should be your Auth Token, not your Oracle Cloud password"
-    exit 1
+if [ -z "$OCI_REGION" ]; then
+    export OCI_REGION=mx-queretaro-1
+    echo "OCI_REGION set to mx-queretaro-1"
 fi
-echo "Authentication successful."
 
-# Base image name and version
+if [ -z "$UI_USERNAME" ]; then
+    export UI_USERNAME=a01643651
+    echo "UI_USERNAME set to a01643651"
+fi
+
+if [ -z "$BOT_TOKEN" ]; then
+    echo "BOT_TOKEN not set. Will get it with state_get"
+    export BOT_TOKEN=$(state_get BOT_TOKEN)
+fi
+if [ -z "$BOT_TOKEN" ]; then
+    echo "Warning: BOT_TOKEN env variable not set. Bot service may not work properly."
+    # Not exiting as this might be optional
+    export BOT_TOKEN="sample-token"
+fi
+
+if [ -z "$BOT_USERNAME" ]; then
+    export BOT_USERNAME="samplebot"
+    echo "BOT_USERNAME set to samplebot"
+fi
+
+# Use consistent variables matching build.sh
 export NAMESPACE=axuo1dsetmvp
 export REPO_NAME=todoapp
 export BASE_NAME=todolistapp-springboot
 export IMAGE_VERSION=0.1
 
-# Build and push for api-service
-echo "Building api-service..."
-cd api-service
-mvn clean package spring-boot:repackage
-export API_IMAGE=${DOCKER_REGISTRY}/${NAMESPACE}/${REPO_NAME}/${BASE_NAME}-api:${IMAGE_VERSION}
-docker build -f Dockerfile -t $API_IMAGE .
-docker push $API_IMAGE
-if [ $? -eq 0 ]; then
-    docker rmi "$API_IMAGE" #local
-    echo "api-service image built and pushed successfully."
-else
-    echo "Failed to push api-service image."
+export CURRENTTIME=$( date '+%F_%H:%M:%S' )
+echo "Deployment timestamp: $CURRENTTIME"
+
+# Check for base deployment YAML
+if [ ! -f "todolistapp-springboot.yaml" ]; then
+    echo "Error: todolistapp-springboot.yaml not found."
+    echo "Available YAML files:"
+    ls -la *.yaml
     exit 1
 fi
-cd ..
 
-# Build and push for bot-service
-echo "Building bot-service..."
-cd bot-service
-mvn clean package spring-boot:repackage
-export BOT_IMAGE=${DOCKER_REGISTRY}/${NAMESPACE}/${REPO_NAME}/${BASE_NAME}-bot:${IMAGE_VERSION}
-docker build -f Dockerfile -t $BOT_IMAGE .
-docker push $BOT_IMAGE
-if [ $? -eq 0 ]; then
-    docker rmi "$BOT_IMAGE" #local
-    echo "bot-service image built and pushed successfully."
+# Create deployment files
+echo "===== Creating deployment files ====="
+cp todolistapp-springboot.yaml todolistapp-springboot-$CURRENTTIME.yaml
+
+# Replace variables in the deployment file
+echo "===== Configuring deployment ====="
+sed -i "s|%DOCKER_REGISTRY%|${DOCKER_REGISTRY}|g" todolistapp-springboot-$CURRENTTIME.yaml
+sed -i "s|%TODO_PDB_NAME%|${TODO_PDB_NAME}|g" todolistapp-springboot-$CURRENTTIME.yaml
+sed -i "s|%OCI_REGION%|${OCI_REGION}|g" todolistapp-springboot-$CURRENTTIME.yaml
+sed -i "s|%UI_USERNAME%|${UI_USERNAME}|g" todolistapp-springboot-$CURRENTTIME.yaml
+sed -i "s|%BOT_TOKEN%|${BOT_TOKEN}|g" todolistapp-springboot-$CURRENTTIME.yaml
+sed -i "s|%BOT_USERNAME%|${BOT_USERNAME}|g" todolistapp-springboot-$CURRENTTIME.yaml
+
+# No longer needed as template YAML already has correct image paths
+# This caused issues by replacing only part of the image path
+# sed -i "s|image: mx-queretaro-1.ocir.io/todolistapp-springboot|image: mx-queretaro-1.ocir.io/axuo1dsetmvp/todoapp/todolistapp-springboot|g" todolistapp-springboot-$CURRENTTIME.yaml
+
+echo "Deployment file created: todolistapp-springboot-$CURRENTTIME.yaml"
+
+# Apply Kubernetes resources
+if [ -z "$1" ]; then
+    echo "Applying deployment..."
+    kubectl apply -f $SCRIPT_DIR/todolistapp-springboot-$CURRENTTIME.yaml -n mtdrworkshop
 else
-    echo "Failed to push bot-service image."
-    exit 1
+    echo "Applying deployment with Istio sidecar injection..."
+    kubectl apply -f <(istioctl kube-inject -f $SCRIPT_DIR/todolistapp-springboot-$CURRENTTIME.yaml) -n mtdrworkshop
 fi
-cd ..
 
-# Build and push for frontend-service
-echo "Building frontend-service..."
-cd frontend-service
-mvn clean package
-export FRONTEND_IMAGE=${DOCKER_REGISTRY}/${NAMESPACE}/${REPO_NAME}/${BASE_NAME}-frontend:${IMAGE_VERSION}
-docker build -f Dockerfile -t $FRONTEND_IMAGE .
-docker push $FRONTEND_IMAGE
+echo "===== Deployment completed ====="
+echo "Checking pod status..."
+kubectl get pods -n mtdrworkshop
+
+# Wait for pods to be running
+echo "Waiting for pods to be ready..."
+kubectl wait --for=condition=ready pod --all -n mtdrworkshop --timeout=300s
 if [ $? -eq 0 ]; then
-    docker rmi "$FRONTEND_IMAGE" #local
-    echo "frontend-service image built and pushed successfully."
+    echo "All pods are running successfully."
 else
-    echo "Failed to push frontend-service image."
-    exit 1
+    echo "Warning: Some pods may not be ready yet. Check status with: kubectl get pods -n mtdrworkshop"
 fi
-cd ..
 
-echo "All services built and pushed successfully."
+echo "Deployment completed at $(date)"
