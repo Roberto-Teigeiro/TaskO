@@ -55,7 +55,7 @@ spec:
     spec:
       containers:
         - name: todolistapp-frontend
-          image: %DOCKER_REGISTRY%/axuo1dsetmvp/todoapp/todolistapp-springboot-frontend:0.1
+          image: %DOCKER_REGISTRY%/todolistapp-springboot-frontend:0.1
           imagePullPolicy: Always
           env:
             - name: OCI_REGION
@@ -96,7 +96,7 @@ spec:
     spec:
       containers:
         - name: todolistapp-api
-          image: %DOCKER_REGISTRY%/axuo1dsetmvp/todoapp/todolistapp-springboot-api:0.1
+          image: %DOCKER_REGISTRY%/todolistapp-springboot-api:0.1
           imagePullPolicy: Always
           env:
             - name: db_user
@@ -151,7 +151,7 @@ spec:
     spec:
       containers:
         - name: todolistapp-bot
-          image: %DOCKER_REGISTRY%/axuo1dsetmvp/todoapp/todolistapp-springboot-bot:0.1
+          image: %DOCKER_REGISTRY%/todolistapp-springboot-bot:0.1
           imagePullPolicy: Always
           env:
             - name: OCI_REGION
