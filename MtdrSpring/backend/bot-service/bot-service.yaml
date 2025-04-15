@@ -1,0 +1,48 @@
+# bot-service.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bot-service-deployment
+  namespace: mtdrworkshop
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: bot-service
+  template:
+    metadata:
+      labels:
+        app: bot-service
+    spec:
+      containers:
+      - name: bot-service
+        image: ${DOCKER_REGISTRY}/bot-service:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8081
+        env:
+        - name: API_SERVICE_URL
+          value: "http://api-service:8080"
+        - name: BOT_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: telegram-bot-secret
+              key: bot-token
+        - name: BOT_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: telegram-bot-secret
+              key: bot-username
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: bot-service
+  namespace: mtdrworkshop
+spec:
+  selector:
+    app: bot-service
+  ports:
+  - port: 8081
+    targetPort: 8081
+  type: ClusterIP
