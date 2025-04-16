@@ -28,12 +28,12 @@ spec:
         - name: UI_USERNAME
           value: "${UI_USERNAME}"
         - name: SPRING_DATASOURCE_URL
-          value: "jdbc:oracle:thin:@${TODO_PDB_NAME}_tp?TNS_ADMIN=/app/db_wallet"
+          value: "jdbc:oracle:thin:@%TODO_PDB_NAME%_tp?TNS_ADMIN=/mtdrworkshop/creds"
         volumeMounts:
-        - name: db-wallet
-          mountPath: /app/db_wallet
+          - name: creds
+            mountPath: /mtdrworkshop/creds
       volumes:
-      - name: db-wallet
+      - name: creds
         secret:
           secretName: db-wallet-secret
 ---
