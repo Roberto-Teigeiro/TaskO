@@ -8,7 +8,7 @@ COPY target/bot-service-0.0.1-SNAPSHOT.jar bot-service.jar
 EXPOSE 8081
 
 # Environment variables
-ENV API_SERVICE_URL="http://todolistapp-api-service:8080"
+ENV API_SERVICE_URL="http://tasko-api-service:8080"
 ENV BOT_TOKEN=""
 ENV BOT_USERNAME=""
 ENV BOT_WEBHOOK_URL=""

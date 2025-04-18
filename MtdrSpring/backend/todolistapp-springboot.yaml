@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: todolistapp-frontend-service
+  name: tasko-frontend-service
   annotations:
     oci.oraclecloud.com/loadbalancer-policy: "IP_HASH"
 spec:
@@ -12,49 +12,49 @@ spec:
       protocol: TCP
       targetPort: 80
   selector:
-    app: todolistapp-frontend
+    app: tasko-frontend
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: todolistapp-api-service
+  name: tasko-api-service
 spec:
   ports:
     - protocol: TCP
       port: 8080
       targetPort: 8080
   selector:
-    app: todolistapp-api
+    app: tasko-api
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: todolistapp-bot-service
+  name: tasko-bot-service
 spec:
   ports:
     - protocol: TCP
       port: 8080
       targetPort: 8080
   selector:
-    app: todolistapp-bot
+    app: tasko-bot
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: todolistapp-frontend-deployment
+  name: tasko-frontend-deployment
 spec:
   selector:
     matchLabels:
-      app: todolistapp-frontend
+      app: tasko-frontend
   replicas: 2
   template:
     metadata:
       labels:
-        app: todolistapp-frontend
+        app: tasko-frontend
         version: v1
     spec:
       containers:
-        - name: todolistapp-frontend
+        - name: tasko-frontend
           image: %DOCKER_REGISTRY%/frontend-service:0.1
           imagePullPolicy: Always
           env:
@@ -77,25 +77,25 @@ spec:
           whenUnsatisfiable: DoNotSchedule
           labelSelector:
             matchLabels:
-              app: todolistapp-frontend
+              app: tasko-frontend
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: todolistapp-api-deployment
+  name: tasko-api-deployment
 spec:
   selector:
     matchLabels:
-      app: todolistapp-api
+      app: tasko-api
   replicas: 2
   template:
     metadata:
       labels:
-        app: todolistapp-api
+        app: tasko-api
         version: v1
     spec:
       containers:
-        - name: todolistapp-api
+        - name: tasko-api
           image: %DOCKER_REGISTRY%/api-service:0.1
           imagePullPolicy: Always
           env:
@@ -132,25 +132,25 @@ spec:
           whenUnsatisfiable: DoNotSchedule
           labelSelector:
             matchLabels:
-              app: todolistapp-api
+              app: tasko-api
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: todolistapp-bot-deployment
+  name: tasko-bot-deployment
 spec:
   selector:
     matchLabels:
-      app: todolistapp-bot
+      app: tasko-bot
   replicas: 1
   template:
     metadata:
       labels:
-        app: todolistapp-bot
+        app: tasko-bot
         version: v1
     spec:
       containers:
-        - name: todolistapp-bot
+        - name: tasko-bot
           image: %DOCKER_REGISTRY%/bot-service:0.1
           imagePullPolicy: Always
           env:
@@ -169,5 +169,5 @@ spec:
           whenUnsatisfiable: DoNotSchedule
           labelSelector:
             matchLabels:
-              app: todolistapp-bot
+              app: tasko-bot
 ---
