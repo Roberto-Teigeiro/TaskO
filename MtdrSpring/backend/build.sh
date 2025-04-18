@@ -1,6 +1,3 @@
-#!/bin/bash
-# filepath: c:\Users\ID140\Documents\TaskO\MtdrSpring\backend\build.sh
-# Script to build and push api-service, bot-service, and frontend-service images
 
 # Get Docker registry or exit if not available
 if [ -z "$DOCKER_REGISTRY" ]; then

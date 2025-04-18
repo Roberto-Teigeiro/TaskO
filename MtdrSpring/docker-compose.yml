@@ -1,6 +1,7 @@
+name: tasko
 services:
   # Spring Boot API service
-  api-service:
+  tasko-api-service:
     build:
       context: ./backend/api-service
       dockerfile: Dockerfile
@@ -15,29 +16,29 @@ services:
       - app-network
       
   # Bot service - Telegram bot interface
-  bot-service:
+  tasko-bot-service:
     build:
       context: ./backend/bot-service
       dockerfile: Dockerfile
     environment:
-      - API_SERVICE_URL=http://api-service:8080
+      - API_SERVICE_URL=http://tasko-api-service:8080
       - BOT_TOKEN=${BOT_TOKEN:-7732849112:AAGbtCOTuKAEud6QD_7_lC5My7LI6d6R5DQ}
       - BOT_USERNAME=${BOT_USERNAME:-manager_todoList}
-    ports:
+    #ports:
       # Only needed if using webhook mode - remove if using polling
-      - "8443:8443"  
+    #  - "8443:8443"  
     networks:
       - app-network
 
   # Frontend + Nginx service - user-facing interface
-  frontend:
+  tasko-frontend-service:
     build:
       context: ./backend/frontend-service
       dockerfile: Dockerfile
     ports:
       - "80:80"
     depends_on:
-      - api-service
+      - tasko-api-service
     networks:
       - app-network
 
