@@ -12,7 +12,7 @@ public class ForwardingController {
      * - Have file extensions (static resources)
      * - Are specifically excluded paths
      */
-    @RequestMapping(value = {"/**/{path:[^\\.]*}"})
+    @RequestMapping(value = {"/{path:^(?!api|assets).*$}/**"})
     public String forwardToRouterPath() {
         return "forward:/index.html";
     }
