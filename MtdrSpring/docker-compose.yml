@@ -1,0 +1,47 @@
+name: tasko
+services:
+  # Spring Boot API service
+  tasko-api-service:
+    build:
+      context: ./backend/api-service
+      dockerfile: Dockerfile
+    environment:
+      - TODO_PDB_NAME=${TODO_PDB_NAME:-todo_database}
+      - OCI_REGION=${OCI_REGION:-us-phoenix-1}
+      - UI_USERNAME=${UI_USERNAME:-admin}
+      - SPRING_DATASOURCE_URL=jdbc:oracle:thin:@mtdrdb291_medium?TNS_ADMIN=/app/db_wallet
+    volumes:
+      - ./backend/db_wallet:/app/db_wallet
+    networks:
+      - app-network
+      
+  # Bot service - Telegram bot interface
+  tasko-bot-service:
+    build:
+      context: ./backend/bot-service
+      dockerfile: Dockerfile
+    environment:
+      - API_SERVICE_URL=http://tasko-api-service:8080
+      - BOT_TOKEN=${BOT_TOKEN:-7732849112:AAGbtCOTuKAEud6QD_7_lC5My7LI6d6R5DQ}
+      - BOT_USERNAME=${BOT_USERNAME:-manager_todoList}
+    #ports:
+      # Only needed if using webhook mode - remove if using polling
+    #  - "8443:8443"  
+    networks:
+      - app-network
+
+  # Frontend + Nginx service - user-facing interface
+  tasko-frontend-service:
+    build:
+      context: ./backend/frontend-service
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    depends_on:
+      - tasko-api-service
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
