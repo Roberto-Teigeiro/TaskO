@@ -1,18 +1,15 @@
 package com.springboot.MyTodoList.repository;
 
 import com.springboot.MyTodoList.model.ProjectMemberItem;
-
-import java.util.List;
-
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+import java.util.UUID;
 
 @Repository
-public interface ProjectMemberItemRepository extends JpaRepository<ProjectMemberItem, String> {
-    @Query("SELECT t FROM TaskItem t WHERE t.taskId = ?1")  
-    List<ProjectMemberItem> findByUserId(String USERID);
-
-
+public interface ProjectMemberItemRepository extends JpaRepository<ProjectMemberItem, ProjectMemberItem.ProjectMemberKey> {
+    List<ProjectMemberItem> findByProjectId(UUID projectId);
+    List<ProjectMemberItem> findByUserId(String userId);
+    boolean existsByProjectIdAndUserId(UUID projectId, String userId);
 }

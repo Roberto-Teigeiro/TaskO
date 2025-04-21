@@ -7,33 +7,60 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+import java.util.UUID;
 
-
-@RequestMapping("/api")
 @RestController
+@RequestMapping("/api/projects")
+@CrossOrigin(origins = "*")
 public class ProjectMemberItemController {
     @Autowired
     private ProjectMemberItemService projectMemberItemService;
 
-    @GetMapping(value = "/projects/{userId}/any")
+    @PostMapping("/{projectId}/members")
+    public ResponseEntity<?> addProjectMember(
+            @PathVariable UUID projectId,
+            @RequestParam String userId,
+            @RequestParam String role) {
+        try {
+            ProjectMemberItem member = new ProjectMemberItem(projectId, userId, null, role);
+            ProjectMemberItem savedMember = projectMemberItemService.addProjectItem(member);
+            return ResponseEntity.ok(savedMember);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Failed to add project member: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/members/{userId}/exists")
     public ResponseEntity<Boolean> checkIfUserInProject(@PathVariable String userId) {
         try {
             Boolean userExists = projectMemberItemService.checkIfUserExists(userId);
-            return new ResponseEntity<>(userExists, HttpStatus.OK);
+            return ResponseEntity.ok(userExists);
         } catch (Exception e) {
-            return new ResponseEntity<>(false, HttpStatus.NOT_FOUND);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(false);
         }
     }
-    @GetMapping("/projects/{userId}")
+
+    @GetMapping("/members/{userId}")
     public ResponseEntity<ProjectMemberItem> getUserProjectData(@PathVariable String userId) {
         try {
-            // Directly return the ResponseEntity from the service
             return projectMemberItemService.getProjectMemberItemById(userId);
         } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
-    
 
-
+    @GetMapping("/{projectId}/members")
+    public ResponseEntity<List<ProjectMemberItem>> getProjectMembers(@PathVariable UUID projectId) {
+        try {
+            List<ProjectMemberItem> members = projectMemberItemService.findByProjectId(projectId);
+            return ResponseEntity.ok(members);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
 }
