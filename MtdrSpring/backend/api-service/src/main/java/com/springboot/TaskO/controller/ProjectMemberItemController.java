@@ -1,13 +1,14 @@
 package com.springboot.TaskO.controller;
 
 import com.springboot.TaskO.model.ProjectMemberItem;
+import com.springboot.TaskO.model.UserItem;
 import com.springboot.TaskO.service.ProjectMemberItemService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-
+import java.util.UUID;
 
 @RestController
 public class ProjectMemberItemController {
@@ -31,6 +32,11 @@ public class ProjectMemberItemController {
         } catch (Exception e) {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
+    }
+
+    @PostMapping(value = "/project/{projectId}/adduser/{teamId}")
+    public ResponseEntity<ProjectMemberItem> addUserToProject(@RequestBody String UserId, @PathVariable UUID projectId, @PathVariable UUID teamId) {
+       return projectMemberItemService.addUserToProject(UserId, projectId, teamId);
     }
     
 

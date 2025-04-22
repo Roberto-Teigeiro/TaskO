@@ -4,7 +4,26 @@
   padding: 2rem;
   text-align: center;
 }
+/* Add these animation keyframes to your global CSS file */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
 
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
 .logo {
   height: 6em;
   padding: 1.5em;
