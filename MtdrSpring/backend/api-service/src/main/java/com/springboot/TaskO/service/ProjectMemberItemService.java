@@ -1,6 +1,7 @@
 package com.springboot.TaskO.service;
 
 import com.springboot.TaskO.model.ProjectMemberItem;
+import com.springboot.TaskO.model.UserItem;
 import com.springboot.TaskO.repository.ProjectMemberItemRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -10,7 +11,6 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-
 @Service
 public class ProjectMemberItemService {
 
@@ -55,4 +55,13 @@ public class ProjectMemberItemService {
             throw new RuntimeException("Failed to add project member: " + e.getMessage());
         }
     }
+    public ResponseEntity<ProjectMemberItem> addUserToProject( String UserId, UUID projectId, UUID TeamId) {
+        ProjectMemberItem projectMemberItem = new ProjectMemberItem();
+        projectMemberItem.setTeamId(TeamId);
+        projectMemberItem.setUserId(UserId);
+        projectMemberItem.setProjectId(projectId);
+        projectMemberItemRepository.save(projectMemberItem);
+        return new ResponseEntity<>(projectMemberItem, HttpStatus.CREATED);
+    }
+
 }

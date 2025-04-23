@@ -25,7 +25,7 @@ public class CorsConfig {
     public CorsFilter corsFilter(){
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowedOrigins(List.of("http://localhost:3000","https://objectstorage.us-phoenix-1.oraclecloud.com",
-                "https://petstore.swagger.io"));
+                "https://petstore.swagger.io", "http://localhost:5173"));
         config.setAllowedMethods(List.of("GET","POST","PUT","OPTIONS","DELETE","PATCH"));
         // Remove this line as it overrides the previous setAllowedOrigins call
         // config.setAllowedOrigins(Collections.singletonList("*"));

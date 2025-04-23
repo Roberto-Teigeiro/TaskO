@@ -9,7 +9,7 @@ import CalendarPage from './components/pages/home/Calendar';
 import Sprints from './components/pages/home/Sprints';
 import { ChatButton } from './components/ChatBot';
 import SSOCallback from './components/SSOCallback'; // Import the SSOCallback component
-
+import Choosepath from './components/pages/choosepath/choosepath';
 function App() {
   const clerkPubKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
@@ -20,7 +20,7 @@ function App() {
           {/* Public Routes */}
           <Route path="/" element={<Register />} />
           <Route path="/login" element={<Login />} />
-          
+          <Route path="/choosepath" element={<Choosepath/>} />
           {/* Callback Route */}
           <Route path="/sso-callback" element={<SSOCallback />} />
 

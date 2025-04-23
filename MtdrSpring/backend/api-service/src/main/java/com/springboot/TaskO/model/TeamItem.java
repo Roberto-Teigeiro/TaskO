@@ -1,28 +1,36 @@
-package com.springboot.MyTodoList.model;
+package com.springboot.TaskO.model;
 
-import javax.persistence.*;
 import java.util.UUID;
 
+import javax.persistence.*;
+
 @Entity
-@Table(name = "TEAMS")
+@Table(name = "TEAM")
 public class TeamItem {
 
     @Id
-    @Column(name = "TEAMID", nullable = false, unique = true, columnDefinition = "RAW(16)")
+    @Column(name = "TEAMID", nullable = false, unique = true)
     private UUID teamId;
-
+    
+    @Column(name = "PROJECTID", nullable = false)
+    private UUID projectId;
+    
     @Column(name = "TEAMNAME", length = 255)
-    private String teamName;
+    private String name;
 
+    // Default constructor
     public TeamItem() {
         this.teamId = UUID.randomUUID();
     }
 
-    public TeamItem(UUID teamId, String teamName) {
+    // Constructor with fields
+    public TeamItem(UUID teamId, UUID projectId, String name) {
         this.teamId = teamId;
-        this.teamName = teamName;
+        this.projectId = projectId;
+        this.name = name;
     }
 
+    // Getters and setters
     public UUID getTeamId() {
         return teamId;
     }
@@ -31,19 +39,28 @@ public class TeamItem {
         this.teamId = teamId;
     }
 
-    public String getTeamName() {
-        return teamName;
+    public UUID getProjectId() {
+        return projectId;
     }
 
-    public void setTeamName(String teamName) {
-        this.teamName = teamName;
+    public void setProjectId(UUID projectId) {
+        this.projectId = projectId;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     @Override
     public String toString() {
-        return "TeamItem{" +
+        return "Teams{" +
                 "teamId=" + teamId +
-                ", teamName='" + teamName + '\'' +
+                ", projectId=" + projectId +
+                ", name='" + name + '\'' +
                 '}';
     }
-} 
+}
