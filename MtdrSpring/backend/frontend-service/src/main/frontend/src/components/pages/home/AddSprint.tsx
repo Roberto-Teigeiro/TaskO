@@ -9,45 +9,70 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { format } from "date-fns"
 import { CalendarIcon, Plus } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { useProjects } from '../../../context/ProjectContext';
 
 interface AddSprintDialogProps {
   onAddSprint?: (sprint: any) => void
 }
 
 export function AddSprintDialog({ onAddSprint }: AddSprintDialogProps) {
-  const [sprintId, setSprintId] = useState(1)
+  const { userProjects } = useProjects();
+  console.log(userProjects ,"sprintlog")
   const [open, setOpen] = useState(false)
   const [name, setName] = useState("")
   const [startDate, setStartDate] = useState<Date>()
   const [endDate, setEndDate] = useState<Date>()
-  const [progress, setProgress] = useState<number>(0)
-  const [status, setStatus] = useState("Not Started")
+  const [description, setDescription] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  const handleSubmit = () => {
-    const newSprint = {
-      id: sprintId,
-      name,
-      startDate: startDate ? format(startDate, "dd/MM/yyyy") : "",
-      endDate: endDate ? format(endDate, "dd/MM/yyyy") : "",
-      progress,
-      status,
-      tasks: [],
+  const handleSubmit = async () => {
+    if (!name || !startDate || !endDate) {
+      setError("Please fill in all required fields")
+      return
     }
 
-    if (onAddSprint) {
-      onAddSprint(newSprint)
+    setIsLoading(true)
+    setError(null)
+
+    try {
+      const response = await fetch('http://localhost:8080/sprint/add', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name,
+          description,
+          startDate: startDate.toISOString(),
+          endDate: endDate.toISOString(),
+          projectId: Array.isArray(userProjects) && userProjects[0] ? userProjects[0].projectId : null
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to create sprint')
+      } else{
+        console.log("Sprint created successfully")
+      }
+
+      const newSprint = await response.json()
+
+      if (onAddSprint) {
+        onAddSprint(newSprint)
+      }
+
+      // Reset form
+      setName("")
+      setStartDate(undefined)
+      setEndDate(undefined)
+      setDescription("")
+      setOpen(false)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred')
+    } finally {
+      setIsLoading(false)
     }
-    setSprintId(sprintId + 1)
-
-    // Reset form
-    setName("")
-    setStartDate(undefined)
-    setEndDate(undefined)
-    setProgress(0)
-    setStatus("Not Started")
-
-    // Close dialog
-    setOpen(false)
   }
 
   return (
@@ -64,12 +89,17 @@ export function AddSprintDialog({ onAddSprint }: AddSprintDialogProps) {
         
         <div className="space-y-4">
           <div>
-            <label htmlFor="name" className="block text-sm font-medium mb-1">Sprint Name</label>
+            <label htmlFor="name" className="block text-sm font-medium mb-1">Sprint Name *</label>
             <Input id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Enter sprint name" />
           </div>
           
           <div>
-            <label className="block text-sm font-medium mb-1">Start Date</label>
+            <label htmlFor="description" className="block text-sm font-medium mb-1">Description</label>
+            <Input id="description" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Enter sprint description" />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium mb-1">Start Date *</label>
             <Popover>
               <PopoverTrigger asChild>
                 <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !startDate && "text-muted-foreground")}> 
@@ -84,7 +114,7 @@ export function AddSprintDialog({ onAddSprint }: AddSprintDialogProps) {
           </div>
           
           <div>
-            <label className="block text-sm font-medium mb-1">End Date</label>
+            <label className="block text-sm font-medium mb-1">End Date *</label>
             <Popover>
               <PopoverTrigger asChild>
                 <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !endDate && "text-muted-foreground")}> 
@@ -97,23 +127,19 @@ export function AddSprintDialog({ onAddSprint }: AddSprintDialogProps) {
               </PopoverContent>
             </Popover>
           </div>
-          
-          <div>
-            <label htmlFor="progress" className="block text-sm font-medium mb-1">Progress</label>
-            <Input id="progress" type="number" value={progress} onChange={(e) => setProgress(Number(e.target.value))} min="0" max="100" className="w-full" />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium mb-1">Status</label>
-            <select className="w-full border-gray-300 rounded-md p-2" value={status} onChange={(e) => setStatus(e.target.value)}>
-              <option value="Not Started">Not Started</option>
-              <option value="In Progress">In Progress</option>
-              <option value="Completed">Completed</option>
-            </select>
-          </div>
+
+          {error && (
+            <div className="text-red-500 text-sm">{error}</div>
+          )}
           
           <div className="mt-4">
-            <Button className="bg-[#ff6767] hover:bg-[#ff5252] text-white w-full" onClick={handleSubmit}>Create Sprint</Button>
+            <Button 
+              className="bg-[#ff6767] hover:bg-[#ff5252] text-white w-full" 
+              onClick={handleSubmit}
+              disabled={isLoading}
+            >
+              {isLoading ? "Creating..." : "Create Sprint"}
+            </Button>
           </div>
         </div>
       </DialogContent>

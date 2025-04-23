@@ -10,13 +10,19 @@ import { Sidebar } from "@/components/Sidebar";
 import { TaskItem, CompletedTaskItem } from "@/components/ui/Task-item";
 import { ProgressCircle } from "@/components/ui/Progress-circle";
 import { useUser, useAuth } from "@clerk/react-router";
+import { useProjects } from '../../../context/ProjectContext';
 
 
 export default function Dashboard() {
   console.log("Dashboard component rendered");
   const { user, isLoaded, isSignedIn } = useUser(); // Add isSignedIn here
   const { getToken } = useAuth(); // Add getToken from useAuth
+  const { userProjects, loading, error } = useProjects();
 
+  // Add debugging
+  console.log('userProjects:', userProjects);
+  console.log('Type of userProjects:', typeof userProjects);
+  console.log('Is Array:', Array.isArray(userProjects));
 
   // Add this to your Dashboard.tsx component or similar
 useEffect(() => {
@@ -58,6 +64,17 @@ useEffect(() => {
   if (!isLoaded) {
     return <div>Loading...</div>;
   }
+
+  if (loading) {
+    return <div>Loading projects...</div>;
+  }
+
+  if (error) {
+    return <div>Error: {error}</div>;
+  }
+
+  // Ensure userProjects is an array before mapping
+  const projectsArray = Array.isArray(userProjects) ? userProjects : [];
 
   return (
     <div className="min-h-screen bg-[#f8f8fb] flex flex-col">
@@ -166,6 +183,22 @@ useEffect(() => {
                 </div>
               </div>
             </div>
+          </div>
+
+          <div>
+            <h1>Your Projects</h1>
+            {projectsArray.length === 0 ? (
+                <p>No projects found</p>
+            ) : (
+                <ul>
+                    {projectsArray.map((project) => (
+                        <li key={project.id}>
+                            <h3>{project.name}</h3>
+                            {/* Add other project details as needed */}
+                        </li>
+                    ))}
+                </ul>
+            )}
           </div>
         </div>
       </div>

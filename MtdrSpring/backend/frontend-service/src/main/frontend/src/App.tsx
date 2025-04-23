@@ -1,20 +1,20 @@
 ///Users/santosa/Documents/GitHub/TaskO/MtdrSpring/backend/src/main/frontend/src/App.tsx
 import { Route, Routes } from 'react-router-dom';
-import { ClerkProvider, SignedIn, SignedOut, RedirectToSignIn } from '@clerk/react-router';
+import { SignedIn, SignedOut, RedirectToSignIn } from '@clerk/react-router';
 import Dashboard from './components/pages/home/Dashboard';
 import Register from './components/pages/register/Register';
 import Login from './components/pages/login/Login';
 import Settings from "./components/pages/home/Settings";
 import CalendarPage from './components/pages/home/Calendar';
 import Sprints from './components/pages/home/Sprints';
-import { ChatButton } from './components/ChatBot';
 import SSOCallback from './components/SSOCallback'; // Import the SSOCallback component
-import Choosepath from './components/pages/choosepath/choosepath';
-function App() {
-  const clerkPubKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+import Choosepath from './components/pages/choosepath/Choosepath';
+import { ProjectProvider } from './context/ProjectContext';
 
+function App() {
+  
   return (
-    <ClerkProvider publishableKey={clerkPubKey} signInUrl="/login" signUpUrl="/">
+    <ProjectProvider>
       <div>
         <Routes>
           {/* Public Routes */}
@@ -82,9 +82,8 @@ function App() {
           <Route path="*" element={<Register />} />
       
         </Routes>
-        <ChatButton />
       </div>
-    </ClerkProvider>
+    </ProjectProvider>
   );
 }
 
