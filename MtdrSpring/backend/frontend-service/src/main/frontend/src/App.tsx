@@ -1,4 +1,4 @@
-///Users/santosa/Documents/GitHub/TaskO/MtdrSpring/backend/src/main/frontend/src/App.tsx
+///Users/santosa/Documents/GitHub/TaskO/MtdrSpring/backend/frontend-service/src/main/frontend/src/App.tsx
 import { Route, Routes } from 'react-router-dom';
 import { ClerkProvider, SignedIn, SignedOut, RedirectToSignIn } from '@clerk/react-router';
 import Dashboard from './components/pages/home/Dashboard';
@@ -9,7 +9,7 @@ import CalendarPage from './components/pages/home/Calendar';
 import Sprints from './components/pages/home/Sprints';
 import { ChatButton } from './components/ChatBot';
 import SSOCallback from './components/SSOCallback'; // Import the SSOCallback component
-import Choosepath from './components/pages/choosepath/choosepath';
+import Choosepath from './components/pages/choosepath/Choosepath';
 function App() {
   const clerkPubKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 

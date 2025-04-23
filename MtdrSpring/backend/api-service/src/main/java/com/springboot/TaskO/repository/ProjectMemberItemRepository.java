@@ -1,18 +1,23 @@
+///Users/santosa/Documents/GitHub/TaskO/MtdrSpring/backend/api-service/src/main/java/com/springboot/TaskO/repository/ProjectMemberItemRepository.java
 package com.springboot.TaskO.repository;
 
 import com.springboot.TaskO.model.ProjectMemberItem;
 
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
-
 @Repository
 public interface ProjectMemberItemRepository extends JpaRepository<ProjectMemberItem, String> {
-    @Query("SELECT t FROM TaskItem t WHERE t.taskId = ?1")  
-    List<ProjectMemberItem> findByUserId(String USERID);
-
-
+    @Query("SELECT p FROM ProjectMemberItem p WHERE p.userId = ?1")
+    List<ProjectMemberItem> findByUserId(String userId);
+    
+    @Query("SELECT p FROM ProjectMemberItem p WHERE p.projectId = ?1")
+    List<ProjectMemberItem> findByProjectId(UUID projectId);
+    
+    @Query("SELECT CASE WHEN COUNT(p) > 0 THEN true ELSE false END FROM ProjectMemberItem p WHERE p.projectId = ?1 AND p.userId = ?2")
+    boolean existsByProjectIdAndUserId(UUID projectId, String userId);
 }

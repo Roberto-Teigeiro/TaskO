@@ -1,7 +1,8 @@
-package com.springboot.MyTodoList.controller;
+///Users/santosa/Documents/GitHub/TaskO/MtdrSpring/backend/api-service/src/main/java/com/springboot/TaskO/controller/TeamItemController.java
+package com.springboot.TaskO.controller;
 
-import com.springboot.MyTodoList.model.TeamItem;
-import com.springboot.MyTodoList.service.TeamItemService;
+import com.springboot.TaskO.model.TeamItem;
+import com.springboot.TaskO.service.TeamItemService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -52,4 +53,4 @@ public class TeamItemController {
         teamItemService.deleteTeam(teamId);
         return ResponseEntity.ok().build();
     }
-} 
+}
