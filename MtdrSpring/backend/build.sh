@@ -1,5 +1,4 @@
 
-# Get Docker registry or exit if not available
 if [ -z "$DOCKER_REGISTRY" ]; then
     export DOCKER_REGISTRY=$(state_get DOCKER_REGISTRY)
     echo "DOCKER_REGISTRY set from state."
@@ -9,14 +8,11 @@ if [ -z "$DOCKER_REGISTRY" ]; then
     exit 1
 fi
 
-# Version for all images
 export IMAGE_VERSION=0.1
 
-# Build all modules at once using parent POM
 echo "Building all modules..."
 mvn clean package
 
-# Build and push API service
 echo "Building and pushing api-service image..."
 cd api-service
 export API_IMAGE=${DOCKER_REGISTRY}/api-service:${IMAGE_VERSION}
@@ -31,7 +27,6 @@ else
 fi
 cd ..
 
-# Build and push Bot service
 echo "Building and pushing bot-service image..."
 cd bot-service
 export BOT_IMAGE=${DOCKER_REGISTRY}/bot-service:${IMAGE_VERSION}
@@ -46,7 +41,6 @@ else
 fi
 cd ..
 
-# Build and push Frontend service
 echo "Building and pushing frontend-service image..."
 cd frontend-service
 export FRONTEND_IMAGE=${DOCKER_REGISTRY}/frontend-service:${IMAGE_VERSION}
