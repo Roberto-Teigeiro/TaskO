@@ -17,7 +17,7 @@ interface AddSprintDialogProps {
 
 export function AddSprintDialog({ onAddSprint }: AddSprintDialogProps) {
   const { userProjects } = useProjects();
-  console.log(userProjects ,"sprintlog")
+  console.log(userProjects[0].projectId, "sprintlog")
   const [open, setOpen] = useState(false)
   const [name, setName] = useState("")
   const [startDate, setStartDate] = useState<Date>()

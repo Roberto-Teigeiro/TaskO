@@ -5,8 +5,9 @@ export const getUserProject = async (userId: string) => {
     if (!response.ok) {
       throw new Error('Failed to fetch projects')
     }
-    const data = await response.json()
     
+    const data = await response.json()
+    console.log(data)
     return data 
     
   } catch (error) {
