@@ -1,6 +1,9 @@
 package com.springboot.TaskO.model;
 
 import javax.persistence.*;
+
+import org.hibernate.annotations.Type;
+
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
@@ -8,11 +11,13 @@ import java.util.UUID;
 @Table(name = "SPRINTS")
 public class SprintItem {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "SPRINTID")
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    @Type(type = "uuid-binary")
+    @Column(name = "SPRINTID", columnDefinition = "RAW(16)")
     private UUID sprintId;
-
-    @Column(name = "PROJECTID")
+    
+    @Type(type = "uuid-binary")
+    @Column(name = "PROJECTID", columnDefinition = "RAW(16)")
     private UUID projectId;
 
     @Column(name = "NAME")
@@ -30,6 +35,7 @@ public class SprintItem {
     // Constructors, getters, and setters
 
     public SprintItem() {
+        
     }
 
     public SprintItem(UUID sprintId, UUID projectId, String name, String description, OffsetDateTime startDate, OffsetDateTime endDate) {
