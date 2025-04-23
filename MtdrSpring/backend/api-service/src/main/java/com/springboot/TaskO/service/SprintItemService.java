@@ -29,7 +29,14 @@ public class SprintItemService {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
-
+    public ResponseEntity<List<SprintItem>> getItemsByProjectId(UUID projectId) {
+        List<SprintItem> items = sprintItemRepository.findByProjectId(projectId);
+        if (!items.isEmpty()) {
+            return new ResponseEntity<>(items, HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
     public SprintItem addSprintItem(SprintItem sprintItem) {
         return sprintItemRepository.save(sprintItem);
     }

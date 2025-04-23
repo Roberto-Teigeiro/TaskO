@@ -1,5 +1,4 @@
-
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Header } from "@/components/Header"
 import { Sidebar } from "@/components/Sidebar"
 import { Button } from "@/components/ui/button"
@@ -9,7 +8,6 @@ import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { AddTaskDialog } from "@/components/pages/home/AddTask"
 import { AddSprintDialog } from "@/components/pages/home/AddSprint"
-
 
 interface Task {
   id: string
@@ -37,36 +35,69 @@ interface SprintType {
   progress: number
   status: "Active" | "Completed" | "Planned"
   tasks: Task[]
- 
+}
+
+interface BackendSprint {
+  sprintId: string
+  projectId: string
+  name: string
+  description: string
+  startDate: string
+  endDate: string
 }
 
 export default function Sprints() {
+  
   const [tasks, setTasks] = useState<Task[]>([])
   const [expandedSprint, setExpandedSprint] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState("all")
-  const [selectedTask, setSelectedTask] = useState<string | null>(null);
-  const [isOpen, setIsOpen] = useState(false);
-  const [sprints, setSprints] = useState<SprintType[]>([]);
+  const [selectedTask, setSelectedTask] = useState<string | null>(null)
+  const [isOpen, setIsOpen] = useState(false)
+  const [sprints, setSprints] = useState<SprintType[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  
+  useEffect(() => {
+    const fetchSprints = async () => {
+      try {
+        const response = await fetch(`http://localhost:8080/sprintlist/`)
+        if (!response.ok) {
+          throw new Error('Failed to fetch sprints')
+        }
+        const data = await response.json() as BackendSprint[]
+        // Transform the data to match our SprintType interface
+        const transformedSprints = data.map((sprint) => ({
+          id: sprint.sprintId,
+          name: sprint.name,
+          startDate: new Date(sprint.startDate).toISOString().split('T')[0],
+          endDate: new Date(sprint.endDate).toISOString().split('T')[0],
+          progress: 0, // TODO: Calculate progress based on tasks
+          status: "Active" as const, // Use const assertion to match the union type
+          tasks: []
+        }))
+        setSprints(transformedSprints)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'An error occurred while fetching sprints')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchSprints()
+  }, [])
 
   const handleAddTask = (newTask: Task) => {
-    setTasks((prevTasks) => [...prevTasks, newTask]);
-  };
-  
+    setTasks((prevTasks) => [...prevTasks, newTask])
+  }
   
   const handleAddSprint = (newSprint: SprintType) => {
     setSprints((prevSprints) => [...prevSprints, newSprint])
   }
 
-  const currentTask = tasks.find((task) => task.id === selectedTask);
-
-
-
-
+  const currentTask = tasks.find((task) => task.id === selectedTask)
 
   const filteredSprints =
     activeTab === "all" ? sprints : sprints.filter((sprint) => sprint.status.toLowerCase() === activeTab)
-
-  
 
   const toggleSprint = (sprintId: string) => {
     if (expandedSprint === sprintId) {
@@ -87,6 +118,33 @@ export default function Sprints() {
       default:
         return "bg-gray-100 text-gray-800"
     }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-[#f8f8fb] flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#ff6767] mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading sprints...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-[#f8f8fb] flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-500">{error}</p>
+          <Button 
+            className="mt-4 bg-[#ff6767] hover:bg-[#ff5252] text-white"
+            onClick={() => window.location.reload()}
+          >
+            Try Again
+          </Button>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -157,7 +215,7 @@ export default function Sprints() {
                             </div>
                             <div className="flex items-center">
                               <Users className="h-4 w-4 mr-1" />
-                              {sprint.tasks.length} tasks
+                              {/*{sprint.tasks.length} tasks  */}
                             </div>
                           </div>
                         </div>

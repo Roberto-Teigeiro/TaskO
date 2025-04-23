@@ -1,13 +1,13 @@
 package com.springboot.TaskO.controller;
 
 import com.springboot.TaskO.model.ProjectMemberItem;
-import com.springboot.TaskO.model.UserItem;
 import com.springboot.TaskO.service.ProjectMemberItemService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
+import java.util.Map;
+import java.util.List;
 import java.util.UUID;
 import java.util.Map;
 @RestController
@@ -24,11 +24,12 @@ public class ProjectMemberItemController {
             return new ResponseEntity<>(false, HttpStatus.NOT_FOUND);
         }
     }
+    
     @GetMapping("/projects/{userId}")
-    public ResponseEntity<ProjectMemberItem> getUserProjectData(@PathVariable String userId) {
+    public ResponseEntity<List<ProjectMemberItem>> getUserProjects(@PathVariable String userId) {
         try {
-            // Directly return the ResponseEntity from the service
-            return projectMemberItemService.getProjectMemberItemById(userId);
+            List<ProjectMemberItem> projects = projectMemberItemService.getUserProjects(userId);
+            return new ResponseEntity<>(projects, HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -39,7 +40,4 @@ public class ProjectMemberItemController {
         String userId = payload.get("userId");
         return projectMemberItemService.addUserToProject(userId, projectId, teamId);
     }
-    
-
-
 }
