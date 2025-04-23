@@ -21,10 +21,10 @@ public class SprintItemService {
         return sprintItemRepository.findAll();
     }
 
-    public ResponseEntity<SprintItem> getItemById(UUID id) {
-        Optional<SprintItem> todoData = sprintItemRepository.findById(id);
-        if (todoData.isPresent()) {
-            return new ResponseEntity<>(todoData.get(), HttpStatus.OK);
+    public ResponseEntity<List<SprintItem>> getItemsByProjectId(UUID projectId) {
+        List<SprintItem> items = sprintItemRepository.findByProjectId(projectId);
+        if (!items.isEmpty()) {
+            return new ResponseEntity<>(items, HttpStatus.OK);
         } else {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
