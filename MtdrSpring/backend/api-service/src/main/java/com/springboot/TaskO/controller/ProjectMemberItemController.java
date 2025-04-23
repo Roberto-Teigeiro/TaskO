@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import java.util.Map;
 
 import java.util.UUID;
 
@@ -35,9 +36,11 @@ public class ProjectMemberItemController {
     }
 
     @PostMapping(value = "/project/{projectId}/adduser/{teamId}")
-    public ResponseEntity<ProjectMemberItem> addUserToProject(@RequestBody String UserId, @PathVariable UUID projectId, @PathVariable UUID teamId) {
-       return projectMemberItemService.addUserToProject(UserId, projectId, teamId);
+    public ResponseEntity<ProjectMemberItem> addUserToProject(@RequestBody Map<String, String> payload, @PathVariable UUID projectId, @PathVariable UUID teamId) {
+        String userId = payload.get("userId");
+        return projectMemberItemService.addUserToProject(userId, projectId, teamId);
     }
+    
     
 
 
