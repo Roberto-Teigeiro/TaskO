@@ -30,7 +30,7 @@ public class TaskItem {
     private String title;
     @Column(name = "DESCRIPTION")
     private String description;
-    @Type(type = "uuid-binary") // Correct mapping for RAW(16)
+    //@Type(type = "uuid-binary") // Correct mapping for RAW(16)
     @Column(name = "ASSIGNEE")
     private String assignee;
     @Column(name = "STATUS")
@@ -43,10 +43,12 @@ public class TaskItem {
     private String comments;
     @Column(name = "STORYPOINTS")
     private int storyPoints;
+    @Column(name = "ESTIMATED_HOURS")
+    private double estimatedHours;
 
     public TaskItem(){
     }
-    public TaskItem(UUID projectId, UUID sprintId, UUID taskId, String title, String description, String assignee, Status status, OffsetDateTime startDate, OffsetDateTime endDate, String comments, int storyPoints) {
+    public TaskItem(UUID projectId, UUID sprintId, UUID taskId, String title, String description, String assignee, Status status, OffsetDateTime startDate, OffsetDateTime endDate, String comments, int storyPoints, double estimatedHours) {
         this.projectId = projectId;
         this.sprintId = sprintId;
         this.taskId = taskId;
@@ -58,6 +60,7 @@ public class TaskItem {
         this.endDate = endDate;
         this.comments = comments;
         this.storyPoints = storyPoints;
+        this.estimatedHours = estimatedHours;
     }
 
     public UUID getProjectId() {
@@ -104,8 +107,8 @@ public class TaskItem {
         return assignee;
     }
 
-    public void setAsignee(String asignee) {
-        this.assignee = asignee;
+    public void setAssignee(String assignee) {
+        this.assignee = assignee;
     }
 
     public Status getStatus() {
@@ -151,6 +154,14 @@ public class TaskItem {
     public OffsetDateTime getCreation_ts() {
         return startDate;
     }
+
+    public double getEstimatedHours() {
+        return estimatedHours;
+    }
+
+    public void setEstimatedHours(double estimatedHours) {
+        this.estimatedHours = estimatedHours;
+    }
    
     @Override
     public String toString() {
@@ -166,6 +177,7 @@ public class TaskItem {
                 ", endDate=" + endDate +
                 ", comments='" + comments + '\'' +
                 ", storyPoints=" + storyPoints +
+                ", estimatedHours=" + estimatedHours +
                 '}';
     }
 }

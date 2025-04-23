@@ -15,6 +15,7 @@ import com.springboot.TaskO.model.SprintItem;
 import com.springboot.TaskO.model.UserItem;
 import com.springboot.TaskO.model.ProjectMemberItem;
 
+import org.apache.tomcat.jni.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,7 +36,7 @@ public class ApiClientService {
     // Task operations
     public List<TaskItem> getAllTasks() {
         TaskItem[] tasks = restTemplate.getForObject(
-                apiBaseUrl + "/tasks", 
+                apiBaseUrl + "/task/all", 
                 TaskItem[].class);
         return Arrays.asList(tasks != null ? tasks : new TaskItem[0]);
     }
@@ -49,7 +50,7 @@ public class ApiClientService {
     
     public TaskItem addTask(TaskItem task) {
         return restTemplate.postForObject(
-                apiBaseUrl + "/tasks",
+                apiBaseUrl + "/task/add",
                 task,
                 TaskItem.class);
     }
@@ -113,5 +114,12 @@ public class ApiClientService {
                 ProjectMemberItem[].class,
                 projectId);
         return Arrays.asList(members != null ? members : new ProjectMemberItem[0]);
+    }
+
+    public UserItem getUserByTelegramUsername(String telegramUsername) {
+        return restTemplate.getForObject(
+            apiBaseUrl + "/users/by-telegram/" + telegramUsername,
+            UserItem.class
+        );
     }
 }

@@ -8,6 +8,14 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import com.springboot.TaskO.model.TaskItem;
+import com.springboot.TaskO.model.UserItem;
+import com.springboot.TaskO.service.ApiClientService;
+import com.springboot.TaskO.util.BotCommands;
+import com.springboot.TaskO.util.BotHelper;
+import com.springboot.TaskO.util.BotLabels;
+import com.springboot.TaskO.util.BotMessages;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
@@ -17,13 +25,6 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMar
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardRemove;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
-
-import com.springboot.TaskO.model.TaskItem;
-import com.springboot.TaskO.service.ApiClientService;
-import com.springboot.TaskO.util.BotCommands;
-import com.springboot.TaskO.util.BotHelper;
-import com.springboot.TaskO.util.BotLabels;
-import com.springboot.TaskO.util.BotMessages;
 
 public class ToDoItemBotController extends TelegramLongPollingBot {
 
@@ -200,6 +201,102 @@ public class ToDoItemBotController extends TelegramLongPollingBot {
                 } catch (Exception e) {
                     logger.error(e.getLocalizedMessage(), e);
                 }
+
+            } else if (messageTextFromTelegram.startsWith("/addtask")){
+                // Ejemplo: /addtask Titulo;Descripcion;3.5
+                String[] parts = messageTextFromTelegram.replace("/addtask", "").trim().split(";");
+                SendMessage messageToTelegram = new SendMessage();
+                messageToTelegram.setChatId(chatId);
+
+                if (parts.length < 3) {
+                    messageToTelegram.setText("Formato: /addtask Titulo;Descripcion;HorasEstimadas (ejemplo: /addtask Login;Crear login;2)");
+                } else {
+                    String title = parts[0].trim();
+                    String description = parts[1].trim();
+                    double estimatedHours = Double.parseDouble(parts[2].trim());
+                    if (estimatedHours > 4.0) {
+                        messageToTelegram.setText("La tarea excede 4 horas. Por favor subdivídela en tareas menores.");
+                    } else {
+                        UserItem user = apiClientService.getUserByTelegramUsername(telegramUsername);
+                        if (user == null) {
+                            messageToTelegram.setText("No estás registrado. Usa /register primero.");
+                        } else {
+                            TaskItem newTask = new TaskItem();
+                            newTask.setTitle(title);
+                            newTask.setDescription(description);
+                            newTask.setEstimatedHours(estimatedHours);
+                            newTask.setStatus(TaskItem.Status.TODO);
+                            newTask.setStartDate(OffsetDateTime.now());
+                            newTask.setAssignee(user.getUserId());
+                            apiClientService.addTask(newTask);
+                            messageToTelegram.setText("Tarea agregada correctamente.");
+                        }
+                        
+                    
+                    }
+                }
+                try { execute(messageToTelegram); } catch (TelegramApiException e) { logger.error(e.getMessage(), e); }
+
+            } else if (messageTextFromTelegram.startsWith("/starttask")) {
+                // Ejemplo: /starttask taskId;sprintId
+                String[] parts = messageTextFromTelegram.replace("/starttask", "").trim().split(";");
+                SendMessage messageToTelegram = new SendMessage();
+                messageToTelegram.setChatId(chatId);
+
+                if (parts.length < 2) {
+                    messageToTelegram.setText("Formato: /starttask taskId;sprintId");
+                } else {
+                    UUID taskId = UUID.fromString(parts[0].trim());
+                    UUID sprintId = UUID.fromString(parts[1].trim());
+                    TaskItem task = apiClientService.getTaskById(taskId);
+                    task.setSprintId(sprintId);
+                    task.setStatus(TaskItem.Status.IN_PROGRESS);
+                    apiClientService.updateTask(task, taskId);
+                    messageToTelegram.setText("Tarea asignada al sprint e iniciada.");
+                }
+                try { execute(messageToTelegram); } catch (TelegramApiException e) { logger.error(e.getMessage(), e); }
+
+            } else if (messageTextFromTelegram.startsWith("/completetask")) {
+                // Ejemplo: /completetask taskId;horasReales
+                String[] parts = messageTextFromTelegram.replace("/completetask", "").trim().split(";");
+                SendMessage messageToTelegram = new SendMessage();
+                messageToTelegram.setChatId(chatId);
+
+                if (parts.length < 2) {
+                    messageToTelegram.setText("Formato: /completetask taskId;horasReales");
+                } else {
+                    UUID taskId = UUID.fromString(parts[0].trim());
+                    double realHours = Double.parseDouble(parts[1].trim());
+                    TaskItem task = apiClientService.getTaskById(taskId);
+                    task.setStatus(TaskItem.Status.COMPLETED);
+                    task.setEndDate(OffsetDateTime.now());
+                    task.setComments("Tiempo real: " + realHours + " horas");
+                    apiClientService.updateTask(task, taskId);
+                    messageToTelegram.setText("Tarea marcada como completada. Tiempo real registrado.");
+                }
+                try { execute(messageToTelegram); } catch (TelegramApiException e) { logger.error(e.getMessage(), e); }
+
+            } else if (messageTextFromTelegram.startsWith("/sprinttasks")) {
+                // Ejemplo: /sprinttasks sprintId
+                String[] parts = messageTextFromTelegram.replace("/sprinttasks", "").trim().split(" ");
+                SendMessage messageToTelegram = new SendMessage();
+                messageToTelegram.setChatId(chatId);
+
+                if (parts.length < 1) {
+                    messageToTelegram.setText("Formato: /sprinttasks sprintId");
+                } else {
+                    UUID sprintId = UUID.fromString(parts[0].trim());
+                    List<TaskItem> allTasks = apiClientService.getAllTasks();
+                    List<TaskItem> sprintTasks = allTasks.stream()
+                        .filter(t -> sprintId.equals(t.getSprintId()))
+                        .collect(Collectors.toList());
+                    StringBuilder sb = new StringBuilder("Tareas del sprint:\n");
+                    for (TaskItem t : sprintTasks) {
+                        sb.append("- ").append(t.getName()).append(" (").append(t.getStatus()).append(")\n");
+                    }
+                    messageToTelegram.setText(sb.toString());
+                }
+                try { execute(messageToTelegram); } catch (TelegramApiException e) { logger.error(e.getMessage(), e); }
 
             } else if (messageTextFromTelegram.equals(BotCommands.HIDE_COMMAND.getCommand())
                     || messageTextFromTelegram.equals(BotLabels.HIDE_MAIN_SCREEN.getLabel())) {

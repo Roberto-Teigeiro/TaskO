@@ -24,6 +24,16 @@ public class UserItemController {
     public List<UserItem> getAllToDoItems(){
         return userItemService.findAll();
     }
+    @GetMapping("/users/by-telegram/{telegramUsername}")
+    public ResponseEntity<UserItem> getUserByTelegramUsername(@PathVariable String telegramUsername) {
+        List<UserItem> users = userItemService.findAll();
+        for (UserItem user : users) {
+            if (telegramUsername.equals(user.getTelegramUsername())) {
+                return ResponseEntity.ok(user);
+            }
+        }
+        return ResponseEntity.notFound().build();
+    }
     @PostMapping("/newuser")
     public ResponseEntity<String> addNewUser(@RequestHeader("Authorization") String jwt) {
         // Verify the JWT and extract user details
