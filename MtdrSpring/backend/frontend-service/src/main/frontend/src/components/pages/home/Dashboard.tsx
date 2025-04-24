@@ -182,21 +182,21 @@ export default function Dashboard() {
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
                     <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                      <div className="w-3 h-3 rounded-full bg-[#32CD32]"></div>
                       <span>Completed</span>
                     </div>
                     <span className="font-semibold">{sprintStats.completed}</span>
                   </div>
                   <div className="flex justify-between items-center">
                     <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                      <div className="w-3 h-3 rounded-full bg-[#4169E1]"></div>
                       <span>In Progress</span>
                     </div>
                     <span className="font-semibold">{sprintStats.inProgress}</span>
                   </div>
                   <div className="flex justify-between items-center">
                     <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full bg-gray-500"></div>
+                      <div className="w-3 h-3 rounded-full bg-[#ff6b6b]"></div>
                       <span>Not Started</span>
                     </div>
                     <span className="font-semibold">{sprintStats.notStarted}</span>

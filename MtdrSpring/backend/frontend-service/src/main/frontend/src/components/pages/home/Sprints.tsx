@@ -148,11 +148,11 @@ export default function Sprints() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case "In Progress":
-        return "bg-blue-100 text-blue-800"
+        return "bg-[#4169E1] text-white"
       case "Completed":
-        return "bg-green-100 text-green-800"
+        return "bg-[#32CD32] text-white"
       case "Not Started":
-        return "bg-amber-100 text-amber-800"
+        return "bg-[#ff6b6b] text-white"
       default:
         return "bg-gray-100 text-gray-800"
     }
