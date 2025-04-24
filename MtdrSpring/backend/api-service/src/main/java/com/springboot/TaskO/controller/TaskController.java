@@ -10,8 +10,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
 import java.util.List;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
+import java.util.Optional;
+import java.util.UUID;
 
 
 @RestController
@@ -29,9 +29,20 @@ public class TaskController {
         HttpHeaders headers = new HttpHeaders();
         return new ResponseEntity<>(newTask, headers, HttpStatus.CREATED);
     }
-    
 
+    @GetMapping("/task/{id}")
+    public ResponseEntity<TaskItem> getTaskItemById(@PathVariable("id") UUID id){
+        return taskItemService.getItemById(id);
+    }
 
-
+    @PutMapping("/task/{id}")
+    public ResponseEntity<TaskItem> updateTaskItem(@PathVariable("id") UUID id, @RequestBody TaskItem task) {
+        TaskItem updatedTask = taskItemService.updateTaskItem(id, task);
+        if (updatedTask != null) {
+            return new ResponseEntity<>(updatedTask, HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
 
 }

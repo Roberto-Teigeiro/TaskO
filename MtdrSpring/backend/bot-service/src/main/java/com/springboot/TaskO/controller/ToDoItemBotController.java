@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import com.springboot.TaskO.model.SprintItem;
 import com.springboot.TaskO.model.TaskItem;
 import com.springboot.TaskO.model.UserItem;
 import com.springboot.TaskO.service.ApiClientService;
@@ -33,6 +34,19 @@ public class ToDoItemBotController extends TelegramLongPollingBot {
     private final ApiClientService apiClientService;
     private final String botName;
     private Map<Long, Boolean> awaitingRegistration = new HashMap<>();
+    private Map<Long, Map<Integer, UUID>> userTaskIndexMap = new HashMap<>();
+    private Map<Long, Map<Integer, UUID>> userSprintIndexMap = new HashMap<>();
+
+    private static String hexToUuid(String hex) {
+        return hex.replaceFirst(
+            "(\\p{XDigit}{8})(\\p{XDigit}{4})(\\p{XDigit}{4})(\\p{XDigit}{4})(\\p{XDigit}+)",
+            "$1-$2-$3-$4-$5"
+            ).toLowerCase();
+    }
+
+    private static String uuidToHex(UUID uuid) {
+        return uuid.toString().replace("-", "").toUpperCase();
+    }
 
     public ToDoItemBotController(String token, String botName, ApiClientService apiClientService) {
         super(token);
@@ -238,41 +252,64 @@ public class ToDoItemBotController extends TelegramLongPollingBot {
                 try { execute(messageToTelegram); } catch (TelegramApiException e) { logger.error(e.getMessage(), e); }
 
             } else if (messageTextFromTelegram.startsWith("/starttask")) {
-                // Ejemplo: /starttask taskId;sprintId
+                // Ejemplo: /starttask <número de tarea>;<sprintId>
                 String[] parts = messageTextFromTelegram.replace("/starttask", "").trim().split(";");
                 SendMessage messageToTelegram = new SendMessage();
                 messageToTelegram.setChatId(chatId);
 
                 if (parts.length < 2) {
-                    messageToTelegram.setText("Formato: /starttask taskId;sprintId");
+                    messageToTelegram.setText("Formato: /starttask <número de tarea>;<sprintId>\nPrimero usa /mytasks para ver tus tareas pendientes.");
                 } else {
-                    UUID taskId = UUID.fromString(parts[0].trim());
-                    UUID sprintId = UUID.fromString(parts[1].trim());
-                    TaskItem task = apiClientService.getTaskById(taskId);
-                    task.setSprintId(sprintId);
-                    task.setStatus(TaskItem.Status.IN_PROGRESS);
-                    apiClientService.updateTask(task, taskId);
-                    messageToTelegram.setText("Tarea asignada al sprint e iniciada.");
+                    try {
+                        int taskNumber = Integer.parseInt(parts[0].trim());
+                        int sprintNumber = Integer.parseInt(parts[1].trim());
+                        Map<Integer, UUID> indexMap = userTaskIndexMap.get(chatId);
+                        Map<Integer, UUID> sprintIndexMap = userSprintIndexMap.get(chatId);
+                        if (indexMap == null || !indexMap.containsKey(taskNumber)) {
+                            messageToTelegram.setText("Número de tarea inválido. Usa /mytasks para ver la lista.");
+                        } else if (sprintIndexMap == null || !sprintIndexMap.containsKey(sprintNumber)) {
+                            messageToTelegram.setText("Número de sprint inválido. Usa /sprints para ver la lista.");
+                        } else {
+                            UUID taskId = indexMap.get(taskNumber);
+                            UUID sprintId = sprintIndexMap.get(sprintNumber);
+                            TaskItem task = apiClientService.getTaskById(taskId);
+                            task.setSprintId(sprintId);
+                            task.setStatus(TaskItem.Status.IN_PROGRESS);
+                            apiClientService.updateTask(task, taskId);
+                            messageToTelegram.setText("Tarea asignada al sprint e iniciada.");
+                        }
+                    } catch (Exception e) {
+                        messageToTelegram.setText("Error al procesar el comando. Asegúrate de usar el formato correcto.");
+                    }
                 }
                 try { execute(messageToTelegram); } catch (TelegramApiException e) { logger.error(e.getMessage(), e); }
-
             } else if (messageTextFromTelegram.startsWith("/completetask")) {
-                // Ejemplo: /completetask taskId;horasReales
+                // Ejemplo: /completetask <número de tarea>;horasReales
                 String[] parts = messageTextFromTelegram.replace("/completetask", "").trim().split(";");
                 SendMessage messageToTelegram = new SendMessage();
                 messageToTelegram.setChatId(chatId);
 
                 if (parts.length < 2) {
-                    messageToTelegram.setText("Formato: /completetask taskId;horasReales");
+                    messageToTelegram.setText("Formato: /completetask <número de tarea>;horasReales");
                 } else {
-                    UUID taskId = UUID.fromString(parts[0].trim());
-                    double realHours = Double.parseDouble(parts[1].trim());
-                    TaskItem task = apiClientService.getTaskById(taskId);
-                    task.setStatus(TaskItem.Status.COMPLETED);
-                    task.setEndDate(OffsetDateTime.now());
-                    task.setComments("Tiempo real: " + realHours + " horas");
-                    apiClientService.updateTask(task, taskId);
-                    messageToTelegram.setText("Tarea marcada como completada. Tiempo real registrado.");
+                    try {
+                        int taskNumber = Integer.parseInt(parts[0].trim());
+                        double realHours = Double.parseDouble(parts[1].trim());
+                        Map<Integer, UUID> indexMap = userTaskIndexMap.get(chatId);
+                        if (indexMap == null || !indexMap.containsKey(taskNumber)) {
+                            messageToTelegram.setText("Número de tarea inválido. Usa /sprinttasks para ver la lista.");
+                        } else {
+                            UUID taskId = indexMap.get(taskNumber);
+                            TaskItem task = apiClientService.getTaskById(taskId);
+                            task.setStatus(TaskItem.Status.COMPLETED);
+                            task.setEndDate(OffsetDateTime.now());
+                            task.setComments("Tiempo real: " + realHours + " horas");
+                            apiClientService.updateTask(task, taskId);
+                            messageToTelegram.setText("Tarea marcada como completada. Tiempo real registrado.");
+                        }
+                    } catch (Exception e) {
+                        messageToTelegram.setText("Error al procesar el comando. Asegúrate de usar el formato correcto.");
+                    }
                 }
                 try { execute(messageToTelegram); } catch (TelegramApiException e) { logger.error(e.getMessage(), e); }
 
@@ -283,21 +320,95 @@ public class ToDoItemBotController extends TelegramLongPollingBot {
                 messageToTelegram.setChatId(chatId);
 
                 if (parts.length < 1) {
-                    messageToTelegram.setText("Formato: /sprinttasks sprintId");
+                    messageToTelegram.setText("Formato: /sprinttasks <número de sprint>\nPrimero usa /sprints para ver la lista.");
                 } else {
-                    UUID sprintId = UUID.fromString(parts[0].trim());
-                    List<TaskItem> allTasks = apiClientService.getAllTasks();
-                    List<TaskItem> sprintTasks = allTasks.stream()
-                        .filter(t -> sprintId.equals(t.getSprintId()))
-                        .collect(Collectors.toList());
-                    StringBuilder sb = new StringBuilder("Tareas del sprint:\n");
-                    for (TaskItem t : sprintTasks) {
-                        sb.append("- ").append(t.getName()).append(" (").append(t.getStatus()).append(")\n");
+                    try {
+                        int sprintNumber = Integer.parseInt(parts[0].trim());
+                        Map<Integer, UUID> sprintIndexMap = userSprintIndexMap.get(chatId);
+                        if (sprintIndexMap == null || !sprintIndexMap.containsKey(sprintNumber)) {
+                            messageToTelegram.setText("Número de sprint inválido. Usa /sprints para ver la lista.");
+                        } else {
+                            UUID sprintId = sprintIndexMap.get(sprintNumber);
+                            List<TaskItem> allTasks = apiClientService.getAllTasks();
+                            List<TaskItem> sprintTasks = allTasks.stream()
+                                .filter(t -> sprintId.equals(t.getSprintId()))
+                                .collect(Collectors.toList());
+                            StringBuilder sb = new StringBuilder("Tareas del sprint:\n");
+                            int idx = 1;
+                            Map<Integer, UUID> taskIndexMap = new HashMap<>();
+                            for (TaskItem t : sprintTasks) {
+                                sb.append(idx).append(". ").append(t.getTitle()).append(" (").append(t.getStatus()).append(")\n");
+                                taskIndexMap.put(idx, t.getTaskId());
+                                idx++;
+                            }
+                            if (sprintTasks.isEmpty()) {
+                                sb.append("No hay tareas en este sprint.");
+                            }
+                            messageToTelegram.setText(sb.toString());
+                            userTaskIndexMap.put(chatId, taskIndexMap);
+                        }
+                    } catch (Exception e) {
+                        messageToTelegram.setText("Error al procesar el comando. Usa /sprints para ver la lista.");
                     }
-                    messageToTelegram.setText(sb.toString());
                 }
                 try { execute(messageToTelegram); } catch (TelegramApiException e) { logger.error(e.getMessage(), e); }
 
+            } else if (messageTextFromTelegram.startsWith("/mytasks")) {
+                SendMessage messageToTelegram = new SendMessage();
+                messageToTelegram.setChatId(chatId);
+            
+                UserItem user = apiClientService.getUserByTelegramUsername(telegramUsername);
+                if (user == null) {
+                    messageToTelegram.setText("No estás registrado. Usa /register primero.");
+                } else {
+                    List<TaskItem> allTasks = apiClientService.getAllTasks();
+                    List<TaskItem> myTasks = allTasks.stream()
+                        .filter(t -> user.getUserId().equals(t.getAssignee()) && (t.getSprintId() == null || t.getStatus() == TaskItem.Status.TODO))
+                        .collect(Collectors.toList());
+            
+                    if (myTasks.isEmpty()) {
+                        messageToTelegram.setText("No tienes tareas pendientes para asignar a un sprint.");
+                    } else {
+                        StringBuilder sb = new StringBuilder("Tus tareas pendientes:\n");
+                        int idx = 1;
+                        Map<Integer, UUID> taskIndexMap = new HashMap<>();
+                        for (TaskItem t : myTasks) {
+                            sb.append(idx).append(". ").append(t.getTitle()).append(" (").append(t.getStatus()).append(")\n");
+                            taskIndexMap.put(idx, t.getTaskId());
+                            idx++;
+                        }
+                        sb.append("\nUsa /starttask <número>;<sprintId> para asignar una tarea a un sprint.");
+                        messageToTelegram.setText(sb.toString());
+                        userTaskIndexMap.put(chatId, taskIndexMap);
+                    }
+                }
+                try { execute(messageToTelegram); } catch (TelegramApiException e) { logger.error(e.getMessage(), e); }
+            } else if (messageTextFromTelegram.startsWith("/sprints")) {
+                SendMessage messageToTelegram = new SendMessage();
+                messageToTelegram.setChatId(chatId);
+
+                List<SprintItem> allSprints = apiClientService.getAllSprints();
+                List<SprintItem> activeSprints = allSprints.stream()
+                    .filter(SprintItem::isActive)
+                    .collect(Collectors.toList());
+
+                if (activeSprints.isEmpty()) {
+                    messageToTelegram.setText("No hay sprints activos.");
+                } else {
+                    StringBuilder sb = new StringBuilder("Sprints activos:\n");
+                    int idx = 1;
+                    Map<Integer, UUID> sprintIndexMap = new HashMap<>();
+                    for (SprintItem sprint : activeSprints) {
+                        sb.append(idx).append(". ").append(sprint.getName()).append("\n");
+                        sprintIndexMap.put(idx, sprint.getSprintId());
+                        idx++;
+                    }
+                    sb.append("\nUsa /sprinttasks <número> para ver las tareas de un sprint.");
+                    messageToTelegram.setText(sb.toString());
+                    // Guarda el mapa para el usuario
+                    userSprintIndexMap.put(chatId, sprintIndexMap);
+                }
+                try { execute(messageToTelegram); } catch (TelegramApiException e) { logger.error(e.getMessage(), e); }
             } else if (messageTextFromTelegram.equals(BotCommands.HIDE_COMMAND.getCommand())
                     || messageTextFromTelegram.equals(BotLabels.HIDE_MAIN_SCREEN.getLabel())) {
 

@@ -17,7 +17,7 @@ public class SprintItemController {
 
     @GetMapping(value = "/sprintlist")
     public List<SprintItem> getAllSprintItems() {
-        System.out.println("Getting all Sprint Items...");
+        // System.out.println("Getting all Sprint Items...");
         return sprintItemService.findAll();
     }
 

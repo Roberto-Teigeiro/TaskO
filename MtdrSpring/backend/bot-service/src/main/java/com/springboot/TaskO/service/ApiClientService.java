@@ -57,17 +57,17 @@ public class ApiClientService {
     
     public TaskItem getTaskById(UUID id) {
         return restTemplate.getForObject(
-                apiBaseUrl + "/tasks/{id}", 
+                apiBaseUrl + "/task/{id}", 
                 TaskItem.class,
                 id);
     }
     
     public void updateTask(TaskItem task, UUID id) {
-        restTemplate.put(apiBaseUrl + "/tasks/{id}", task, id);
+        restTemplate.put(apiBaseUrl + "/task/{id}", task, id);
     }
     
     public void deleteTask(UUID id) {
-        restTemplate.delete(apiBaseUrl + "/tasks/{id}", id);
+        restTemplate.delete(apiBaseUrl + "/task/{id}", id);
     }
     
     // User operations
@@ -121,5 +121,12 @@ public class ApiClientService {
             apiBaseUrl + "/users/by-telegram/" + telegramUsername,
             UserItem.class
         );
+    }
+
+    public List<SprintItem> getAllSprints() {
+        SprintItem[] sprints = restTemplate.getForObject(
+                apiBaseUrl + "/sprintlist",
+                SprintItem[].class);
+        return Arrays.asList(sprints != null ? sprints : new SprintItem[0]);
     }
 }
