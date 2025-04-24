@@ -280,9 +280,9 @@ export default function Sprints() {
                                 <AddTaskDialog 
                                   onAddTask={(task) => handleAddTask({ ...task, sprintId: sprint.id })} 
                                   sprintId={sprint.id} 
-                                  projectId={userProject}
+                                  projectId={userProject? userProject : "error"}
                                 />
-</div>
+                                </div>
 
                                 <div className="space-y-11">
                                   {tasks
