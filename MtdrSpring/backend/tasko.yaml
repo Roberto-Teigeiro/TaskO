@@ -4,14 +4,21 @@ metadata:
   name: tasko-frontend-service
   annotations:
     oci.oraclecloud.com/loadbalancer-policy: "IP_HASH"
+    service.beta.kubernetes.io/oci-load-balancer-ssl-ports: "443"
+    service.beta.kubernetes.io/oci-load-balancer-tls-secret: "tasko-tls-secret"
 spec:
   type: LoadBalancer
-  loadbalancerIP: 140.84.190.34
+  loadBalancerIP: 140.84.190.34
   externalTrafficPolicy: Local
   ports:
     - port: 80
       protocol: TCP
-      targetPort: 80
+      targetPort: 8080
+      name: http
+    - port: 443
+      protocol: TCP
+      targetPort: 8080
+      name: https
   selector:
     app: tasko-frontend
 ---
