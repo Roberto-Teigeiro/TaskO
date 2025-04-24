@@ -12,7 +12,7 @@ import java.net.URI;
 import java.util.List;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-
+import java.util.UUID;
 
 @RestController
 public class TaskController {
@@ -30,7 +30,12 @@ public class TaskController {
         return new ResponseEntity<>(newTask, headers, HttpStatus.CREATED);
     }
     
+    @GetMapping(value = "/task/{sprintId}")
+    public List<TaskItem> getAllToDoItemsBySprintId(@PathVariable("sprintId") UUID sprintId){
+        return taskItemService.findAllBySprintId(sprintId);
+    }
 
+    
 
 
 
