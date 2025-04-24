@@ -57,7 +57,7 @@ export default function Sprints() {
   const [sprints, setSprints] = useState<SprintType[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  
+  const [userProject, setUserProject] = useState<string | null>(null)
   useEffect(() => {
     const fetchSprints = async () => {
       if (!userProjects || userProjects.length === 0) {
@@ -68,6 +68,7 @@ export default function Sprints() {
 
       try {
         const projectId = userProjects[0].projectId
+        setUserProject(projectId)
         console.log('Fetching sprints for project:', projectId)
         
         const response = await fetch(`http://localhost:8080/sprintlist/${projectId}`)
@@ -201,7 +202,7 @@ export default function Sprints() {
             </div>
 
             <div className="flex items-center gap-2 mt-2 md:mt-0">
-              <AddSprintDialog onAddSprint={handleAddSprint} />
+              <AddSprintDialog onAddSprint={handleAddSprint}/>
             </div>
           </div>
 
@@ -244,7 +245,7 @@ export default function Sprints() {
                               <ChevronRight className="h-5 w-5 text-gray-500 mr-2" />
                             )}
                             <div>
-                              <h3 className="font-medium text-lg">{sprint.name}</h3>
+                              <h3 className="font-medium text-lg">{sprint.name+sprint.id}</h3>
                               <div className="flex flex-wrap items-center gap-3 mt-1 text-sm text-gray-500">
                                 <div className="flex items-center">
                                   <Calendar className="h-4 w-4 mr-1" />
@@ -276,7 +277,12 @@ export default function Sprints() {
                               
                               <div className="bg-white rounded-xl p-6 shadow-sm">
                                 <div className="mb-2">
-                                  <AddTaskDialog onAddTask={(task) => handleAddTask({ ...task, sprintName: sprint.name})} /></div>
+                                <AddTaskDialog 
+                                  onAddTask={(task) => handleAddTask({ ...task, sprintId: sprint.id })} 
+                                  sprintId={sprint.id} 
+                                  projectId={userProject}
+                                />
+</div>
 
                                 <div className="space-y-11">
                                   {tasks
