@@ -12,9 +12,8 @@ interface HeaderProps {
 }
 
 export function Header({ date, day, title, titleSpan }: HeaderProps) {
-  const { userProjects } = useProjects()
-  const projectId = userProjects[0].projectId
-  
+  const { currentProject, loading } = useProjects()
+
   return (
     <header className="bg-white py-3 px-6 flex items-center justify-between border-b">
       <div className="flex items-center gap-4">
@@ -22,7 +21,9 @@ export function Header({ date, day, title, titleSpan }: HeaderProps) {
           <span className="text-[#ff6767]">{title}</span>-{titleSpan}
         </h1>
         <div className="text-sm text-gray-500">
-          Project: <span className="font-medium text-gray-700">{projectId}</span>
+          Current Project: <span className="font-medium text-gray-700">
+            {loading ? "Loading..." : currentProject?.projectName || "No Project Selected"}
+          </span>
         </div>
       </div>
 
