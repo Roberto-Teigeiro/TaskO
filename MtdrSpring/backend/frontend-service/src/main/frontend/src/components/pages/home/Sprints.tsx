@@ -38,14 +38,7 @@ interface SprintType {
   tasks: Task[]
 }
 
-interface BackendSprint {
-  sprintId: string
-  projectId: string
-  name: string
-  description: string
-  startDate: string
-  endDate: string
-}
+
 
 export default function Sprints() {
   const { userProjects } = useProjects()
