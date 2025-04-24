@@ -9,56 +9,38 @@ import { Header } from "@/components/Header";
 import { Sidebar } from "@/components/Sidebar";
 import { TaskItem, CompletedTaskItem } from "@/components/ui/Task-item";
 import { ProgressCircle } from "@/components/ui/Progress-circle";
-import { useUser, useAuth } from "@clerk/react-router";
+import { useUser} from "@clerk/react-router";
 import { useProjects } from '../../../context/ProjectContext';
-
+import { useNavigate } from 'react-router-dom';
 
 export default function Dashboard() {
-  console.log("Dashboard component rendered");
-  const { user, isLoaded, isSignedIn } = useUser(); // Add isSignedIn here
-  const { getToken } = useAuth(); // Add getToken from useAuth
+  const navigate = useNavigate();
+  const { user, isLoaded, isSignedIn } = useUser();
   const { userProjects, loading, error } = useProjects();
 
-  // Add debugging
-  console.log('userProjects:', userProjects);
-  console.log('Type of userProjects:', typeof userProjects);
-  console.log('Is Array:', Array.isArray(userProjects));
-
-  // Add this to your Dashboard.tsx component or similar
-useEffect(() => {
-  async function registerUserIfNeeded() {
-    // Check if this was a new OAuth user
-    const urlParams = new URLSearchParams(window.location.search);
-    const isNewUser = urlParams.get('new_user') === 'true';
-    
-    if (isNewUser && isSignedIn) {
-      const token = await getToken({template: 'TaskO'});
-      if (token) {
-        try {
-          const response = await fetch('/api/newuser', {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json'
-            }
-          });
-          
-          if (response.ok) {
-            console.log('User registered in backend successfully');
-          }
-        } catch (error) {
-          console.error('Error registering user in backend:', error);
-        }
-      }
-    }
-  }
-  
-  registerUserIfNeeded();
-}, [isSignedIn]);
-
   useEffect(() => {
-    // No need for the localStorage-related code anymore
-  }, [user, isLoaded]);
+    const checkUserProjects = async () => {
+      if (!user?.id) return;
+      
+      try {
+        const response = await fetch(`http://localhost:8080/projects/${user.id}/any`);
+        if (!response.ok) {
+          throw new Error('Failed to check user projects');
+        }
+        
+        const hasProjects = await response.json();
+        if (!hasProjects) {
+          navigate('/choosepath');
+        }
+      } catch (err) {
+        console.error('Error checking user projects:', err);
+      }
+    };
+
+    if (isSignedIn && !loading) {
+      checkUserProjects();
+    }
+  }, [user?.id, isSignedIn, loading, navigate]);
 
   // Show a loading state while Clerk is initializing
   if (!isLoaded) {
