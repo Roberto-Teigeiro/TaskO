@@ -34,18 +34,11 @@ interface SprintType {
   startDate: string
   endDate: string
   progress: number
-  status: "Active" | "Completed" | "Planned"
+  status: "Completed" | "In Progress" | "Not Started"
   tasks: Task[]
 }
 
-interface BackendSprint {
-  sprintId: string
-  projectId: string
-  name: string
-  description: string
-  startDate: string
-  endDate: string
-}
+
 
 export default function Sprints() {
   const { userProjects } = useProjects()
@@ -75,7 +68,6 @@ export default function Sprints() {
         
         if (!response.ok) {
           if (response.status === 404) {
-            // No sprints found is not an error, just an empty state
             setSprints([])
             setError(null)
           } else {
@@ -93,15 +85,28 @@ export default function Sprints() {
           throw new Error('Invalid response format from server')
         }
         
+        const currentDate = new Date()
         const transformedSprints = data.map((sprint) => {
           console.log('Processing sprint:', sprint)
+          const startDate = new Date(sprint.startDate)
+          const endDate = new Date(sprint.endDate)
+          
+          let status: "Completed" | "In Progress" | "Not Started"
+          if (currentDate > endDate) {
+            status = "Completed"
+          } else if (currentDate >= startDate && currentDate <= endDate) {
+            status = "In Progress"
+          } else {
+            status = "Not Started"
+          }
+          
           return {
             id: sprint.sprintId,
             name: sprint.name,
-            startDate: new Date(sprint.startDate).toISOString().split('T')[0],
-            endDate: new Date(sprint.endDate).toISOString().split('T')[0],
+            startDate: startDate.toISOString().split('T')[0],
+            endDate: endDate.toISOString().split('T')[0],
             progress: 0,
-            status: "Active" as const,
+            status,
             tasks: []
           }
         })
@@ -142,11 +147,11 @@ export default function Sprints() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "Active":
+      case "In Progress":
         return "bg-blue-100 text-blue-800"
       case "Completed":
         return "bg-green-100 text-green-800"
-      case "Planned":
+      case "Not Started":
         return "bg-amber-100 text-amber-800"
       default:
         return "bg-gray-100 text-gray-800"
@@ -214,12 +219,12 @@ export default function Sprints() {
             ) : (
               <>
                 <div className="p-4 border-b">
-                  <Tabs defaultValue="all" onValueChange={setActiveTab}>
-                    <TabsList className="grid grid-cols-4 w-full max-w-md">
+                  <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
+                    <TabsList>
                       <TabsTrigger value="all">All</TabsTrigger>
-                      <TabsTrigger value="active">Active</TabsTrigger>
                       <TabsTrigger value="completed">Completed</TabsTrigger>
-                      <TabsTrigger value="planned">Planned</TabsTrigger>
+                      <TabsTrigger value="in progress">In Progress</TabsTrigger>
+                      <TabsTrigger value="not started">Not Started</TabsTrigger>
                     </TabsList>
                   </Tabs>
                 </div>

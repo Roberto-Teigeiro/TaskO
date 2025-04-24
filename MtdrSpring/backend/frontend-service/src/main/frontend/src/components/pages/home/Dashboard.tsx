@@ -1,22 +1,38 @@
 ///Users/santosa/Documents/GitHub/TaskO/MtdrSpring/backend/src/main/frontend/src/components/pages/home/Dashboard.tsx
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { CircleDot, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { Header } from "@/components/Header";
 import { Sidebar } from "@/components/Sidebar";
-import { TaskItem, CompletedTaskItem } from "@/components/ui/Task-item";
+import { CompletedTaskItem } from "@/components/ui/Task-item";
 import { ProgressCircle } from "@/components/ui/Progress-circle";
-import { useUser} from "@clerk/react-router";
+import { useUser } from "@clerk/react-router";
 import { useProjects } from '../../../context/ProjectContext';
 import { useNavigate } from 'react-router-dom';
+
+interface BackendSprint {
+  sprintId: string;
+  projectId: string;
+  title: string;
+  description: string;
+  startDate: string;
+  endDate: string;
+  status: string;
+}
 
 export default function Dashboard() {
   const navigate = useNavigate();
   const { user, isLoaded, isSignedIn } = useUser();
-  const { userProjects, loading, error } = useProjects();
+  const { userProjects, loading, error, currentProject } = useProjects();
+  const [sprintStats, setSprintStats] = useState({
+    completed: 0,
+    inProgress: 0,
+    notStarted: 0,
+    total: 0
+  });
 
   useEffect(() => {
     const checkUserProjects = async () => {
@@ -41,6 +57,61 @@ export default function Dashboard() {
       checkUserProjects();
     }
   }, [user?.id, isSignedIn, loading, navigate]);
+
+  useEffect(() => {
+    const fetchSprints = async () => {
+      if (!currentProject?.projectId) return;
+
+      try {
+        const response = await fetch(`http://localhost:8080/sprintlist/${currentProject.projectId}`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch sprints');
+        }
+        
+        const data = await response.json() as BackendSprint[];
+        const currentDate = new Date();
+        
+        const sprintsWithStatus = data.map((sprint) => {
+          const startDate = new Date(sprint.startDate);
+          const endDate = new Date(sprint.endDate);
+          
+          let status: "Completed" | "In Progress" | "Not Started";
+          if (currentDate > endDate) {
+            status = "Completed";
+          } else if (currentDate >= startDate && currentDate <= endDate) {
+            status = "In Progress";
+          } else {
+            status = "Not Started";
+          }
+          
+          return {
+            id: sprint.sprintId,
+            name: sprint.title,
+            startDate: sprint.startDate,
+            endDate: sprint.endDate,
+            status
+          };
+        });
+
+        // Calculate sprint statistics
+        const totalSprints = sprintsWithStatus.length;
+        const stats = {
+          completed: sprintsWithStatus.filter((s) => s.status === "Completed").length,
+          inProgress: sprintsWithStatus.filter((s) => s.status === "In Progress").length,
+          notStarted: sprintsWithStatus.filter((s) => s.status === "Not Started").length,
+          total: totalSprints
+        };
+        
+        setSprintStats(stats);
+      } catch (err) {
+        console.error('Error fetching sprints:', err);
+      }
+    };
+
+    if (currentProject?.projectId) {
+      fetchSprints();
+    }
+  }, [currentProject?.projectId]);
 
   // Show a loading state while Clerk is initializing
   if (!isLoaded) {
@@ -72,9 +143,9 @@ export default function Dashboard() {
         <div className="p-6 flex-1">
           {/* Welcome Section */}
           <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold">
-  Welcome back, {user?.firstName ?? ''} {user?.lastName ?? ''} 👋
-</h2>
+            <h2 className="text-2xl font-bold">
+              Welcome back, {user?.firstName ?? ''} {user?.lastName ?? ''} 👋
+            </h2>
             <div className="flex items-center gap-2">
               <div className="flex -space-x-2">
                 <Avatar className="border-2 border-white w-8 h-8">
@@ -83,13 +154,14 @@ export default function Dashboard() {
                 </Avatar>
               
                 {[...Array(4)].map((_, i) => {
-  const uniqueKey = `avatar-${i}-${Date.now()}`; // Better approach is to have real IDs
-  return (
-    <Avatar key={uniqueKey} className="border-2 border-white w-8 h-8">
-<AvatarImage src="/placeholder.svg?height=32&width=32" />
-<AvatarFallback>U{i + 2}</AvatarFallback>    </Avatar>
-  );
-})}
+                  const uniqueKey = `avatar-${i}-${Date.now()}`; // Better approach is to have real IDs
+                  return (
+                    <Avatar key={uniqueKey} className="border-2 border-white w-8 h-8">
+                      <AvatarImage src="/placeholder.svg?height=32&width=32" />
+                      <AvatarFallback>U{i + 2}</AvatarFallback>
+                    </Avatar>
+                  );
+                })}
               </div>
               <Button
                 variant="outline"
@@ -104,33 +176,31 @@ export default function Dashboard() {
           {/* Task Section */}
           <div className="bg-gray-50 rounded-xl p-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* To-Do Tasks */}
+              {/* Task Status */}
               <div className="bg-white rounded-xl p-4 shadow-sm">
-                <div className="flex justify-between items-center mb-4">
-                  <div className="flex items-center gap-2">
-                    <CircleDot className="text-[#ff6b6b]" />
-                    <h3 className="font-medium text-[#ff6b6b]">To-Do</h3>
+                <h3 className="font-medium mb-4">Sprint Status</h3>
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                      <span>Completed</span>
+                    </div>
+                    <span className="font-semibold">{sprintStats.completed}</span>
                   </div>
-                  <div className="flex items-center gap-2 text-sm text-gray-500">
-                    <span>20 June</span>
-                    <span>•</span>
-                    <span>Today</span>
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                      <span>In Progress</span>
+                    </div>
+                    <span className="font-semibold">{sprintStats.inProgress}</span>
                   </div>
-                </div>
-
-                {/* Task Items */}
-                <div className="space-y-3">
-                  {[...Array(3)].map((_, i) => (
-                    <TaskItem
-                      key={i}
-                      title={`Task ${i + 1}`}
-                      description={`Description for task ${i + 1}`}
-                      priority={i % 2 === 0 ? "High" : "Moderate"}
-                      status={i % 3 === 0 ? "Not Started" : "In Progress"}
-                      date={`20/06/2023`}
-                      image="/placeholder.svg?height=80&width=80"
-                    />
-                  ))}
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-gray-500"></div>
+                      <span>Not Started</span>
+                    </div>
+                    <span className="font-semibold">{sprintStats.notStarted}</span>
+                  </div>
                 </div>
               </div>
 
@@ -138,13 +208,25 @@ export default function Dashboard() {
               <div className="space-y-6">
                 {/* Task Status */}
                 <div className="bg-white rounded-xl p-4 shadow-sm">
-                  <h3 className="font-medium mb-4">Task Status</h3>
+                  <h3 className="font-medium mb-4">Sprints Status KPI</h3>
 
                   {/* Progress Circles */}
                   <div className="flex justify-around items-center">
-                    <ProgressCircle value={40} color="#32CD32" label="Completed" />
-                    <ProgressCircle value={40} color="#4169E1" label="In Progress" />
-                    <ProgressCircle value={20} color="#ff6b6b" label="Not Started" />
+                    <ProgressCircle 
+                      value={sprintStats.total > 0 ? Math.round((sprintStats.completed / sprintStats.total) * 100) : 0} 
+                      color="#32CD32" 
+                      label={`Completed (${sprintStats.completed}/${sprintStats.total})`} 
+                    />
+                    <ProgressCircle 
+                      value={sprintStats.total > 0 ? Math.round((sprintStats.inProgress / sprintStats.total) * 100) : 0} 
+                      color="#4169E1" 
+                      label={`In Progress (${sprintStats.inProgress}/${sprintStats.total})`} 
+                    />
+                    <ProgressCircle 
+                      value={sprintStats.total > 0 ? Math.round((sprintStats.notStarted / sprintStats.total) * 100) : 0} 
+                      color="#ff6b6b" 
+                      label={`Not Started (${sprintStats.notStarted}/${sprintStats.total})`} 
+                    />
                   </div>
                 </div>
 
