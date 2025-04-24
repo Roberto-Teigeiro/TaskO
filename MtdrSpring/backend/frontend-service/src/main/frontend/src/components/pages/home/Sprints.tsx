@@ -188,7 +188,7 @@ export default function Sprints() {
   return (
     <div className="min-h-screen bg-[#f8f8fb] flex flex-col">
       {/* Top Navigation */}
-      <Header day="Tuesday" date="20/06/2023" title = "To" titleSpan = "Do"/>
+      <Header title = "To" titleSpan = "Do"/>
 
       {/* Main Content */}
       <div className="flex flex-1">

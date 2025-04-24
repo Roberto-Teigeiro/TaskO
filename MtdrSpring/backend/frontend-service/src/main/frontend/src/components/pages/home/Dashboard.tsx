@@ -132,7 +132,7 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-[#f8f8fb] flex flex-col">
       {/* Header */}
-      <Header day="Tuesday" date="20/06/2023" title="Dash" titleSpan="Board" />
+      <Header title="Dash" titleSpan="Board" />
 
       {/* Main Content */}
       <div className="flex flex-1">
