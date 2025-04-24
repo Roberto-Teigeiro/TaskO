@@ -1,8 +1,6 @@
+///Users/santosa/Documents/GitHub/TaskO/MtdrSpring/backend/frontend-service/src/main/frontend/src/components/pages/home/AddTask.tsx
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client"
-
-import type React from "react"
-
 import { useState } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
@@ -11,251 +9,287 @@ import { Textarea } from "@/components/ui/textarea"
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { format } from "date-fns"
-import { CalendarIcon, Plus, Upload } from "lucide-react"
-import { cn } from "@/lib/utils"
+import { Plus, X } from "lucide-react"
+
+interface Task {
+  id?: string
+  title: string
+  sprintId: string
+  date?: string
+  description: string
+  priority: "Extreme" | "High" | "Moderate" | "Low"
+  status: "Not Started" | "In Progress" | "Completed"
+  createdOn: string
+  image?: string
+  assignee?: string
+  storyPoints?: number
+  objective?: string
+  fullDescription?: string
+  additionalNotes?: string[]
+  deadline?: string
+}
 
 interface AddTaskDialogProps {
-  onAddTask?: (task: any) => void
+  readonly onAddTask: (task: Task) => void
 }
 
 export function AddTaskDialog({ onAddTask }: AddTaskDialogProps) {
-  const [taskId, setTaskId] = useState(1)
+  // Removida la variable auth no utilizada
+  const [title, setTitle] = useState("")
+  const [description, setDescription] = useState("")
+  const [fullDescription, setFullDescription] = useState("")
+  const [objective, setObjective] = useState("")
+  const [deadline, setDeadline] = useState<Date>()
   const [open, setOpen] = useState(false)
-  const [date, setDate] = useState<Date>()
-  const [priority, setPriority] = useState<string>("Moderate")
-  const [storyPoints, setStoryPoints] = useState<string>("5")
-  const [title, setTitle] = useState<string>("")
-  const [description, setDescription] = useState<string>("")
-  const [imagePreview, setImagePreview] = useState<string | null>(null)
-
-  
-  
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0] || null
-    if (file) {
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string)
-      }
-      reader.readAsDataURL(file)
-    }
-  }
-
-  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault()
-    const file = e.dataTransfer.files?.[0] || null
-    if (file) {
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string)
-      }
-      reader.readAsDataURL(file)
-    }
-  }
-
-  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault()
-  }
+  const [priority, setPriority] = useState<"Extreme" | "High" | "Moderate" | "Low">("Moderate")
+  const [status, setStatus] = useState<"Not Started" | "In Progress" | "Completed">("Not Started")
+  const [additionalNote, setAdditionalNote] = useState("")
+  const [additionalNotes, setAdditionalNotes] = useState<string[]>([])
+  const [storyPoints, setStoryPoints] = useState<number>(0)
+  const [assignee, setAssignee] = useState("")
 
   const handleSubmit = () => {
-    const newTask = {
-      id: taskId,
-      title,
-      date: date ? format(date, "dd/MM/yyyy") : "",
-      priority,
-      storyPoints,
-      description,
-      image: imagePreview || "/placeholder.svg?height=80&width=80",
-      status: "Not Started",
-      createdOn: format(new Date(), "dd/MM/yyyy"),
+    if (!title.trim()) {
+      alert("Please enter a task title");
+      return;
     }
 
-    if (onAddTask) {
-      onAddTask(newTask)
+    const newTask: Task = {
+      title,
+      sprintId: "", // Esto será establecido por el componente padre
+      description,
+      fullDescription,
+      objective,
+      priority,
+      status,
+      createdOn: new Date().toISOString(),
+      additionalNotes: additionalNotes.length > 0 ? additionalNotes : undefined,
+      deadline: deadline ? format(deadline, "PPP") : undefined,
+      storyPoints: storyPoints || undefined,
+      assignee: assignee || undefined,
+      image: "/placeholder.svg"
     }
-    setTaskId(taskId + 1)
-    
+
+    onAddTask(newTask)
+
     // Reset form
-    setTitle("")
-    setDate(undefined)
-    setPriority("Moderate")
-    setStoryPoints("5")
-    setDescription("")
-    setImagePreview(null)
+    resetForm()
 
     // Close dialog
     setOpen(false)
   }
 
+  const resetForm = () => {
+    setTitle("")
+    setDescription("")
+    setFullDescription("")
+    setObjective("")
+    setDeadline(undefined)
+    setPriority("Moderate")
+    setStatus("Not Started")
+    setAdditionalNote("")
+    setAdditionalNotes([])
+    setStoryPoints(0)
+    setAssignee("")
+  }
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={!!open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button size="sm" variant="ghost" className="text-[#ff6767]">
-          <Plus className="h-4 w-4 mr-1" /> Add task
+          <Plus className="h-4 w-4 mr-1" /> Add Task
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[600px] p-0 gap-0">
-        <DialogHeader className="p-6 pb-2">
-          <div className="flex justify-between items-center">
-            <DialogTitle className="text-xl font-bold border-b-2 border-[#ff6767] pb-1 pr-4 inline-block">
-              Add New Task
-            </DialogTitle>
-            <Button variant="ghost" className="text-gray-500 hover:text-gray-700" onClick={() => setOpen(false)}>
-              Go Back
-            </Button>
-          </div>
+      <DialogContent className="sm:max-w-[600px] p-6 max-h-[90vh] overflow-y-auto" aria-describedby={undefined}>
+        <DialogHeader>
+          <DialogTitle className="text-xl font-bold border-b-2 border-[#ff6767] pb-1">Add New Task</DialogTitle>
         </DialogHeader>
-
-        <div className="p-6 pt-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="md:col-span-2 space-y-4">
-              <div>
-                <label htmlFor="title" className="block text-sm font-medium mb-1">
-                  Title
-                </label>
-                <Input
-                  id="title"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  placeholder="Enter task title"
-                />
-              </div>
-
-              <div>
-                <label htmlFor="date" className="block text-sm font-medium mb-1">
-                  Date
-                </label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn("w-full justify-start text-left font-normal", !date && "text-muted-foreground")}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {date ? format(date, "PPP") : <span>Select a date</span>}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar mode="single" selected={date} onSelect={setDate} initialFocus />
-                  </PopoverContent>
-                </Popover>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-1">Priority</label>
-                <div className="flex items-center space-x-6">
-                  <div className="flex items-center space-x-2">
-                    <div
-                      className={`w-4 h-4 rounded-full ${priority === "Extreme" ? "bg-[#ff6767]" : "border border-gray-300"}`}
-                      onClick={() => setPriority("Extreme")}
-                    />
-                    <span className="text-sm">Extreme</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <div
-                      className={`w-4 h-4 rounded-full ${priority === "Moderate" ? "bg-[#3abeff]" : "border border-gray-300"}`}
-                      onClick={() => setPriority("Moderate")}
-                    />
-                    <span className="text-sm">Moderate</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <div
-                      className={`w-4 h-4 rounded-full ${priority === "Low" ? "bg-[#05a301]" : "border border-gray-300"}`}
-                      onClick={() => setPriority("Low")}
-                    />
-                    <span className="text-sm">Low</span>
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <label htmlFor="description" className="block text-sm font-medium mb-1">
-                  Task Description
-                </label>
-                <Textarea
-                  id="description"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Start writing here..."
-                  className="min-h-[120px]"
-                />
-              </div>
+        
+        <div className="space-y-4 mt-4">
+          <div>
+            <label htmlFor="title" className="block text-sm font-medium mb-1">Task Title *</label>
+            <Input 
+              id="title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Enter task title"
+              required
+            />
+          </div>
+          
+          <div>
+            <label htmlFor="description" className="block text-sm font-medium mb-1">Short Description *</label>
+            <Input
+              id="description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Brief description of the task"
+              required
+            />
+          </div>
+          
+          <div>
+            <label htmlFor="fullDescription" className="block text-sm font-medium mb-1">Full Description</label>
+            <Textarea
+              id="fullDescription"
+              value={fullDescription}
+              onChange={(e) => setFullDescription(e.target.value)}
+              placeholder="Detailed task description"
+              className="min-h-[100px]"
+            />
+          </div>
+          
+          <div>
+            <label htmlFor="objective" className="block text-sm font-medium mb-1">Objective</label>
+            <Input
+              id="objective"
+              value={objective}
+              onChange={(e) => setObjective(e.target.value)}
+              placeholder="Main objective of this task"
+            />
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="priority" className="block text-sm font-medium mb-1">Priority</label>
+              <select
+                id="priority"
+                value={priority}
+                onChange={(e) => setPriority(e.target.value as any)}
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              >
+                <option value="Low">Low</option>
+                <option value="Moderate">Moderate</option>
+                <option value="High">High</option>
+                <option value="Extreme">Extreme</option>
+              </select>
             </div>
-
-            <div className="space-y-4">
-              <div>
-                <label htmlFor="storyPoints" className="block text-sm font-medium mb-1">
-                  Story points
-                </label>
-                <Input
-                  id="storyPoints"
-                  type="number"
-                  value={storyPoints}
-                  onChange={(e) => setStoryPoints(e.target.value)}
-                  className="w-full"
-                  min="1"
-                  max="10"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-1">Upload Image</label>
-                <div
-                  className="border-2 border-dashed border-gray-200 rounded-md p-4 h-[180px] flex flex-col items-center justify-center text-center"
-                  onDrop={handleDrop}
-                  onDragOver={handleDragOver}
-                >
-                  {imagePreview ? (
-                    <div className="relative w-full h-full">
-                      <img
-                        src={imagePreview || "/placeholder.svg"}
-                        alt="Preview"
-                        className="w-full h-full object-contain"
-                      />
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        className="absolute top-0 right-0"
-                        onClick={() => {
-                          setImagePreview(null)
-                        }}
-                      >
-                        ✕
-                      </Button>
-                    </div>
-                  ) : (
-                    <>
-                      <Upload className="h-10 w-10 text-gray-300 mb-2" />
-                      <p className="text-sm text-gray-500 mb-1">Drag&Drop files here</p>
-                      <p className="text-sm text-gray-400 mb-2">or</p>
-                      <label htmlFor="file-upload" className="cursor-pointer">
-                        <span className="bg-gray-100 hover:bg-gray-200 text-gray-600 px-3 py-1.5 rounded text-sm">
-                          Browse
-                        </span>
-                        <input
-                          id="file-upload"
-                          type="file"
-                          className="hidden"
-                          accept="image/*"
-                          onChange={handleFileChange}
-                        />
-                      </label>
-                    </>
-                  )}
-                </div>
-              </div>
+            
+            <div>
+              <label htmlFor="status" className="block text-sm font-medium mb-1">Status</label>
+              <select
+                id="status"
+                value={status}
+                onChange={(e) => setStatus(e.target.value as any)}
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              >
+                <option value="Not Started">Not Started</option>
+                <option value="In Progress">In Progress</option>
+                <option value="Completed">Completed</option>
+              </select>
             </div>
           </div>
-
-          <div className="mt-6">
-            <Button className="bg-[#ff6767] hover:bg-[#ff5252] text-white" onClick={handleSubmit}>
-              Done
+          
+          <div>
+            <label htmlFor="deadline" className="block text-sm font-medium mb-1">Deadline</label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  id="deadline"
+                  variant="outline"
+                  className="w-full justify-start text-left font-normal"
+                >
+                  {deadline ? format(deadline, "PPP") : "Pick a date"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0">
+                <Calendar
+                  mode="single"
+                  selected={deadline}
+                  onSelect={setDeadline}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+        
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="storyPoints" className="block text-sm font-medium mb-1">Story Points</label>
+              <Input
+                id="storyPoints"
+                type="number"
+                min="0"
+                value={storyPoints.toString()}
+                onChange={(e) => setStoryPoints(Number(e.target.value))}
+              />
+            </div>
+            
+            <div>
+              <label htmlFor="assignee" className="block text-sm font-medium mb-1">Assignee</label>
+              <Input
+                id="assignee"
+                value={assignee}
+                onChange={(e) => setAssignee(e.target.value)}
+                placeholder="Task assignee"
+              />
+            </div>
+          </div>
+          
+          <div>
+            <label htmlFor="additionalNote" className="block text-sm font-medium mb-1">Additional Notes</label>
+            <div className="flex gap-2">
+              <Input
+                id="additionalNote"
+                value={additionalNote}
+                onChange={(e) => setAdditionalNote(e.target.value)}
+                placeholder="Add a note"
+                className="flex-1"
+              />
+              <Button 
+                type="button" 
+                onClick={() => {
+                  if (additionalNote.trim()) {
+                    setAdditionalNotes([...additionalNotes, additionalNote]);
+                    setAdditionalNote("");
+                  }
+                }}
+                size="sm"
+              >
+                Add
+              </Button>
+            </div>
+            
+            {additionalNotes.length > 0 && (
+              <ul className="mt-2 space-y-1">
+                {additionalNotes.map((note, idx) => (
+                  <li key={`note-${idx}-${note.substring(0, 10)}`} className="flex items-center justify-between bg-gray-50 p-2 rounded-md">
+                    <span className="text-sm">{note}</span>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        const updatedNotes = [...additionalNotes];
+                        updatedNotes.splice(idx, 1);
+                        setAdditionalNotes(updatedNotes);
+                      }}
+                      className="h-6 w-6 p-0"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+          
+          <div className="flex justify-end gap-2 pt-4">
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                resetForm();
+                setOpen(false);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleSubmit}>
+              Create Task
             </Button>
           </div>
         </div>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
-

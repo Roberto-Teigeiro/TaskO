@@ -1,3 +1,4 @@
+///Users/santosa/Documents/GitHub/TaskO/MtdrSpring/backend/frontend-service/src/main/frontend/src/components/pages/home/AddSprint.tsx
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client"
 import { useState } from "react"
@@ -10,8 +11,18 @@ import { format } from "date-fns"
 import { CalendarIcon, Plus } from "lucide-react"
 import { cn } from "@/lib/utils"
 
+interface SprintType {
+  id: string | number
+  name: string
+  startDate: string
+  endDate: string
+  progress: number
+  status: string
+  tasks: any[]
+}
+
 interface AddSprintDialogProps {
-  onAddSprint?: (sprint: any) => void
+  readonly onAddSprint?: (sprint: SprintType) => void
 }
 
 export function AddSprintDialog({ onAddSprint }: AddSprintDialogProps) {
@@ -24,7 +35,7 @@ export function AddSprintDialog({ onAddSprint }: AddSprintDialogProps) {
   const [status, setStatus] = useState("Not Started")
 
   const handleSubmit = () => {
-    const newSprint = {
+    const newSprint: SprintType = {
       id: sprintId,
       name,
       startDate: startDate ? format(startDate, "dd/MM/yyyy") : "",
@@ -51,28 +62,37 @@ export function AddSprintDialog({ onAddSprint }: AddSprintDialogProps) {
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={!!open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button size="sm" variant="ghost" className="text-[#ff6767]">
           <Plus className="h-4 w-4 mr-1" /> Add Sprint
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px] p-6">
+      <DialogContent className="sm:max-w-[500px] p-6" aria-describedby={undefined}>
         <DialogHeader>
           <DialogTitle className="text-xl font-bold border-b-2 border-[#ff6767] pb-1">Add New Sprint</DialogTitle>
         </DialogHeader>
         
         <div className="space-y-4">
           <div>
-            <label htmlFor="name" className="block text-sm font-medium mb-1">Sprint Name</label>
-            <Input id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Enter sprint name" />
+            <label htmlFor="sprint-name" className="block text-sm font-medium mb-1">Sprint Name</label>
+            <Input 
+              id="sprint-name" 
+              value={name} 
+              onChange={(e) => setName(e.target.value)} 
+              placeholder="Enter sprint name" 
+            />
           </div>
           
           <div>
-            <label className="block text-sm font-medium mb-1">Start Date</label>
+            <label htmlFor="start-date" className="block text-sm font-medium mb-1">Start Date</label>
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !startDate && "text-muted-foreground")}> 
+                <Button 
+                  id="start-date"
+                  variant="outline" 
+                  className={cn("w-full justify-start text-left font-normal", !startDate && "text-muted-foreground")}
+                > 
                   <CalendarIcon className="mr-2 h-4 w-4" />
                   {startDate ? format(startDate, "PPP") : <span>Select a start date</span>}
                 </Button>
@@ -84,10 +104,14 @@ export function AddSprintDialog({ onAddSprint }: AddSprintDialogProps) {
           </div>
           
           <div>
-            <label className="block text-sm font-medium mb-1">End Date</label>
+            <label htmlFor="end-date" className="block text-sm font-medium mb-1">End Date</label>
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !endDate && "text-muted-foreground")}> 
+                <Button 
+                  id="end-date"
+                  variant="outline" 
+                  className={cn("w-full justify-start text-left font-normal", !endDate && "text-muted-foreground")}
+                > 
                   <CalendarIcon className="mr-2 h-4 w-4" />
                   {endDate ? format(endDate, "PPP") : <span>Select an end date</span>}
                 </Button>
@@ -100,12 +124,25 @@ export function AddSprintDialog({ onAddSprint }: AddSprintDialogProps) {
           
           <div>
             <label htmlFor="progress" className="block text-sm font-medium mb-1">Progress</label>
-            <Input id="progress" type="number" value={progress} onChange={(e) => setProgress(Number(e.target.value))} min="0" max="100" className="w-full" />
+            <Input 
+              id="progress" 
+              type="number" 
+              value={progress} 
+              onChange={(e) => setProgress(Number(e.target.value))} 
+              min="0" 
+              max="100" 
+              className="w-full" 
+            />
           </div>
           
           <div>
-            <label className="block text-sm font-medium mb-1">Status</label>
-            <select className="w-full border-gray-300 rounded-md p-2" value={status} onChange={(e) => setStatus(e.target.value)}>
+            <label htmlFor="sprint-status" className="block text-sm font-medium mb-1">Status</label>
+            <select 
+              id="sprint-status"
+              className="w-full border-gray-300 rounded-md p-2" 
+              value={status} 
+              onChange={(e) => setStatus(e.target.value)}
+            >
               <option value="Not Started">Not Started</option>
               <option value="In Progress">In Progress</option>
               <option value="Completed">Completed</option>
