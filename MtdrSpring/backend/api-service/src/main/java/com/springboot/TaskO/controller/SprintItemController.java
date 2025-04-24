@@ -22,12 +22,11 @@ public class SprintItemController {
     }
 
     @GetMapping(value = "/sprintlist/{id}")
-    public ResponseEntity<SprintItem> getSprintItemById(@PathVariable UUID id) {
+    public ResponseEntity<List<SprintItem>> getSprintItemsByProjectId(@PathVariable UUID id) {
         try {
-            ResponseEntity<SprintItem> responseEntity = sprintItemService.getItemById(id);
-            return new ResponseEntity<SprintItem>(responseEntity.getBody(), HttpStatus.OK);
+            return sprintItemService.getItemsByProjectId(id);
         } catch (Exception e) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
     @PostMapping(value = "/sprint/add")

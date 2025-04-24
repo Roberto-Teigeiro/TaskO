@@ -20,7 +20,9 @@ public class ProjectMemberItemService {
     public List<ProjectMemberItem> findAll() {
         return projectMemberItemRepository.findAll();
     }
-
+    public List<ProjectMemberItem> getUserProjects(String userId) {
+        return projectMemberItemRepository.findByUserId(userId);
+    }
     public ResponseEntity<ProjectMemberItem> getProjectMemberItemById(String id) {
         Optional<ProjectMemberItem> projectData = projectMemberItemRepository.findById(id);
         if (projectData.isPresent()) {

@@ -16,10 +16,13 @@ import { cn } from "@/lib/utils"
 
 interface AddTaskDialogProps {
   onAddTask?: (task: any) => void
+  sprintId:string
+  projectId:string
+
 }
 
-export function AddTaskDialog({ onAddTask }: AddTaskDialogProps) {
-  const [taskId, setTaskId] = useState(1)
+export function AddTaskDialog({ onAddTask, sprintId,projectId}: AddTaskDialogProps) {
+  console.log("addtask"+sprintId)
   const [open, setOpen] = useState(false)
   const [date, setDate] = useState<Date>()
   const [priority, setPriority] = useState<string>("Moderate")
@@ -27,9 +30,8 @@ export function AddTaskDialog({ onAddTask }: AddTaskDialogProps) {
   const [title, setTitle] = useState<string>("")
   const [description, setDescription] = useState<string>("")
   const [imagePreview, setImagePreview] = useState<string | null>(null)
-
-  
-  
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null
@@ -58,34 +60,57 @@ export function AddTaskDialog({ onAddTask }: AddTaskDialogProps) {
     e.preventDefault()
   }
 
-  const handleSubmit = () => {
-    const newTask = {
-      id: taskId,
-      title,
-      date: date ? format(date, "dd/MM/yyyy") : "",
-      priority,
-      storyPoints,
-      description,
-      image: imagePreview || "/placeholder.svg?height=80&width=80",
-      status: "Not Started",
-      createdOn: format(new Date(), "dd/MM/yyyy"),
+  const handleSubmit = async () => {
+    if (!title || !date) {
+      setError("Please fill in all required fields")
+      return
     }
 
-    if (onAddTask) {
-      onAddTask(newTask)
-    }
-    setTaskId(taskId + 1)
-    
-    // Reset form
-    setTitle("")
-    setDate(undefined)
-    setPriority("Moderate")
-    setStoryPoints("5")
-    setDescription("")
-    setImagePreview(null)
+    setIsLoading(true)
+    setError(null)
 
-    // Close dialog
-    setOpen(false)
+    try {
+      const response = await fetch('http://localhost:8080/task/add', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title,
+          description,
+          startDate: date.toISOString(),
+          endDate: date.toISOString(), // Using same date for end date for now
+          projectId,
+          sprintId,
+          storyPoints: parseInt(storyPoints),
+          status: "TODO",
+          assignee: null // TODO: Add assignee selection
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to create task')
+      }
+
+      const newTask = await response.json()
+
+      if (onAddTask) {
+        onAddTask(newTask)
+      }
+
+      // Reset form
+      setTitle("")
+      setDate(undefined)
+      setPriority("Moderate")
+      setStoryPoints("5")
+      setDescription("")
+      setImagePreview(null)
+      setOpen(false)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -112,7 +137,7 @@ export function AddTaskDialog({ onAddTask }: AddTaskDialogProps) {
             <div className="md:col-span-2 space-y-4">
               <div>
                 <label htmlFor="title" className="block text-sm font-medium mb-1">
-                  Title
+                  Title *
                 </label>
                 <Input
                   id="title"
@@ -124,7 +149,7 @@ export function AddTaskDialog({ onAddTask }: AddTaskDialogProps) {
 
               <div>
                 <label htmlFor="date" className="block text-sm font-medium mb-1">
-                  Date
+                  Date *
                 </label>
                 <Popover>
                   <PopoverTrigger asChild>
@@ -248,9 +273,17 @@ export function AddTaskDialog({ onAddTask }: AddTaskDialogProps) {
             </div>
           </div>
 
+          {error && (
+            <div className="mt-4 text-red-500 text-sm">{error}</div>
+          )}
+
           <div className="mt-6">
-            <Button className="bg-[#ff6767] hover:bg-[#ff5252] text-white" onClick={handleSubmit}>
-              Done
+            <Button 
+              className="bg-[#ff6767] hover:bg-[#ff5252] text-white" 
+              onClick={handleSubmit}
+              disabled={isLoading}
+            >
+              {isLoading ? "Creating..." : "Done"}
             </Button>
           </div>
         </div>
