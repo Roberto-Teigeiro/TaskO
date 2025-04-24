@@ -117,7 +117,7 @@ export default function Register() {
       }
     } catch (error: any) {
       console.error("Error during registration:", error);
-      setError(error.message || "Error creating account. Please try again.");
+      setError(error.message ?? "Error creating account. Please try again.");
     } finally {
       setLoading(false);
     }

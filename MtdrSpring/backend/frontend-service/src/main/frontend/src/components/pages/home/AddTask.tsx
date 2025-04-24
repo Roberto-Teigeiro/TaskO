@@ -1,3 +1,4 @@
+///Users/santosa/Documents/GitHub/TaskO/MtdrSpring/backend/frontend-service/src/main/frontend/src/components/pages/home/AddTask.tsx
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client"
 
@@ -15,14 +16,12 @@ import { CalendarIcon, Plus, Upload } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 interface AddTaskDialogProps {
-  onAddTask?: (task: any) => void
-  sprintId:string
-  projectId:string
-
+  readonly onAddTask?: (task: any) => void
+  readonly sprintId: string
+  readonly projectId: string
 }
 
-export function AddTaskDialog({ onAddTask, sprintId,projectId}: AddTaskDialogProps) {
-  console.log("addtask"+sprintId)
+export function AddTaskDialog({ onAddTask, sprintId, projectId }: AddTaskDialogProps) {
   const [open, setOpen] = useState(false)
   const [date, setDate] = useState<Date>()
   const [priority, setPriority] = useState<string>("Moderate")
@@ -62,54 +61,79 @@ export function AddTaskDialog({ onAddTask, sprintId,projectId}: AddTaskDialogPro
 
   const handleSubmit = async () => {
     if (!title || !date) {
-      setError("Please fill in all required fields")
-      return
+      setError("Please fill in all required fields");
+      return;
     }
 
-    setIsLoading(true)
-    setError(null)
+    // Verificar que sprintId esté definido
+    if (!sprintId) {
+      setError("No se puede crear una tarea sin un sprint asociado");
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
 
     try {
+      console.log('Creating task with sprintId:', sprintId);
+      
+      // AddTask.tsx - Modificación en handleSubmit
+const taskData = {
+  title,
+  description,
+  startDate: date.toISOString(), // Asegúrate de enviar en formato ISO completo
+  endDate: date.toISOString(),   // Asegúrate de enviar en formato ISO completo
+  projectId,
+  sprintId,
+  priority,
+  storyPoints: parseInt(storyPoints),
+  status: "Not Started",
+  // No envíes campos nulos si el backend no los espera
+  // Asegúrate de que el backend espera estos campos exactamente como los nombras aquí
+};
+
+// Log para debug
+console.log('Task data being sent:', JSON.stringify(taskData));
+
+      
       const response = await fetch('http://localhost:8080/task/add', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          title,
-          description,
-          startDate: date.toISOString(),
-          endDate: date.toISOString(), // Using same date for end date for now
-          projectId,
-          sprintId,
-          storyPoints: parseInt(storyPoints),
-          status: "TODO",
-          assignee: null // TODO: Add assignee selection
-        })
-      })
+        body: JSON.stringify(taskData)
+      });
 
       if (!response.ok) {
-        throw new Error('Failed to create task')
+        const errorText = await response.text();
+        console.error("Error details:", errorText);
+        throw new Error(`Failed to create task: ${errorText}`);
       }
 
-      const newTask = await response.json()
+      const newTask = await response.json();
 
       if (onAddTask) {
-        onAddTask(newTask)
+        onAddTask({
+          ...newTask,
+          priority: priority,
+          status: newTask.status || "Not Started",
+          createdOn: newTask.createdAt || new Date().toISOString(),
+          image: imagePreview || "/placeholder.svg",
+        });
       }
 
       // Reset form
-      setTitle("")
-      setDate(undefined)
-      setPriority("Moderate")
-      setStoryPoints("5")
-      setDescription("")
-      setImagePreview(null)
-      setOpen(false)
+      setTitle("");
+      setDate(undefined);
+      setPriority("Moderate");
+      setStoryPoints("5");
+      setDescription("");
+      setImagePreview(null);
+      setOpen(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred')
+      setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
   }
 
@@ -291,4 +315,3 @@ export function AddTaskDialog({ onAddTask, sprintId,projectId}: AddTaskDialogPro
     </Dialog>
   )
 }
-

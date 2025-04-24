@@ -1,7 +1,8 @@
+///Users/santosa/Documents/GitHub/TaskO/MtdrSpring/backend/frontend-service/src/main/frontend/src/components/pages/home/AddSprint.tsx
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client"
 import { useState } from "react"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Calendar } from "@/components/ui/calendar"
@@ -17,7 +18,10 @@ interface AddSprintDialogProps {
 
 export function AddSprintDialog({ onAddSprint }: AddSprintDialogProps) {
   const { userProjects } = useProjects();
-  console.log(userProjects[0].projectId, "sprintlog")
+  const projectId = Array.isArray(userProjects) && userProjects.length > 0 
+    ? userProjects[0].projectId 
+    : null;
+
   const [open, setOpen] = useState(false)
   const [name, setName] = useState("")
   const [startDate, setStartDate] = useState<Date>()
@@ -28,50 +32,58 @@ export function AddSprintDialog({ onAddSprint }: AddSprintDialogProps) {
 
   const handleSubmit = async () => {
     if (!name || !startDate || !endDate) {
-      setError("Please fill in all required fields")
-      return
+      setError("Please fill in all required fields");
+      return;
     }
 
-    setIsLoading(true)
-    setError(null)
+    if (!projectId) {
+      setError("No hay proyectos disponibles para crear sprints");
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
 
     try {
+      // Formatea las fechas correctamente
+      const sprintData = {
+        name,
+        description,
+        startDate: startDate.toISOString(), // Formato ISO completo
+        endDate: endDate.toISOString(),     // Formato ISO completo
+        projectId
+      };
+
+      console.log("Sprint data being sent:", JSON.stringify(sprintData));
+
       const response = await fetch('http://localhost:8080/sprint/add', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          name,
-          description,
-          startDate: startDate.toISOString(),
-          endDate: endDate.toISOString(),
-          projectId: Array.isArray(userProjects) && userProjects[0] ? userProjects[0].projectId : null
-        })
-      })
+        body: JSON.stringify(sprintData)
+      });
 
       if (!response.ok) {
-        throw new Error('Failed to create sprint')
-      } else{
-        console.log("Sprint created successfully")
+        throw new Error('Failed to create sprint');
       }
 
-      const newSprint = await response.json()
+      const newSprint = await response.json();
 
       if (onAddSprint) {
-        onAddSprint(newSprint)
+        onAddSprint(newSprint);
       }
 
       // Reset form
-      setName("")
-      setStartDate(undefined)
-      setEndDate(undefined)
-      setDescription("")
-      setOpen(false)
+      setName("");
+      setStartDate(undefined);
+      setEndDate(undefined);
+      setDescription("");
+      setOpen(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred')
+      setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
   }
 
@@ -85,6 +97,9 @@ export function AddSprintDialog({ onAddSprint }: AddSprintDialogProps) {
       <DialogContent className="sm:max-w-[500px] p-6">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold border-b-2 border-[#ff6767] pb-1">Add New Sprint</DialogTitle>
+          <DialogDescription className="text-sm text-gray-500">
+            Crea un nuevo sprint para organizar tus tareas del proyecto.
+          </DialogDescription>
         </DialogHeader>
         
         <div className="space-y-4">
