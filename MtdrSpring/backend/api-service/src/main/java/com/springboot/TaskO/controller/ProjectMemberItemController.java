@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 import java.util.List;
 import java.util.UUID;
-
+import java.util.Map;
 @RestController
 public class ProjectMemberItemController {
     @Autowired
@@ -34,6 +34,19 @@ public class ProjectMemberItemController {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
+    @GetMapping("/projects/{projectId}/members")
+    public ResponseEntity<List<ProjectMemberItem>> getProjectMembers(@PathVariable UUID projectId) {
+        try {
+            List<ProjectMemberItem> members = projectMemberItemService.getProjectMembers(projectId);
+            return new ResponseEntity<>(members, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+
+    @GetMapping("/")
 
     @PostMapping(value = "/project/{projectId}/adduser/{teamId}")
     public ResponseEntity<ProjectMemberItem> addUserToProject(@RequestBody Map<String, String> payload, @PathVariable UUID projectId, @PathVariable UUID teamId) {
