@@ -1,5 +1,4 @@
 // @/components/ui/Task-item.tsx
-// @/components/ui/Task-item.tsx
 import { CircleDot } from "lucide-react"
 import { AssignUserDialog } from "@/components/pages/home/AssignUserDialog"
 import { ChangeStatusDialog } from "@/components/pages/home/ChangeStatusDialog"
@@ -77,15 +76,25 @@ export function TaskItem({
         return;
       }
       
+      // First, get the current task to preserve all fields
+      const getResponse = await fetch(`http://localhost:8080/task/${taskId}`);
+      
+      if (!getResponse.ok) {
+        throw new Error(`Error al obtener la tarea: ${getResponse.status}`);
+      }
+      
+      const currentTask = await getResponse.json();
+      
+      // Update only the assignee field
+      currentTask.assignee = userId;
+
+      // Call the generic update endpoint with the complete object
       const response = await fetch(`http://localhost:8080/task/${taskId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          taskId,
-          userId,
-        }),
+        body: JSON.stringify(currentTask),
       });
 
       // Verificar si la respuesta es exitosa

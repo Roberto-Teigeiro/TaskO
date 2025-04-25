@@ -76,7 +76,7 @@ export function AssignUserDialog({ taskId, currentAssignee, onAssign }: AssignUs
         
         // Usar datos de respaldo para simplificar (en un caso real deberías obtener nombres de usuarios)
         const backupUsers: UserType[] = [
-          { id: '1', name: 'Ana García', email: 'ana@example.com', avatar: '/placeholder.svg' },
+          { id: 'user_2wCDemERnBiP3fgOlBNPDwV3ncB', name: 'Ana García', email: 'ana@example.com', avatar: '/placeholder.svg' },
           { id: '2', name: 'Carlos López', email: 'carlos@example.com', avatar: '/placeholder.svg' },
           { id: '3', name: 'Elena Martínez', email: 'elena@example.com', avatar: '/placeholder.svg' },
         ]
@@ -91,7 +91,7 @@ export function AssignUserDialog({ taskId, currentAssignee, onAssign }: AssignUs
       
       // Datos de ejemplo en caso de fallo para asegurar que la UI funcione
       setUsers([
-        { id: '1', name: 'Ana García', email: 'ana@example.com', avatar: '/placeholder.svg' },
+        { id: 'user_2wCDemERnBiP3fgOlBNPDwV3ncB', name: 'Ana García', email: 'ana@example.com', avatar: '/placeholder.svg' },
         { id: '2', name: 'Carlos López', email: 'carlos@example.com', avatar: '/placeholder.svg' },
         { id: '3', name: 'Elena Martínez', email: 'elena@example.com', avatar: '/placeholder.svg' },
       ])
