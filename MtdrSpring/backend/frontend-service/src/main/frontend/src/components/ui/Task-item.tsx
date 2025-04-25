@@ -102,8 +102,6 @@ export function TaskItem({
         const errorText = await response.text();
         throw new Error(`Error ${response.status}: ${errorText}`);
       }
-
-      console.log(`Usuario ${userId} asignado correctamente a tarea ${taskId}`);
       
       // Si hay una función de actualización, usarla en lugar de recargar la página
       if (onTaskUpdated) {

@@ -1,23 +1,20 @@
-// @/components/pages/home/AssignUserDialog.tsx
 // AssignUserDialog.tsx
+// AssignUserDialog.tsx
+// @/components/pages/home/AssignUserDialog.tsx
 import { useState, useEffect } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { UserPlus, User, Check } from "lucide-react"
 import { useProjects } from "../../../context/ProjectContext"
 
+// Definir las interfaces basadas en los datos reales del API
 interface UserType {
-  readonly id: string
-  readonly name: string
-  readonly email: string
+  readonly id?: string
+  readonly userId?: string
+  readonly name?: string
+  readonly email?: string
   readonly avatar?: string
-}
-
-interface TeamMemberType {
-  readonly userId: string
-  readonly projectId: string
-  readonly teamId: string
-  readonly role: string | null
+  readonly role?: string | null
 }
 
 interface AssignUserDialogProps {
@@ -38,11 +35,7 @@ export function AssignUserDialog({ taskId, currentAssignee, onAssign }: AssignUs
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // Generar un ID único para el diálogo
-  const dialogDescriptionId = `assign-dialog-description-${taskId}`;
-
   useEffect(() => {
-    // Solo cargar usuarios cuando el diálogo está abierto
     if (open) {
       fetchUsers()
     }
@@ -59,7 +52,7 @@ export function AssignUserDialog({ taskId, currentAssignee, onAssign }: AssignUs
         throw new Error('No se ha seleccionado un proyecto');
       }
       
-      // Llamada a la API para obtener usuarios del proyecto
+      // Llamada a la API para obtener usuarios
       const response = await fetch(`http://localhost:8080/projects/${projectId}/members`)
       
       if (!response.ok) {
@@ -68,23 +61,19 @@ export function AssignUserDialog({ taskId, currentAssignee, onAssign }: AssignUs
       
       const data = await response.json()
       
-      // Si la respuesta es un array de objetos con userId (miembros del equipo),
-      // necesitamos convertirlos al formato de UserType
-      if (data && data.length > 0 && 'userId' in data[0]) {
-        // Los datos son de tipo TeamMemberType, necesitamos obtener usuarios reales
-        const teamMembers = data as TeamMemberType[];
-        
-        // Usar datos de respaldo para simplificar (en un caso real deberías obtener nombres de usuarios)
-        const backupUsers: UserType[] = [
-          { id: 'user_2wCDemERnBiP3fgOlBNPDwV3ncB', name: 'Ana García', email: 'ana@example.com', avatar: '/placeholder.svg' },
-          { id: '2', name: 'Carlos López', email: 'carlos@example.com', avatar: '/placeholder.svg' },
-          { id: '3', name: 'Elena Martínez', email: 'elena@example.com', avatar: '/placeholder.svg' },
-        ]
-        setUsers(backupUsers)
-      } else {
-        // Los datos ya están en formato UserType
-        setUsers(data as UserType[])
-      }
+      // Transformar los datos recibidos al formato esperado
+      const formattedUsers: UserType[] = data.map((user: any) => {
+        // Extraer el ID de usuario desde el objeto recibido
+        return {
+          id: user.userId, // Usar userId como id
+          name: user.name || `Usuario ${user.userId.slice(-4)}`, // Usar nombre o fallback
+          email: user.email || '',
+          avatar: user.avatar || null,
+          role: user.role
+        }
+      });
+      
+      setUsers(formattedUsers)
     } catch (error) {
       console.error('Error fetching users:', error)
       setError('No se pudieron cargar los usuarios. Usando datos de respaldo.')
@@ -122,6 +111,9 @@ export function AssignUserDialog({ taskId, currentAssignee, onAssign }: AssignUs
       setSelectedUser(userId);
     }
   }
+
+  // ID único para el DialogDescription para conectarlo con aria-describedby
+  const dialogDescriptionId = `assign-dialog-description-${taskId}`;
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -165,8 +157,8 @@ export function AssignUserDialog({ taskId, currentAssignee, onAssign }: AssignUs
                         ? "bg-[#fff8f8] border border-[#ff6767]"
                         : "hover:bg-gray-100 border border-transparent"
                     }`}
-                    onClick={() => setSelectedUser(user.id)}
-                    onKeyDown={(e) => handleUserKeyDown(e, user.id)}
+                    onClick={() => setSelectedUser(user.id || '')}
+                    onKeyDown={(e) => user.id && handleUserKeyDown(e, user.id)}
                     tabIndex={0}
                     role="button"
                     aria-pressed={selectedUser === user.id}
@@ -175,7 +167,7 @@ export function AssignUserDialog({ taskId, currentAssignee, onAssign }: AssignUs
                       {user.avatar ? (
                         <img
                           src={user.avatar}
-                          alt={user.name}
+                          alt={user.name || 'Usuario'}
                           className="h-10 w-10 rounded-full object-cover"
                         />
                       ) : (
@@ -185,8 +177,8 @@ export function AssignUserDialog({ taskId, currentAssignee, onAssign }: AssignUs
                       )}
                     </div>
                     <div className="flex-1">
-                      <h4 className="font-medium">{user.name}</h4>
-                      <p className="text-sm text-gray-500">{user.email}</p>
+                      <h4 className="font-medium">{user.name || `Usuario ${user.id?.slice(-4)}`}</h4>
+                      <p className="text-sm text-gray-500">{user.email || (user.role && `Rol: ${user.role}`) || ''}</p>
                     </div>
                     {selectedUser === user.id && (
                       <Check className="h-5 w-5 text-[#ff6767]" />
