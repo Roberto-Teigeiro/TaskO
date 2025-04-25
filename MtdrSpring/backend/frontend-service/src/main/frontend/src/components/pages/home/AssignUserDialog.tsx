@@ -1,46 +1,57 @@
 // AssignUserDialog.tsx
 // @/components/pages/home/AssignUserDialog.tsx
-// @/components/pages/home/AssignUserDialog.tsx
+// AssignUserDialog.tsx
 import { useState, useEffect } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { UserPlus, User, Check } from "lucide-react"
+import { useProjects } from "../../../context/ProjectContext"
 
 interface UserType {
-  id: string
-  name: string
-  email: string
-  avatar?: string
+  readonly id: string
+  readonly name: string
+  readonly email: string
+  readonly avatar?: string
 }
 
 interface AssignUserDialogProps {
-  taskId: string
-  currentAssignee?: string
-  onAssign: (taskId: string, userId: string) => Promise<void>
+  readonly taskId: string
+  readonly currentAssignee?: string
+  readonly onAssign: (taskId: string, userId: string) => Promise<void>
 }
 
 export function AssignUserDialog({ taskId, currentAssignee, onAssign }: AssignUserDialogProps) {
+  // Obtener el projectId desde el contexto
+  const { userProjects } = useProjects();
+  const projectId = userProjects && userProjects.length > 0 ? userProjects[0].projectId : null;
+  
   const [open, setOpen] = useState(false)
   const [users, setUsers] = useState<UserType[]>([])
-  const [selectedUser, setSelectedUser] = useState<string | null>(currentAssignee || null)
+  const [selectedUser, setSelectedUser] = useState<string | null>(currentAssignee ?? null)
   const [isLoading, setIsLoading] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  console.log("users", users)
   useEffect(() => {
     if (open) {
       fetchUsers()
     }
     // Reset selected user when dialog opens
-    setSelectedUser(currentAssignee || null)
+    setSelectedUser(currentAssignee ?? null)
   }, [open, currentAssignee])
 
   const fetchUsers = async () => {
     setIsLoading(true)
     setError(null)
     try {
+      // Verificar si tenemos un projectId válido
+      if (!projectId) {
+        throw new Error('No se ha seleccionado un proyecto');
+      }
+      
       // Llamada a la API para obtener usuarios
-      const response = await fetch('http://localhost:8080/users')
+      const response = await fetch(`http://localhost:8080/projects/${projectId}/members`)
       
       if (!response.ok) {
         throw new Error(`Error ${response.status}: ${response.statusText}`)
@@ -75,6 +86,14 @@ export function AssignUserDialog({ taskId, currentAssignee, onAssign }: AssignUs
       } finally {
         setIsSubmitting(false)
       }
+    }
+  }
+
+  // Manejadores para accesibilidad de teclado
+  const handleUserKeyDown = (e: React.KeyboardEvent, userId: string) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      setSelectedUser(userId);
     }
   }
 
@@ -124,6 +143,10 @@ export function AssignUserDialog({ taskId, currentAssignee, onAssign }: AssignUs
                         : "hover:bg-gray-100 border border-transparent"
                     }`}
                     onClick={() => setSelectedUser(user.id)}
+                    onKeyDown={(e) => handleUserKeyDown(e, user.id)}
+                    tabIndex={0}
+                    role="button"
+                    aria-pressed={selectedUser === user.id}
                   >
                     <div className="flex-shrink-0">
                       {user.avatar ? (

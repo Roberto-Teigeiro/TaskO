@@ -7,9 +7,9 @@ import { CircleDot, Check } from "lucide-react"
 import { BackendStatus, FrontendStatus, getBackendStatus } from "@/components/ui/Task-item"
 
 interface ChangeStatusDialogProps {
-  taskId: string
-  currentStatus: FrontendStatus
-  onStatusChange: (taskId: string, status: BackendStatus) => Promise<void>
+  readonly taskId: string;
+  readonly currentStatus: FrontendStatus;
+  readonly onStatusChange: (taskId: string, status: BackendStatus) => Promise<void>;
 }
 
 export function ChangeStatusDialog({ taskId, currentStatus, onStatusChange }: ChangeStatusDialogProps) {
@@ -42,6 +42,14 @@ export function ChangeStatusDialog({ taskId, currentStatus, onStatusChange }: Ch
       setError('No se pudo cambiar el estado de la tarea. Inténtalo de nuevo.')
     } finally {
       setIsSubmitting(false)
+    }
+  }
+
+  // Manejador para accesibilidad de teclado
+  const handleStatusKeyDown = (e: React.KeyboardEvent, statusValue: FrontendStatus) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      setSelectedStatus(statusValue);
     }
   }
 
@@ -81,6 +89,10 @@ export function ChangeStatusDialog({ taskId, currentStatus, onStatusChange }: Ch
                   : "hover:bg-gray-100 border border-transparent"
               }`}
               onClick={() => setSelectedStatus(status.value as FrontendStatus)}
+              onKeyDown={(e) => handleStatusKeyDown(e, status.value as FrontendStatus)}
+              tabIndex={0}
+              role="button"
+              aria-pressed={selectedStatus === status.value}
             >
               <CircleDot className={`h-5 w-5 ${status.color}`} />
               <div className="flex-1">
