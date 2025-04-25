@@ -34,6 +34,7 @@ public class TaskItem {
     @Column(name = "ASSIGNEE")
     private String assignee;
     @Column(name = "STATUS")
+    @Enumerated(EnumType.STRING)
     private Status status;
     @Column(name = "STARTDATE")
     private OffsetDateTime startDate;
@@ -42,13 +43,13 @@ public class TaskItem {
     @Column(name = "COMMENTS")
     private String comments;
     @Column(name = "STORYPOINTS")
-    private int storyPoints;
+    private Integer storyPoints;
     @Column(name = "ESTIMATED_HOURS")
-    private double estimatedHours;
+    private Double estimatedHours;
 
     public TaskItem(){
     }
-    public TaskItem(UUID projectId, UUID sprintId, UUID taskId, String title, String description, String assignee, Status status, OffsetDateTime startDate, OffsetDateTime endDate, String comments, int storyPoints, double estimatedHours) {
+    public TaskItem(UUID projectId, UUID sprintId, UUID taskId, String title, String description, String assignee, Status status, OffsetDateTime startDate, OffsetDateTime endDate, String comments, Integer storyPoints, Double estimatedHours) {
         this.projectId = projectId;
         this.sprintId = sprintId;
         this.taskId = taskId;
@@ -143,11 +144,11 @@ public class TaskItem {
         this.comments = comments;
     }
 
-    public int getStoryPoints() {
+    public Integer getStoryPoints() {
         return storyPoints;
     }
 
-    public void setStoryPoints(int storyPoints) {
+    public void setStoryPoints(Integer storyPoints) {
         this.storyPoints = storyPoints;
     }
 
@@ -155,11 +156,11 @@ public class TaskItem {
         return startDate;
     }
 
-    public double getEstimatedHours() {
+    public Double getEstimatedHours() {
         return estimatedHours;
     }
 
-    public void setEstimatedHours(double estimatedHours) {
+    public void setEstimatedHours(Double estimatedHours) {
         this.estimatedHours = estimatedHours;
     }
    

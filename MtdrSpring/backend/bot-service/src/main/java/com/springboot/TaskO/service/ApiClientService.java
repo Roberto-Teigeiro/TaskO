@@ -129,4 +129,16 @@ public class ApiClientService {
                 SprintItem[].class);
         return Arrays.asList(sprints != null ? sprints : new SprintItem[0]);
     }
+
+    public UserItem registerUserByEmail(String email, String telegramId) {
+        try {
+            return restTemplate.postForObject(
+                    apiBaseUrl +  "/users/register",
+                    Map.of("email", email, "telegramId", telegramId),
+                    UserItem.class);
+        } catch (Exception e) {
+            logger.error("Failed to register user with email: " + email + " and telegram: " + telegramId, e);
+            throw new RuntimeException("Registration failed: " + e.getMessage(), e);
+        }
+    }
 }

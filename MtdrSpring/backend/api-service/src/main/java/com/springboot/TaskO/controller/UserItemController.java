@@ -51,28 +51,60 @@ public class UserItemController {
     @PostMapping("/users/register")
     public ResponseEntity<?> registerTelegramUser(@RequestBody Map<String, String> registration) {
         try {
-            String userId = registration.get("username");
+            String email = registration.get("email");
             String telegramId = registration.get("telegramId");
             
-            if (userId == null || telegramId == null) {
-                return ResponseEntity.badRequest().body("Username and telegramId are required");
+            if (email == null || telegramId == null) {
+                return ResponseEntity.badRequest().body("Email y telegramId son requeridos");
             }
             
-            // Add telegram to user and get the updated user
-            UserItem updatedUser = userItemService.addTelegramToUserItem(userId, telegramId);
+            // Busca el usuario por email
+            List<UserItem> users = userItemService.findAll();
+            UserItem user = users.stream()
+                .filter(u -> email.equalsIgnoreCase(u.getEmail()))
+                .findFirst()
+                .orElse(null);
             
-            if (updatedUser == null) {
+            if (user == null) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body("User not found with username: " + userId);
+                    .body("Usuario no encontrado con ese correo: " + email);
             }
             
-            // Return the updated user
-            return ResponseEntity.ok(updatedUser);
+            // Actualiza el telegramUsername
+            user.setTelegramUsername(telegramId);
+            userItemService.addUserItem(user);
+            
+            return ResponseEntity.ok(user);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body("Error registering telegram user: " + e.getMessage());
+                .body("Error registrando usuario de telegram: " + e.getMessage());
         }
     }
+    // @PostMapping("/users/register")
+    // public ResponseEntity<?> registerTelegramUser(@RequestBody Map<String, String> registration) {
+    //     try {
+    //         String userId = registration.get("username");
+    //         String telegramId = registration.get("telegramId");
+            
+    //         if (userId == null || telegramId == null) {
+    //             return ResponseEntity.badRequest().body("Username and telegramId are required");
+    //         }
+            
+    //         // Add telegram to user and get the updated user
+    //         UserItem updatedUser = userItemService.addTelegramToUserItem(userId, telegramId);
+            
+    //         if (updatedUser == null) {
+    //             return ResponseEntity.status(HttpStatus.NOT_FOUND)
+    //                 .body("User not found with username: " + userId);
+    //         }
+            
+    //         // Return the updated user
+    //         return ResponseEntity.ok(updatedUser);
+    //     } catch (Exception e) {
+    //         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+    //             .body("Error registering telegram user: " + e.getMessage());
+    //     }
+    // }
 }
 
 

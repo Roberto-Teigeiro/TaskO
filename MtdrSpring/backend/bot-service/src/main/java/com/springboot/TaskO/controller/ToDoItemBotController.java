@@ -23,7 +23,6 @@ import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardRemove;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
@@ -66,105 +65,75 @@ public class ToDoItemBotController extends TelegramLongPollingBot {
             String messageTextFromTelegram = update.getMessage().getText();
             long chatId = update.getMessage().getChatId();
             String telegramUsername = update.getMessage().getFrom().getUserName();
-
-            // Handle registration command or process
-            if (messageTextFromTelegram.equals(BotCommands.REGISTER.getCommand())) {
-                // Start registration process
-                SendMessage messageToTelegram = new SendMessage();
-                messageToTelegram.setChatId(chatId);
-                messageToTelegram.setText("Please enter your TaskO username to register:");
-                
-                // Mark this user as awaiting registration
-                awaitingRegistration.put(chatId, true);
-                
-                try {
-                    execute(messageToTelegram);
-                } catch (TelegramApiException e) {
-                    logger.error("Error while sending message: " + e.getMessage(), e);
-                }
-            } 
-            // Handle registration with username parameter
-            else if (messageTextFromTelegram.startsWith(BotCommands.REGISTER.getCommand() + " ")) {
+ 
+            if (messageTextFromTelegram.startsWith(BotCommands.REGISTER.getCommand() + " ")) {
                 SendMessage messageToTelegram = new SendMessage();
                 String[] parts = messageTextFromTelegram.split(" ");
                 if (parts.length > 1) {
-                    String username = parts[1];
-                    logger.info("Registering user: " + username + " with Telegram username: " + telegramUsername);
+                    String email = parts[1].trim();
+                    logger.info("Registering user with email: " + email + " and Telegram username: " + telegramUsername);
                     try {
-                        apiClientService.registerUser(username, telegramUsername);
+                        apiClientService.registerUserByEmail(email, telegramUsername);
                         messageToTelegram.setChatId(chatId);
-                        messageToTelegram.setText("You have been successfully registered as " + username + "! You can now use TaskO through this chat.");
+                        messageToTelegram.setText("¡Registro exitoso! Ahora puedes usar TaskO con este chat.");
                     } catch (Exception e) {
                         messageToTelegram.setChatId(chatId);
-                        messageToTelegram.setText("Registration failed: " + e.getMessage() + ". Please try again.");
+                        messageToTelegram.setText("No se pudo registrar: " + e.getMessage() + ". Verifica tu correo de TaskO.");
                         logger.error("Registration error: " + e.getMessage(), e);
                     }
                 } else {
                     messageToTelegram.setChatId(chatId);
-                    messageToTelegram.setText("Please provide your username like this: /register yourusername");
+                    messageToTelegram.setText("Por favor, escribe tu correo así: /register tu@email.com");
                 }
-                
                 try {
                     execute(messageToTelegram);
                 } catch (TelegramApiException e) {
                     logger.error("Error while sending message: " + e.getMessage(), e);
                 }
             }
-            // Process username input if awaiting registration
-            else if (awaitingRegistration.getOrDefault(chatId, false)) {
-                String username = messageTextFromTelegram;
+            else if (messageTextFromTelegram.startsWith(BotCommands.REGISTER.getCommand())) {
                 SendMessage messageToTelegram = new SendMessage();
                 messageToTelegram.setChatId(chatId);
-                
-                try {
-                    apiClientService.registerUser(username, telegramUsername);
-                    messageToTelegram.setText("You have been successfully registered as " + username + "! You can now use TaskO through this chat.");
-                    
-                    // Registration complete, show main screen
-                    ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
-                    List<KeyboardRow> keyboard = new ArrayList<>();
-
-                    KeyboardRow row = new KeyboardRow();
-                    row.add(BotLabels.LIST_ALL_ITEMS.getLabel());
-                    row.add(BotLabels.ADD_NEW_ITEM.getLabel());
-                    keyboard.add(row);
-
-                    keyboardMarkup.setKeyboard(keyboard);
-                    messageToTelegram.setReplyMarkup(keyboardMarkup);
-                    
-                } catch (Exception e) {
-                    messageToTelegram.setText("Registration failed: " + e.getMessage() + ". Please try again with /register command.");
-                    logger.error("Registration error: " + e.getMessage(), e);
-                }
-                
-                // Clear registration state
-                awaitingRegistration.remove(chatId);
-                
+                messageToTelegram.setText("Por favor, escribe tu correo de TaskO para registrarte. Ejemplo: /register tu@email.com");
                 try {
                     execute(messageToTelegram);
                 } catch (TelegramApiException e) {
                     logger.error("Error while sending message: " + e.getMessage(), e);
                 }
+
             }
-            // Handle other commands as before
             else if (messageTextFromTelegram.equals(BotCommands.START_COMMAND.getCommand())
                     || messageTextFromTelegram.equals(BotLabels.SHOW_MAIN_SCREEN.getLabel())) {
 
                 SendMessage messageToTelegram = new SendMessage();
                 messageToTelegram.setChatId(chatId);
-                messageToTelegram.setText(BotMessages.HELLO_MYTODO_BOT.getMessage());
 
+                StringBuilder sb = new StringBuilder();
+                sb.append("¡Bienvenido a TaskO Bot!\n\n");
+                sb.append("Comandos disponibles:\n");
+                sb.append("/register <correo> - Registrar tu cuenta\n");
+                sb.append("/addtask Título;Descripción;Horas - Agregar tarea\n");
+                sb.append("/mytasks - Ver tus tareas pendientes\n");
+                sb.append("/sprints - Ver sprints activos\n");
+                sb.append("/sprinttasks <número> - Ver tareas de un sprint\n");
+                sb.append("/starttask <número tarea>;<número sprint> - Asignar tarea a sprint\n");
+                sb.append("/completetask <número tarea>;horas - Completar tarea\n");
+                sb.append("/deletetask <número tarea> - Eliminar tarea\n");
+
+                messageToTelegram.setText(sb.toString());
+
+                // Opcional: solo muestra botones útiles
                 ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
                 List<KeyboardRow> keyboard = new ArrayList<>();
 
                 KeyboardRow row = new KeyboardRow();
-                row.add(BotLabels.LIST_ALL_ITEMS.getLabel());
-                row.add(BotLabels.ADD_NEW_ITEM.getLabel());
+                row.add("/mytasks");
+                row.add("/addtask");
                 keyboard.add(row);
 
                 row = new KeyboardRow();
-                row.add(BotLabels.SHOW_MAIN_SCREEN.getLabel());
-                row.add(BotLabels.HIDE_MAIN_SCREEN.getLabel());
+                row.add("/sprints");
+                row.add("/register");
                 keyboard.add(row);
 
                 keyboardMarkup.setKeyboard(keyboard);
@@ -175,7 +144,6 @@ public class ToDoItemBotController extends TelegramLongPollingBot {
                 } catch (TelegramApiException e) {
                     logger.error(e.getLocalizedMessage(), e);
                 }
-
             } else if (messageTextFromTelegram.indexOf(BotLabels.DONE.getLabel()) != -1) {
                 String done = messageTextFromTelegram.substring(0,
                         messageTextFromTelegram.indexOf(BotLabels.DASH.getLabel()));
@@ -409,100 +377,42 @@ public class ToDoItemBotController extends TelegramLongPollingBot {
                     userSprintIndexMap.put(chatId, sprintIndexMap);
                 }
                 try { execute(messageToTelegram); } catch (TelegramApiException e) { logger.error(e.getMessage(), e); }
-            } else if (messageTextFromTelegram.equals(BotCommands.HIDE_COMMAND.getCommand())
+            } else if (messageTextFromTelegram.startsWith("/deletetask")) {
+                // Ejemplo: /deletetask <número de tarea>
+                String[] parts = messageTextFromTelegram.replace("/deletetask", "").trim().split(";");
+                SendMessage messageToTelegram = new SendMessage();
+                messageToTelegram.setChatId(chatId);
+                if (parts.length < 1) {
+                    messageToTelegram.setText("Formato: /deletetask <número de tarea>\nPrimero usa /mytasks para ver la lista.");
+                } else {
+                    try {
+                        int taskNumber = Integer.parseInt(parts[0].trim());
+                        Map<Integer, UUID> indexMap = userTaskIndexMap.get(chatId);
+                        if (indexMap == null || !indexMap.containsKey(taskNumber)) {
+                            messageToTelegram.setText("Número de tarea inválido. Usa /mytasks para ver la lista.");
+                        } else {
+                            UUID taskId = indexMap.get(taskNumber);
+                            apiClientService.deleteTask(taskId);
+                            messageToTelegram.setText("Tarea eliminada correctamente.");
+                        }
+                    } catch (Exception e) {
+                        messageToTelegram.setText("Error al procesar el comando. Asegúrate de usar el formato correcto.");
+                    }
+                }
+                try { execute(messageToTelegram); } catch (TelegramApiException e) { logger.error(e.getMessage(), e); }
+            }
+            else if (messageTextFromTelegram.equals(BotCommands.HIDE_COMMAND.getCommand())
                     || messageTextFromTelegram.equals(BotLabels.HIDE_MAIN_SCREEN.getLabel())) {
 
                 BotHelper.sendMessageToTelegram(chatId, BotMessages.BYE.getMessage(), this);
 
-            } else if (messageTextFromTelegram.equals(BotCommands.TODO_LIST.getCommand())
-                    || messageTextFromTelegram.equals(BotLabels.LIST_ALL_ITEMS.getLabel())
-                    || messageTextFromTelegram.equals(BotLabels.MY_TODO_LIST.getLabel())) {
-
-                List<TaskItem> allItems = apiClientService.getAllTasks();
-                ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
-                List<KeyboardRow> keyboard = new ArrayList<>();
-
-                KeyboardRow mainScreenRowTop = new KeyboardRow();
-                mainScreenRowTop.add(BotLabels.SHOW_MAIN_SCREEN.getLabel());
-                keyboard.add(mainScreenRowTop);
-
-                KeyboardRow firstRow = new KeyboardRow();
-                firstRow.add(BotLabels.ADD_NEW_ITEM.getLabel());
-                keyboard.add(firstRow);
-
-                KeyboardRow TaskOTitleRow = new KeyboardRow();
-                TaskOTitleRow.add(BotLabels.MY_TODO_LIST.getLabel());
-                keyboard.add(TaskOTitleRow);
-
-                List<TaskItem> activeItems = allItems.stream()
-                        .filter(item -> item.getStatus() != TaskItem.Status.COMPLETED)
-                        .collect(Collectors.toList());
-
-                for (TaskItem item : activeItems) {
-                    KeyboardRow currentRow = new KeyboardRow();
-                    currentRow.add(item.getDescription());
-                    currentRow.add(item.getTaskId() + BotLabels.DASH.getLabel() + BotLabels.DONE.getLabel());
-                    keyboard.add(currentRow);
-                }
-
-                List<TaskItem> doneItems = allItems.stream()
-                        .filter(item -> item.getStatus() == TaskItem.Status.COMPLETED)
-                        .collect(Collectors.toList());
-
-                for (TaskItem item : doneItems) {
-                    KeyboardRow currentRow = new KeyboardRow();
-                    currentRow.add(item.getDescription());
-                    currentRow.add(item.getTaskId() + BotLabels.DASH.getLabel() + BotLabels.UNDO.getLabel());
-                    currentRow.add(item.getTaskId() + BotLabels.DASH.getLabel() + BotLabels.DELETE.getLabel());
-                    keyboard.add(currentRow);
-                }
-
-                KeyboardRow mainScreenRowBottom = new KeyboardRow();
-                mainScreenRowBottom.add(BotLabels.SHOW_MAIN_SCREEN.getLabel());
-                keyboard.add(mainScreenRowBottom);
-
-                keyboardMarkup.setKeyboard(keyboard);
-
+            } else {
                 SendMessage messageToTelegram = new SendMessage();
                 messageToTelegram.setChatId(chatId);
-                messageToTelegram.setText(BotLabels.MY_TODO_LIST.getLabel());
-                messageToTelegram.setReplyMarkup(keyboardMarkup);
-
+                messageToTelegram.setText("Comando no reconocido. Usa /start para ver la lista de comandos disponibles.");
                 try {
                     execute(messageToTelegram);
                 } catch (TelegramApiException e) {
-                    logger.error(e.getLocalizedMessage(), e);
-                }
-
-            } else if (messageTextFromTelegram.equals(BotCommands.ADD_ITEM.getCommand())
-                    || messageTextFromTelegram.equals(BotLabels.ADD_NEW_ITEM.getLabel())) {
-                try {
-                    SendMessage messageToTelegram = new SendMessage();
-                    messageToTelegram.setChatId(chatId);
-                    messageToTelegram.setText(BotMessages.TYPE_NEW_TODO_ITEM.getMessage());
-                    ReplyKeyboardRemove keyboardMarkup = new ReplyKeyboardRemove(true);
-                    messageToTelegram.setReplyMarkup(keyboardMarkup);
-
-                    execute(messageToTelegram);
-
-                } catch (Exception e) {
-                    logger.error(e.getLocalizedMessage(), e);
-                }
-
-            } else {
-                try {
-                    TaskItem newItem = new TaskItem();
-                    newItem.setDescription(messageTextFromTelegram);
-                    newItem.setStartDate(OffsetDateTime.now());
-                    newItem.setStatus(TaskItem.Status.TODO);
-                    apiClientService.addTask(newItem);
-
-                    SendMessage messageToTelegram = new SendMessage();
-                    messageToTelegram.setChatId(chatId);
-                    messageToTelegram.setText(BotMessages.NEW_ITEM_ADDED.getMessage());
-
-                    execute(messageToTelegram);
-                } catch (Exception e) {
                     logger.error(e.getLocalizedMessage(), e);
                 }
             }
