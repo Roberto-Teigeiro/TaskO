@@ -35,13 +35,11 @@ public class TaskController {
     }
 
     
-    @GetMapping(value = "/task/{sprintId}")
+    @GetMapping(value = "/task/sprint/{sprintId}")
     public List<TaskItem> getAllToDoItemsBySprintId(@PathVariable("sprintId") UUID sprintId){
         return taskItemService.findAllBySprintId(sprintId);
     }
-
     
-
 
     @GetMapping("/task/{id}")
     public ResponseEntity<TaskItem> getTaskItemById(@PathVariable("id") UUID id){
