@@ -222,17 +222,17 @@ export default function Dashboard() {
                   <ProgressCircle 
                     value={sprintStats.total > 0 ? Math.round((sprintStats.completed / sprintStats.total) * 100) : 0} 
                     color="#32CD32" 
-                    label={`Completed (${sprintStats.completed}/${sprintStats.total})`} 
+                    label={`Completed Sprints (${sprintStats.completed}/${sprintStats.total})`} 
                   />
                   <ProgressCircle 
                     value={sprintStats.total > 0 ? Math.round((sprintStats.inProgress / sprintStats.total) * 100) : 0} 
                     color="#4169E1" 
-                    label={`In Progress (${sprintStats.inProgress}/${sprintStats.total})`} 
+                    label={`In Progress Sprints (${sprintStats.inProgress}/${sprintStats.total})`} 
                   />
                   <ProgressCircle 
                     value={sprintStats.total > 0 ? Math.round((sprintStats.notStarted / sprintStats.total) * 100) : 0} 
                     color="#ff6b6b" 
-                    label={`Not Started (${sprintStats.notStarted}/${sprintStats.total})`} 
+                    label={`Not Started Sprints (${sprintStats.notStarted}/${sprintStats.total})`} 
                   />
                 </div>
               </div>
@@ -243,10 +243,6 @@ export default function Dashboard() {
                 <div className="space-y-4">
                   {sprints.map((sprint) => {
                     const tasks = sprintTasks[sprint.sprintId] || [];
-                    const totalTasks = tasks.length;
-                    const completedTasks = tasks.filter(task => task.status === "COMPLETED").length;
-                    const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
-
                     const completedTasksByUser = tasks
                       .filter(task => task.status === "COMPLETED" && task.assignee)
                       .reduce((acc: Record<string, { userId: string; userName: string; count: number }>, task) => {
@@ -262,37 +258,36 @@ export default function Dashboard() {
                       }, {});
 
                     const completedTasksArray = Object.values(completedTasksByUser);
-                    console.log(`Sprint ${sprint.sprintId} completed tasks:`, completedTasksArray);
 
                     return (
                       <div key={sprint.sprintId} className="border-b pb-4 last:border-b-0">
-                        <div className="flex justify-between items-center mb-2">
-                          <h4 className="font-semibold text-gray-700">{sprint.name}</h4>
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm text-gray-500">Completion Rate:</span>
-                            <span className="font-semibold bg-blue-500 text-white rounded-md border-2 border-blue-700 px-2 py-1">
-                              {completionRate}%
-                            </span>
-                            <span className="text-sm text-gray-500">
-                              ({completedTasks}/{totalTasks} tasks)
-                            </span>
-                          </div>
+                        <div className="flex justify-between items-center mb-3">
+                          <h4 className="font-semibold text-lg text-gray-800">{sprint.name}</h4>
+                          <span className="text-sm text-gray-500">
+                            {tasks.filter(task => task.status === "COMPLETED").length} completed tasks
+                          </span>
                         </div>
-                        <div className="space-y-2">
+                        <div className="space-y-3">
                           {completedTasksArray.length > 0 ? (
                             completedTasksArray.map((task) => (
-                              <div key={task.userId} className="flex justify-between items-center">
-                                <div className="flex items-center gap-2">
-                                  <Avatar className="w-6 h-6">
-                                    <AvatarFallback>{task.userName.charAt(0)}</AvatarFallback>
+                              <div key={task.userId} className="flex justify-between items-center bg-gray-50 p-3 rounded-lg">
+                                <div className="flex items-center gap-3">
+                                  <Avatar className="w-8 h-8">
+                                    <AvatarFallback className="bg-blue-100 text-blue-800">
+                                      {task.userName.charAt(0).toUpperCase()}
+                                    </AvatarFallback>
                                   </Avatar>
-                                  <span>{task.userName}</span>
+                                  <span className="font-medium text-gray-700">{task.userName}</span>
                                 </div>
-                                <span className="font-semibold bg-green-500 text-white rounded-md border-2 border-green-700 px-2 py-1">{task.count} task(s) completed</span>
+                                <span className="font-semibold bg-green-100 text-green-800 rounded-full px-3 py-1">
+                                  {task.count} {task.count === 1 ? 'task' : 'tasks'}
+                                </span>
                               </div>
                             ))
                           ) : (
-                            <p className="text-gray-500 text-sm">No completed tasks in this sprint</p>
+                            <div className="text-center py-4 bg-gray-50 rounded-lg">
+                              <p className="text-gray-500">No completed tasks in this sprint</p>
+                            </div>
                           )}
                         </div>
                       </div>
@@ -341,7 +336,7 @@ export default function Dashboard() {
           </div>
 
           <div>
-            <h1>Your Projects</h1>
+            <h1></h1>
             {projectsArray.length === 0 ? (
                 <p>No projects found</p>
             ) : (
