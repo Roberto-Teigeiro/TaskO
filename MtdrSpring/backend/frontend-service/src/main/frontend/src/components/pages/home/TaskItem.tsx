@@ -113,6 +113,7 @@ export function TaskItem({
         return;
       }
 
+      
       const response = await fetch(`http://localhost:8080/task/status`, {
         method: 'PUT',
         headers: {
