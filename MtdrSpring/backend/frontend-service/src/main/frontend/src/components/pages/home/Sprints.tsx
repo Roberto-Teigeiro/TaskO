@@ -319,7 +319,13 @@ export default function Sprints() {
           </Tabs>
 
           <div className="space-y-4">
-            {filteredSprints.map((sprint) => {
+            {filteredSprints
+              .sort((a, b) => {
+                const rateA = getCompletionRate(a.id);
+                const rateB = getCompletionRate(b.id);
+                return rateB - rateA; // Sort in descending order
+              })
+              .map((sprint) => {
               const completionRate = getCompletionRate(sprint.id);
 
               return (
