@@ -104,15 +104,6 @@ export function TaskItem({
       }
     } catch (error) {
       console.error('Error al asignar usuario:', error);
-      // Aquí podrías mostrar un mensaje de error al usuario
-      
-      // Simulamos una actualización exitosa para desarrollo
-      if (process.env.NODE_ENV === 'development') {
-        console.log('Modo desarrollo: simulando actualización exitosa');
-        if (onTaskUpdated) {
-          onTaskUpdated();
-        }
-      }
     }
   };
 
@@ -129,15 +120,25 @@ export function TaskItem({
         return;
       }
 
-      const response = await fetch(`http://localhost:8080/task/status`, {
+      // Primero, obtener la tarea actual para no perder datos
+      const getResponse = await fetch(`http://localhost:8080/task/${taskId}`);
+      
+      if (!getResponse.ok) {
+        throw new Error(`Error al obtener la tarea: ${getResponse.status}`);
+      }
+      
+      const currentTask = await getResponse.json();
+      
+      // Actualizar solo el estado
+      currentTask.status = newStatus;
+
+      // Llamar al endpoint genérico de actualización con el objeto completo
+      const response = await fetch(`http://localhost:8080/task/${taskId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          taskId,
-          status: newStatus,
-        }),
+        body: JSON.stringify(currentTask),
       });
 
       // Mejor manejo de respuestas de error
@@ -148,7 +149,7 @@ export function TaskItem({
 
       console.log(`Estado actualizado correctamente para tarea ${taskId} a ${newStatus}`);
       
-      // Si hay una función de actualización, usarla en lugar de recargar la página
+      // Actualizar UI
       if (onTaskUpdated) {
         onTaskUpdated();
       } else {
@@ -156,14 +157,6 @@ export function TaskItem({
       }
     } catch (error) {
       console.error('Error al actualizar estado:', error);
-      
-      // Simulamos una actualización exitosa para desarrollo
-      if (process.env.NODE_ENV === 'development') {
-        console.log('Modo desarrollo: simulando actualización exitosa');
-        if (onTaskUpdated) {
-          onTaskUpdated();
-        }
-      }
     }
   };
 
@@ -222,7 +215,7 @@ export function TaskItem({
 
         <div className="flex-shrink-0 ml-2">
           <img
-            src={image || "/placeholder.svg"}
+            src={image ?? "/placeholder.svg"}
             alt={title}
             className="w-12 h-12 md:w-16 md:h-16 rounded-lg object-cover"
           />
@@ -273,7 +266,7 @@ export function CompletedTaskItem({ title, description, daysAgo, image, complete
 
         <div className="flex-shrink-0 ml-2">
           <img
-            src={image || "/placeholder.svg"}
+            src={image ?? "/placeholder.svg"}
             alt={title}
             className="w-12 h-12 md:w-16 md:h-16 rounded-lg object-cover"
           />
