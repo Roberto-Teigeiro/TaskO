@@ -1,3 +1,4 @@
+///Users/santosa/Documents/GitHub/TaskO/MtdrSpring/backend/api-service/src/main/java/com/springboot/TaskO/model/TaskItem.java
 package com.springboot.TaskO.model;
 
 import javax.persistence.*;
@@ -103,8 +104,8 @@ public class TaskItem {
         return assignee;
     }
 
-    public void setAsignee(String asignee) {
-        this.assignee = asignee;
+    public void setAssignee(String assignee) {
+        this.assignee = assignee;
     }
 
     public Status getStatus() {

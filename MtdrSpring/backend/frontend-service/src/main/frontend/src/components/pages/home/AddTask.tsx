@@ -15,12 +15,32 @@ import { format } from "date-fns"
 import { CalendarIcon, Plus, Upload } from "lucide-react"
 import { cn } from "@/lib/utils"
 
+
 interface AddTaskDialogProps {
   readonly onAddTask?: (task: any) => void
   readonly sprintId: string
   readonly projectId: string
 }
 
+// Función para convertir de frontend a backend
+const getBackendStatus = (frontendStatus: string) => {
+  switch (frontendStatus) {
+    case "Not Started": return "TODO";
+    case "In Progress": return "IN_PROGRESS";
+    case "Completed": return "COMPLETED";
+    default: return "TODO";
+  }
+};
+
+// Function to convert backend status to frontend status
+const getFrontendStatus = (backendStatus: string) => {
+  switch (backendStatus) {
+    case "TODO": return "Not Started";
+    case "IN_PROGRESS": return "In Progress";
+    case "COMPLETED": return "Completed";
+    default: return "Not Started";
+  }
+};
 export function AddTaskDialog({ onAddTask, sprintId, projectId }: AddTaskDialogProps) {
   const [open, setOpen] = useState(false)
   const [date, setDate] = useState<Date>()
@@ -59,83 +79,85 @@ export function AddTaskDialog({ onAddTask, sprintId, projectId }: AddTaskDialogP
     e.preventDefault()
   }
 
-  const handleSubmit = async () => {
-    if (!title || !date) {
-      setError("Please fill in all required fields");
-      return;
-    }
-
-    // Verificar que sprintId esté definido
-    if (!sprintId) {
-      setError("No se puede crear una tarea sin un sprint asociado");
-      return;
-    }
-
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      console.log('Creating task with sprintId:', sprintId);
-      
-      // AddTask.tsx - Modificación en handleSubmit
-const taskData = {
-  title,
-  description,
-  startDate: date.toISOString(), // Asegúrate de enviar en formato ISO completo
-  endDate: date.toISOString(),   // Asegúrate de enviar en formato ISO completo
-  projectId,
-  sprintId,
-  priority,
-  storyPoints: parseInt(storyPoints),
-  status: "Not Started",
-  // No envíes campos nulos si el backend no los espera
-  // Asegúrate de que el backend espera estos campos exactamente como los nombras aquí
-};
-
-// Log para debug
-console.log('Task data being sent:', JSON.stringify(taskData));
-
-      
-      const response = await fetch('http://localhost:8080/task/add', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(taskData)
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("Error details:", errorText);
-        throw new Error(`Failed to create task: ${errorText}`);
-      }
-
-      const newTask = await response.json();
-
-      if (onAddTask) {
-        onAddTask({
-          ...newTask,
-          priority: priority,
-          status: newTask.status || "Not Started",
-          createdOn: newTask.createdAt || new Date().toISOString(),
-          image: imagePreview || "/placeholder.svg",
-        });
-      }
-
-      // Reset form
-      setTitle("");
-      setDate(undefined);
-      setPriority("Moderate");
-      setStoryPoints("5");
-      setDescription("");
-      setImagePreview(null);
-      setOpen(false);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
-    } finally {
-      setIsLoading(false);
-    }
+ const handleSubmit = async () => {
+  if (!title || !date) {
+    setError("Please fill in all required fields");
+    return;
   }
+
+  // Verificar que sprintId esté definido
+  if (!sprintId) {
+    setError("No se puede crear una tarea sin un sprint asociado");
+    return;
+  }
+
+  setIsLoading(true);
+  setError(null);
+
+  try {
+    console.log('Creating task with sprintId:', sprintId);
+    
+    // Objeto ajustado a la estructura del backend
+    const taskData = {
+      projectId: projectId, // UUID
+      sprintId: sprintId,   // UUID
+      title: title,
+      description: description,
+      assignee: null,       // Correcto según el modelo TaskItem.java
+      status: getBackendStatus("Not Started"), // Valor del enum en backend
+      startDate: date.toISOString(), // Formato ISO completo
+      endDate: date.toISOString(),
+      comments: description, // Si no tienes campo comments específico
+      storyPoints: parseInt(storyPoints)
+    };
+    
+    console.log('Task data:', taskData);
+    
+    const response = await fetch('http://localhost:8080/task/add', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(taskData)
+    });
+
+    // Mejor manejo de errores
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("Error response:", response.status, response.statusText);
+      console.error("Error details:", errorText);
+      throw new Error(`Failed to create task: ${response.status} ${errorText}`);
+    }
+
+    // Registro de respuesta exitosa
+    const newTask = await response.json();
+    console.log("Task created successfully:", newTask);
+    
+    if (onAddTask) {
+      onAddTask({
+        ...newTask,
+        priority: priority,
+        status: getFrontendStatus(newTask.status) || "Not Started", // Convertir de backend a frontend
+        createdOn: newTask.startDate || new Date().toISOString(),
+        image: imagePreview || "/placeholder.svg",
+      });
+    }
+
+    // Resetear formulario
+    setTitle("");
+    setDate(undefined);
+    setPriority("Moderate");
+    setStoryPoints("5");
+    setDescription("");
+    setImagePreview(null);
+    setOpen(false);
+  } catch (err) {
+    console.error("Error in task creation:", err);
+    setError(err instanceof Error ? err.message : 'An error occurred');
+  } finally {
+    setIsLoading(false);
+  }
+}
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>

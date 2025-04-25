@@ -42,17 +42,30 @@ interface SprintType {
 }
 
 interface ServerTask {
-  taskId: string
-  title: string
-  description: string
-  sprintId: string
-  priority?: string
-  status?: string
-  createdAt?: string
-  image?: string
-  assignedTo?: string
-  storyPoints?: number
+  taskId: string;
+  title: string;
+  description: string;
+  sprintId: string;
+  assignee?: string; 
+  status?: string;
+  startDate?: string;
+  endDate?: string;
+  comments?: string;
+  storyPoints?: number;
+  priority?: string;
+  image?: string;
+  createdAt?: string; // Para compatibilidad con la UI actual
 }
+
+// Función para convertir status del backend al frontend
+const getFrontendStatus = (backendStatus: string) => {
+  switch (backendStatus) {
+    case "TODO": return "Not Started";
+    case "IN_PROGRESS": return "In Progress";
+    case "COMPLETED": return "Completed";
+    default: return "Not Started";
+  }
+};
 
 export default function Sprints() {
   const { userProjects } = useProjects()
@@ -119,10 +132,8 @@ export default function Sprints() {
     try {
       setLoadedSprints(prev => ({ ...prev, [sprintId]: true }));
       
-      // Verificar la URL correcta para tu backend
       const response = await fetch(`http://localhost:8080/task/sprint/${sprintId}`);
       
-      // Manejo de respuesta y errores mejorado
       if (!response.ok) {
         if (response.status === 404) {
           console.log(`No tasks found for sprint ${sprintId}`);
@@ -137,7 +148,6 @@ export default function Sprints() {
       const data = await response.json();
       console.log(`Tasks for sprint ${sprintId}:`, data);
       
-      // Transformar correctamente los datos
       const transformedTasks = data.map((task: ServerTask) => ({
         id: task.taskId,
         title: task.title,
@@ -146,10 +156,10 @@ export default function Sprints() {
         sprintName: "", 
         date: task.createdAt ? new Date(task.createdAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
         priority: task.priority ?? "Low",
-        status: task.status ?? "Not Started",
+        status: getFrontendStatus(task.status ?? "TODO"),
         createdOn: task.createdAt ? new Date(task.createdAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
         image: task.image ?? "/placeholder.svg",
-        assignee: task.assignedTo ?? "",
+        assignee: task.assignee ?? "",
         storyPoints: task.storyPoints ?? 0,
       }));
       
@@ -169,31 +179,20 @@ export default function Sprints() {
     }
   }, [expandedSprint, fetchTasks]);
 
+  // Modificar handleAddTask en Sprints.tsx
   const handleAddTask = async (newTask: Task) => {
     try {
-      // Asegurarte de que newTask.sprintId esté definido
       if (!newTask.sprintId) {
         console.error('Error: sprintId is undefined');
         return;
       }
       
-      setTasksBySprint(prev => {
-        const currentTasks = prev[newTask.sprintId] || [];
-        return {
-          ...prev,
-          [newTask.sprintId]: [...currentTasks, newTask]
-        };
-      });
-      
-      // Actualizar la UI inmediatamente
-      setSelectedTask(newTask.id);
-      
-      // Actualizar el estado loadedSprints para forzar una recarga de tareas
+      // Forzar una recarga de las tareas para este sprint
       setLoadedSprints(prev => ({ ...prev, [newTask.sprintId]: false }));
       
-      // Si el sprint está expandido, recarga sus tareas
+      // Si este sprint está actualmente expandido, obtener sus tareas inmediatamente
       if (expandedSprint === newTask.sprintId) {
-        fetchTasks(newTask.sprintId);
+        await fetchTasks(newTask.sprintId);
       }
       
     } catch (error) {
@@ -203,7 +202,6 @@ export default function Sprints() {
   
   const handleAddSprint = (newSprint: SprintType) => {
     setSprints((prevSprints) => [...prevSprints, newSprint]);
-    // Expandir el nuevo sprint creado
     setExpandedSprint(newSprint.id);
   }
 

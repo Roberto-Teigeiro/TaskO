@@ -4,10 +4,20 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Button } from "@/components/ui/button"
 import { CircleDot, Check } from "lucide-react"
 
+// Función para convertir de frontend a backend
+const getBackendStatus = (frontendStatus: string) => {
+  switch (frontendStatus) {
+    case "Not Started": return "TODO";
+    case "In Progress": return "IN_PROGRESS";
+    case "Completed": return "COMPLETED";
+    default: return "TODO";
+  }
+};
+
 interface ChangeStatusDialogProps {
   taskId: string
   currentStatus: "Not Started" | "In Progress" | "Completed"
-  onStatusChange: (taskId: string, status: "Not Started" | "In Progress" | "Completed") => Promise<void>
+  onStatusChange: (taskId: string, status: "TODO" | "IN_PROGRESS" | "COMPLETED") => Promise<void>
 }
 
 export function ChangeStatusDialog({ taskId, currentStatus, onStatusChange }: ChangeStatusDialogProps) {
@@ -31,7 +41,9 @@ export function ChangeStatusDialog({ taskId, currentStatus, onStatusChange }: Ch
     
     setIsSubmitting(true)
     try {
-      await onStatusChange(taskId, selectedStatus)
+      // Convertir el estado al formato del backend
+      const backendStatus = getBackendStatus(selectedStatus);
+      await onStatusChange(taskId, backendStatus)
       setOpen(false)
     } catch (error) {
       console.error('Error changing status:', error)
