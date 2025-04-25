@@ -16,11 +16,27 @@ import { useNavigate } from 'react-router-dom';
 interface BackendSprint {
   sprintId: string;
   projectId: string;
-  title: string;
+  name: string;
   description: string;
   startDate: string;
   endDate: string;
   status: string;
+}
+
+interface Task {
+  taskId: string;
+  title: string;
+  description: string;
+  sprintId: string;
+  assignee?: string;
+  status?: string;
+  startDate?: string;
+  endDate?: string;
+  comments?: string;
+  storyPoints?: number;
+  priority?: string;
+  image?: string;
+  createdAt?: string;
 }
 
 export default function Dashboard() {
@@ -33,6 +49,8 @@ export default function Dashboard() {
     notStarted: 0,
     total: 0
   });
+  const [sprints, setSprints] = useState<BackendSprint[]>([]);
+  const [sprintTasks, setSprintTasks] = useState<Record<string, Task[]>>({});
 
   useEffect(() => {
     const checkUserProjects = async () => {
@@ -69,6 +87,8 @@ export default function Dashboard() {
         }
         
         const data = await response.json() as BackendSprint[];
+        console.log('Fetched sprints:', data);
+        
         const currentDate = new Date();
         
         const sprintsWithStatus = data.map((sprint) => {
@@ -85,13 +105,31 @@ export default function Dashboard() {
           }
           
           return {
-            id: sprint.sprintId,
-            name: sprint.title,
-            startDate: sprint.startDate,
-            endDate: sprint.endDate,
+            ...sprint,
             status
           };
         });
+
+        console.log('Sprints with status:', sprintsWithStatus);
+        setSprints(sprintsWithStatus);
+
+        // Fetch tasks for each sprint
+        const tasksBySprint: Record<string, Task[]> = {};
+        for (const sprint of sprintsWithStatus) {
+          try {
+            const tasksResponse = await fetch(`http://localhost:8080/task/sprint/${sprint.sprintId}`);
+            if (!tasksResponse.ok) {
+              throw new Error(`Failed to fetch tasks for sprint ${sprint.sprintId}`);
+            }
+            const tasks = await tasksResponse.json() as Task[];
+            tasksBySprint[sprint.sprintId] = tasks;
+          } catch (err) {
+            console.error(`Error fetching tasks for sprint ${sprint.sprintId}:`, err);
+            tasksBySprint[sprint.sprintId] = [];
+          }
+        }
+        console.log('Tasks by sprint:', tasksBySprint);
+        setSprintTasks(tasksBySprint);
 
         // Calculate sprint statistics
         const totalSprints = sprintsWithStatus.length;
@@ -177,32 +215,7 @@ export default function Dashboard() {
           <div className="bg-gray-50 rounded-xl p-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Task Status */}
-              <div className="bg-white rounded-xl p-4 shadow-sm">
-                <h3 className="font-medium mb-4">Sprint Status</h3>
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full bg-[#32CD32]"></div>
-                      <span>Completed</span>
-                    </div>
-                    <span className="font-semibold">{sprintStats.completed}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full bg-[#4169E1]"></div>
-                      <span>In Progress</span>
-                    </div>
-                    <span className="font-semibold">{sprintStats.inProgress}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full bg-[#ff6b6b]"></div>
-                      <span>Not Started</span>
-                    </div>
-                    <span className="font-semibold">{sprintStats.notStarted}</span>
-                  </div>
-                </div>
-              </div>
+              
 
               {/* Task Status and Completed Tasks */}
               <div className="space-y-6">
@@ -244,6 +257,57 @@ export default function Dashboard() {
                       image=""
                     />
                   ))}
+                </div>
+              </div>
+
+              {/* Sprint KPIs Section */}
+              <div className="bg-white rounded-xl p-4 shadow-sm">
+                <h3 className="font-medium mb-4">Tasks Completed by Person per Sprint</h3>
+                <div className="space-y-4">
+                  {sprints.map((sprint) => {
+                    const tasks = sprintTasks[sprint.sprintId] || [];
+                    const completedTasks = tasks
+                      .filter(task => task.status === "COMPLETED" && task.assignee)
+                      .reduce((acc: Record<string, { userId: string; userName: string; count: number }>, task) => {
+                        if (!acc[task.assignee!]) {
+                          acc[task.assignee!] = {
+                            userId: task.assignee!,
+                            userName: task.assignee!, // In a real app, you'd fetch the user's name
+                            count: 0
+                          };
+                        }
+                        acc[task.assignee!].count++;
+                        return acc;
+                      }, {});
+
+                    const completedTasksArray = Object.values(completedTasks);
+                    console.log(`Sprint ${sprint.sprintId} completed tasks:`, completedTasksArray);
+
+                    return (
+                      <div key={sprint.sprintId} className="border-b pb-4 last:border-b-0">
+                        <h4 className="font-semibold text-gray-700 mb-2">
+                          {sprint.name} 
+                        </h4>
+                        <div className="space-y-2">
+                          {completedTasksArray.length > 0 ? (
+                            completedTasksArray.map((task) => (
+                              <div key={task.userId} className="flex justify-between items-center">
+                                <div className="flex items-center gap-2">
+                                  <Avatar className="w-6 h-6">
+                                    <AvatarFallback>{task.userName.charAt(0)}</AvatarFallback>
+                                  </Avatar>
+                                  <span>{task.userName}</span>
+                                </div>
+                                <span className="font-semibold">{task.count} Task Completed</span>
+                              </div>
+                            ))
+                          ) : (
+                            <p className="text-gray-500 text-sm">No completed tasks in this sprint</p>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             </div>
