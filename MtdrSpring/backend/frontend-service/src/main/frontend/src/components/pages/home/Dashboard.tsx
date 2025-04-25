@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { Header } from "@/components/Header";
 import { Sidebar } from "@/components/Sidebar";
-import { CompletedTaskItem } from "@/components/ui/Task-item";
 import { ProgressCircle } from "@/components/ui/Progress-circle";
 import { useUser } from "@clerk/react-router";
 import { useProjects } from '../../../context/ProjectContext';
@@ -16,11 +15,27 @@ import { useNavigate } from 'react-router-dom';
 interface BackendSprint {
   sprintId: string;
   projectId: string;
-  title: string;
+  name: string;
   description: string;
   startDate: string;
   endDate: string;
   status: string;
+}
+
+interface Task {
+  taskId: string;
+  title: string;
+  description: string;
+  sprintId: string;
+  assignee?: string;
+  status?: string;
+  startDate?: string;
+  endDate?: string;
+  comments?: string;
+  storyPoints?: number;
+  priority?: string;
+  image?: string;
+  createdAt?: string;
 }
 
 export default function Dashboard() {
@@ -33,6 +48,8 @@ export default function Dashboard() {
     notStarted: 0,
     total: 0
   });
+  const [sprints, setSprints] = useState<BackendSprint[]>([]);
+  const [sprintTasks, setSprintTasks] = useState<Record<string, Task[]>>({});
 
   useEffect(() => {
     const checkUserProjects = async () => {
@@ -69,6 +86,8 @@ export default function Dashboard() {
         }
         
         const data = await response.json() as BackendSprint[];
+        console.log('Fetched sprints:', data);
+        
         const currentDate = new Date();
         
         const sprintsWithStatus = data.map((sprint) => {
@@ -85,13 +104,31 @@ export default function Dashboard() {
           }
           
           return {
-            id: sprint.sprintId,
-            name: sprint.title,
-            startDate: sprint.startDate,
-            endDate: sprint.endDate,
+            ...sprint,
             status
           };
         });
+
+        console.log('Sprints with status:', sprintsWithStatus);
+        setSprints(sprintsWithStatus);
+
+        // Fetch tasks for each sprint
+        const tasksBySprint: Record<string, Task[]> = {};
+        for (const sprint of sprintsWithStatus) {
+          try {
+            const tasksResponse = await fetch(`http://localhost:8080/task/sprint/${sprint.sprintId}`);
+            if (!tasksResponse.ok) {
+              throw new Error(`Failed to fetch tasks for sprint ${sprint.sprintId}`);
+            }
+            const tasks = await tasksResponse.json() as Task[];
+            tasksBySprint[sprint.sprintId] = tasks;
+          } catch (err) {
+            console.error(`Error fetching tasks for sprint ${sprint.sprintId}:`, err);
+            tasksBySprint[sprint.sprintId] = [];
+          }
+        }
+        console.log('Tasks by sprint:', tasksBySprint);
+        setSprintTasks(tasksBySprint);
 
         // Calculate sprint statistics
         const totalSprints = sprintsWithStatus.length;
@@ -175,82 +212,131 @@ export default function Dashboard() {
 
           {/* Task Section */}
           <div className="bg-gray-50 rounded-xl p-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="flex flex-col gap-4">
               {/* Task Status */}
               <div className="bg-white rounded-xl p-4 shadow-sm">
-                <h3 className="font-medium mb-4">Sprint Status</h3>
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full bg-[#32CD32]"></div>
-                      <span>Completed</span>
-                    </div>
-                    <span className="font-semibold">{sprintStats.completed}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full bg-[#4169E1]"></div>
-                      <span>In Progress</span>
-                    </div>
-                    <span className="font-semibold">{sprintStats.inProgress}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full bg-[#ff6b6b]"></div>
-                      <span>Not Started</span>
-                    </div>
-                    <span className="font-semibold">{sprintStats.notStarted}</span>
-                  </div>
+                <h3 className="font-medium mb-4 text-xl">Sprints Status per Project KPI</h3>
+
+                {/* Progress Circles */}
+                <div className="flex justify-center gap-6 items-center">
+                  <ProgressCircle 
+                    value={sprintStats.total > 0 ? Math.round((sprintStats.completed / sprintStats.total) * 100) : 0} 
+                    color="#32CD32" 
+                    label={`Completed Sprints (${sprintStats.completed}/${sprintStats.total})`} 
+                  />
+                  <ProgressCircle 
+                    value={sprintStats.total > 0 ? Math.round((sprintStats.inProgress / sprintStats.total) * 100) : 0} 
+                    color="#4169E1" 
+                    label={`In Progress Sprints (${sprintStats.inProgress}/${sprintStats.total})`} 
+                  />
+                  <ProgressCircle 
+                    value={sprintStats.total > 0 ? Math.round((sprintStats.notStarted / sprintStats.total) * 100) : 0} 
+                    color="#ff6b6b" 
+                    label={`Not Started Sprints (${sprintStats.notStarted}/${sprintStats.total})`} 
+                  />
                 </div>
               </div>
 
-              {/* Task Status and Completed Tasks */}
-              <div className="space-y-6">
-                {/* Task Status */}
-                <div className="bg-white rounded-xl p-4 shadow-sm">
-                  <h3 className="font-medium mb-4">Sprints Status KPI</h3>
+              {/* Sprint KPIs Section */}
+              <div className="bg-white rounded-xl p-4 shadow-sm">
+                <h3 className="font-medium text-xl mb-4">Tasks Completed by Person per Sprint KPI</h3>
+                <div className="space-y-4">
+                  {sprints.map((sprint) => {
+                    const tasks = sprintTasks[sprint.sprintId] || [];
+                    const completedTasksByUser = tasks
+                      .filter(task => task.status === "COMPLETED" && task.assignee)
+                      .reduce((acc: Record<string, { userId: string; userName: string; count: number }>, task) => {
+                        if (!acc[task.assignee!]) {
+                          acc[task.assignee!] = {
+                            userId: task.assignee!,
+                            userName: task.assignee!,
+                            count: 0
+                          };
+                        }
+                        acc[task.assignee!].count++;
+                        return acc;
+                      }, {});
 
-                  {/* Progress Circles */}
-                  <div className="flex justify-around items-center">
-                    <ProgressCircle 
-                      value={sprintStats.total > 0 ? Math.round((sprintStats.completed / sprintStats.total) * 100) : 0} 
-                      color="#32CD32" 
-                      label={`Completed (${sprintStats.completed}/${sprintStats.total})`} 
-                    />
-                    <ProgressCircle 
-                      value={sprintStats.total > 0 ? Math.round((sprintStats.inProgress / sprintStats.total) * 100) : 0} 
-                      color="#4169E1" 
-                      label={`In Progress (${sprintStats.inProgress}/${sprintStats.total})`} 
-                    />
-                    <ProgressCircle 
-                      value={sprintStats.total > 0 ? Math.round((sprintStats.notStarted / sprintStats.total) * 100) : 0} 
-                      color="#ff6b6b" 
-                      label={`Not Started (${sprintStats.notStarted}/${sprintStats.total})`} 
-                    />
-                  </div>
+                    const completedTasksArray = Object.values(completedTasksByUser);
+
+                    return (
+                      <div key={sprint.sprintId} className="border-b pb-4 last:border-b-0">
+                        <div className="flex justify-between items-center mb-3">
+                          <h4 className="font-semibold text-lg text-gray-800">{sprint.name}</h4>
+                          <span className="text-sm text-gray-500">
+                            {tasks.filter(task => task.status === "COMPLETED").length} completed tasks
+                          </span>
+                        </div>
+                        <div className="space-y-3">
+                          {completedTasksArray.length > 0 ? (
+                            completedTasksArray.map((task) => (
+                              <div key={task.userId} className="flex justify-between items-center bg-gray-50 p-3 rounded-lg">
+                                <div className="flex items-center gap-3">
+                                  <Avatar className="w-8 h-8">
+                                    <AvatarFallback className="bg-blue-100 text-blue-800">
+                                      {task.userName.charAt(0).toUpperCase()}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <span className="font-medium text-gray-700">{task.userName}</span>
+                                </div>
+                                <span className="font-semibold bg-green-100 text-green-800 rounded-full px-3 py-1">
+                                  {task.count} {task.count === 1 ? 'task' : 'tasks'}
+                                </span>
+                              </div>
+                            ))
+                          ) : (
+                            <div className="text-center py-4 bg-gray-50 rounded-lg">
+                              <p className="text-gray-500">No completed tasks in this sprint</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
+              </div>
 
-                {/* Completed Tasks */}
-                <div className="bg-white rounded-xl p-4 shadow-sm">
-                  <h3 className="font-medium text-gray-700 mb-4">Completed Tasks</h3>
+              {/* Sprint Completion Summary */}
+              <div className="bg-white rounded-xl p-4 shadow-sm">
+                <h3 className="font-medium text-xl mb-4">Sprint Completion Overview KPI</h3>
+                <div className="space-y-4">
+                  {sprints.map((sprint) => {
+                    const tasks = sprintTasks[sprint.sprintId] || [];
+                    const totalTasks = tasks.length;
+                    const completedTasks = tasks.filter(task => task.status === "COMPLETED").length;
+                    const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
-                  {/* Completed Task Items */}
-                  {[...Array(2)].map((_, i) => (
-                    <CompletedTaskItem
-                      key={i}
-                      title={`Completed Task ${i + 1}`}
-                      description={`Details about completed task ${i + 1}`}
-                      daysAgo={i + 1}
-                      image=""
-                    />
-                  ))}
+                    return (
+                      <div key={sprint.sprintId} className="border-b pb-4 last:border-b-0">
+                        <div className="flex justify-between items-center">
+                          <span className="font-medium">{sprint.name}</span>
+                          <div className="flex items-center gap-2">
+                            <div className="w-32 bg-gray-200 rounded-full h-2.5">
+                              <div 
+                                className="h-2.5 rounded-full" 
+                                style={{ 
+                                  width: `${completionRate}%`,
+                                  backgroundColor: completionRate >= 75 ? '#32CD32' : 
+                                                completionRate >= 50 ? '#4169E1' : '#ff6b6b'
+                                }}
+                              ></div>
+                            </div>
+                            <span className="text-sm font-semibold">{completionRate}%</span>
+                          </div>
+                        </div>
+                        <div className="text-sm text-gray-500 mt-1">
+                          {completedTasks} of {totalTasks} tasks completed
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             </div>
           </div>
 
           <div>
-            <h1>Your Projects</h1>
+            <h1></h1>
             {projectsArray.length === 0 ? (
                 <p>No projects found</p>
             ) : (

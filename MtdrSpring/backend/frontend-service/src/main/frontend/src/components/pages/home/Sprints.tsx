@@ -3,8 +3,7 @@ import { useState, useEffect, useCallback } from "react"
 import { Header } from "@/components/Header"
 import { Sidebar } from "@/components/Sidebar"
 import { Button } from "@/components/ui/button"
-import { Calendar, ChevronDown, ChevronRight, Users } from "lucide-react"
-import { Progress } from "@/components/ui/progress"
+import { Calendar, ChevronRight } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { AddTaskDialog } from "@/components/pages/home/AddTask"
@@ -190,6 +189,11 @@ export default function Sprints() {
         })
         setSprints(transformedSprints)
         setError(null)
+
+        // Fetch tasks for all sprints
+        for (const sprint of transformedSprints) {
+          await fetchTasks(sprint.id);
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred while fetching sprints')
         setSprints([])
@@ -199,7 +203,7 @@ export default function Sprints() {
     }
 
     fetchSprints()
-  }, [userProjects])
+  }, [userProjects, fetchTasks])
 
   const handleAddTask = async (newTask: Task) => {
     try {
@@ -249,15 +253,22 @@ export default function Sprints() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "In Progress":
-        return "bg-[#4169E1] text-white"
       case "Completed":
-        return "bg-[#32CD32] text-white"
+        return "bg-green-100 text-green-800"
+      case "In Progress":
+        return "bg-blue-100 text-blue-800"
       case "Not Started":
-        return "bg-[#ff6b6b] text-white"
+        return "bg-red-100 text-red-800"
       default:
         return "bg-gray-100 text-gray-800"
     }
+  }
+
+  const getCompletionRate = (sprintId: string) => {
+    const tasks = tasksBySprint[sprintId] || [];
+    const totalTasks = tasks.length;
+    const completedTasks = tasks.filter(task => task.status === "Completed").length;
+    return totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
   }
 
   if (isLoading) {
@@ -289,138 +300,123 @@ export default function Sprints() {
 
   return (
     <div className="min-h-screen bg-[#f8f8fb] flex flex-col">
-      {/* Top Navigation */}
-      <Header title = "To" titleSpan = "Do"/>
-
-      {/* Main Content */}
+      <Header title="Sprints" titleSpan="" />
       <div className="flex flex-1">
-        {/* Sidebar */}
         <Sidebar />
-
-        {/* Main Content Area */}
-        <div className="p-4 md:p-6 flex-1">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
-            <div>
-              <h2 className="text-xl md:text-2xl font-bold flex items-center">
-                Sprints
-              </h2>
-              <p className="text-gray-500 mt-1">Manage your project sprints and associated tasks</p>
-            </div>
-            <div className="flex items-center gap-2 mt-2 md:mt-0">
-              <AddSprintDialog onAddSprint={handleAddSprint}/>
-            </div>
+        <div className="p-6 flex-1">
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-2xl font-bold">Sprints</h1>
+            <AddSprintDialog onAddSprint={handleAddSprint} />
           </div>
 
-          <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-            {sprints.length === 0 ? (
-              <div className="p-8 text-center">
-                <p className="text-gray-500 mb-4">No sprints found for this project</p>
-                <AddSprintDialog onAddSprint={handleAddSprint} />
-              </div>
-            ) : (
-              <>
-                <div className="p-4 border-b">
-                  <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
-                    <TabsList>
-                      <TabsTrigger value="all">All</TabsTrigger>
-                      <TabsTrigger value="completed">Completed</TabsTrigger>
-                      <TabsTrigger value="in progress">In Progress</TabsTrigger>
-                      <TabsTrigger value="not started">Not Started</TabsTrigger>
-                    </TabsList>
-                  </Tabs>
-                </div>
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
+            <TabsList>
+              <TabsTrigger value="all">All</TabsTrigger>
+              <TabsTrigger value="completed">Completed</TabsTrigger>
+              <TabsTrigger value="in progress">In Progress</TabsTrigger>
+              <TabsTrigger value="not started">Not Started</TabsTrigger>
+            </TabsList>
+          </Tabs>
 
-                <div className="p-4">
-                  <div className="space-y-4">
-                    {filteredSprints.map((sprint) => (
-                      <div key={sprint.id} className="border rounded-lg overflow-hidden">
-                        <button
-                          className="p-4 bg-gray-50 flex flex-col md:flex-row justify-between items-start md:items-center cursor-pointer"
-                          onClick={() => toggleSprint(sprint.id)}
-                          onKeyDown={(e) => handleKeyDown(e, sprint.id)}
-                          type="button"
-                          aria-expanded={expandedSprint === sprint.id}
-                        >
-                          <div className="flex items-center">
-                            {expandedSprint === sprint.id ? (
-                              <ChevronDown className="h-5 w-5 text-gray-500 mr-2" />
-                            ) : (
-                              <ChevronRight className="h-5 w-5 text-gray-500 mr-2" />
-                            )}
-                            <div>
-                              <h3 className="font-medium text-lg">{sprint.name}</h3>
-                              <div className="flex flex-wrap items-center gap-3 mt-1 text-sm text-gray-500">
-                                <div className="flex items-center">
-                                  <Calendar className="h-4 w-4 mr-1" />
-                                  {sprint.startDate} - {sprint.endDate}
-                                </div>
-                                <div className="flex items-center">
-                                  <Users className="h-4 w-4 mr-1" />
-                                  {(tasksBySprint[sprint.id]?.length ?? 0)} tasks
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                          <div className="flex flex-col md:flex-row items-start md:items-center gap-3 mt-3 md:mt-0">
-                            <div className="flex items-center gap-2 w-full md:w-auto">
-                              <div className="text-sm font-medium">{sprint.progress}%</div>
-                              <div className="w-32 md:w-40">
-                                <Progress value={sprint.progress} className="h-2" />
-                              </div>
-                            </div>
-                            <Badge className={`${getStatusColor(sprint.status)}`}>{sprint.status}</Badge>
-                          </div>
-                        </button>
+          <div className="space-y-4">
+            {filteredSprints
+              .sort((a, b) => {
+                const rateA = getCompletionRate(a.id);
+                const rateB = getCompletionRate(b.id);
+                return rateB - rateA; // Sort in descending order
+              })
+              .map((sprint) => {
+              const completionRate = getCompletionRate(sprint.id);
 
-                        {expandedSprint === sprint.id && (
-                          <div className="p-4 border-t">
-                            <h4 className="font-medium p-2">Tasks in this Sprint</h4>
-                            <div className="">
-                              <div className="bg-white rounded-xl p-6 shadow-sm">
-                                <div className="mb-2">
-                                  <AddTaskDialog 
-                                    onAddTask={(task) => handleAddTask({ ...task, sprintId: sprint.id })} 
-                                    sprintId={sprint.id} 
-                                    projectId={userProject ?? "error"}
-                                  />
-                                </div>
-
-                                <div className="space-y-4">
-                                  {(tasksBySprint[sprint.id] ?? []).length === 0 ? (
-                                    <div className="text-center py-4 text-gray-500">
-                                      No hay tareas en este sprint. ¡Agrega una nueva tarea!
-                                    </div>
-                                  ) : (
-                                    tasksBySprint[sprint.id].map((task) => (
-                                      <TaskItem
-                                        key={task.id}
-                                        id={task.id}
-                                        title={task.title}
-                                        description={task.description}
-                                        priority={task.priority}
-                                        status={task.status}
-                                        date={task.createdOn}
-                                        image={task.image ?? "/placeholder.svg"}
-                                        assignee={task.assignee}
-                                        sprintId={sprint.id}
-                                        onTaskUpdated={() => handleTaskUpdate(sprint.id)}
-                                      />
-                                    ))
-                                  )}
-                                </div>
-                              </div>
-                            </div>
+              return (
+                <div
+                  key={sprint.id}
+                  className="bg-white rounded-lg shadow-sm overflow-hidden"
+                >
+                  <div
+                    className="p-4 cursor-pointer hover:bg-gray-50"
+                    onClick={() => toggleSprint(sprint.id)}
+                    onKeyDown={(e) => handleKeyDown(e, sprint.id)}
+                    tabIndex={0}
+                    role="button"
+                  >
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center gap-4">
+                        <ChevronRight
+                          className={`h-5 w-5 transition-transform ${
+                            expandedSprint === sprint.id ? "rotate-90" : ""
+                          }`}
+                        />
+                        <div>
+                          <h3 className="font-semibold">{sprint.name}</h3>
+                          <div className="flex items-center gap-2 mt-1">
+                            <Calendar className="h-4 w-4 text-gray-500" />
+                            <span className="text-sm text-gray-500">
+                              {new Date(sprint.startDate).toLocaleDateString()} -{" "}
+                              {new Date(sprint.endDate).toLocaleDateString()}
+                            </span>
                           </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-2">
+                          <div className="w-32 bg-gray-200 rounded-full h-2.5">
+                            <div 
+                              className="h-2.5 rounded-full" 
+                              style={{ 
+                                width: `${completionRate}%`,
+                                backgroundColor: completionRate >= 75 ? '#32CD32' : 
+                                              completionRate >= 50 ? '#4169E1' : '#ff6b6b'
+                              }}
+                            ></div>
+                          </div>
+                          <span className="text-sm font-semibold">{completionRate}%</span>
+                        </div>
+                        <Badge className={getStatusColor(sprint.status)}>
+                          {sprint.status}
+                        </Badge>
+                      </div>
+                    </div>
+                  </div>
+
+                  {expandedSprint === sprint.id && (
+                    <div className="border-t p-4">
+                      <div className="flex justify-between items-center mb-4">
+                        <h4 className="font-medium">Tasks</h4>
+                        <AddTaskDialog
+                          onAddTask={handleAddTask}
+                          sprintId={sprint.id}
+                          projectId={userProject || ""}
+                        />
+                      </div>
+                      <div className="space-y-4">
+                        {tasksBySprint[sprint.id]?.map((task) => (
+                          <TaskItem
+                            key={task.id}
+                            id={task.id}
+                            title={task.title}
+                            description={task.description}
+                            priority={task.priority}
+                            status={task.status}
+                            date={task.date}
+                            image={task.image}
+                            assignee={task.assignee}
+                            sprintId={sprint.id}
+                            onTaskUpdated={() => handleTaskUpdate(sprint.id)}
+                          />
+                        ))}
+                        {(!tasksBySprint[sprint.id] || tasksBySprint[sprint.id].length === 0) && (
+                          <p className="text-gray-500 text-center py-4">No tasks in this sprint</p>
                         )}
                       </div>
-                    ))}
-                  </div>
+                    </div>
+                  )}
                 </div>
-              </>
-            )}
+              );
+            })}
           </div>
         </div>
       </div>
     </div>
-  )
+  );
 }
