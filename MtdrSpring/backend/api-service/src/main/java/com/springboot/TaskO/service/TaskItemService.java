@@ -54,17 +54,30 @@ public class TaskItemService {
         return todoItems;
     }
 
-    public TaskItem updateTaskItem(UUID id, TaskItem t){
+    public TaskItem updateTaskItem(UUID id, TaskItem t) {
         Optional<TaskItem> toDoItemData = toDoItemRepository.findById(id);
-        if(toDoItemData.isPresent()){
+        if (toDoItemData.isPresent()) {
             TaskItem toDoItem = toDoItemData.get();
-            // Solo actualiza los campos necesarios, NO cambies assignee
-            toDoItem.setSprintId(t.getSprintId());
-            toDoItem.setStatus(t.getStatus());
-            toDoItem.setEndDate(t.getEndDate());
-            toDoItem.setComments(t.getComments());
+            
+            // Only update fields that are not null in the input object
+            if (t.getSprintId() != null) {
+                toDoItem.setSprintId(t.getSprintId());
+            }
+            if (t.getStatus() != null) {
+                toDoItem.setStatus(t.getStatus());
+            }
+            if (t.getEndDate() != null) {
+                toDoItem.setEndDate(t.getEndDate());
+            }
+            if (t.getComments() != null) {
+                toDoItem.setComments(t.getComments());
+            }
+            if (t.getAssignee() != null) {
+                toDoItem.setAssignee(t.getAssignee());
+            }
+            
             return toDoItemRepository.save(toDoItem);
-        }else{
+        } else {
             return null;
         }
     }
