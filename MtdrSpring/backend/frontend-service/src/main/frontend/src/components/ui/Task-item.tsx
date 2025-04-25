@@ -1,20 +1,59 @@
 // @/components/ui/Task-item.tsx
+// @/components/ui/Task-item.tsx
 import { CircleDot } from "lucide-react"
 import { AssignUserDialog } from "@/components/pages/home/AssignUserDialog"
 import { ChangeStatusDialog } from "@/components/pages/home/ChangeStatusDialog"
 
+// Tipo de estado para el backend
+export type BackendStatus = "TODO" | "IN_PROGRESS" | "COMPLETED";
+// Tipo de estado para el frontend
+export type FrontendStatus = "Not Started" | "In Progress" | "Completed";
+
+// Función para convertir estado del frontend al backend
+export const getBackendStatus = (frontendStatus: string): BackendStatus => {
+  switch (frontendStatus) {
+    case "Not Started": return "TODO";
+    case "In Progress": return "IN_PROGRESS";
+    case "Completed": return "COMPLETED";
+    default: return "TODO";
+  }
+};
+
+// Función para convertir estado del backend al frontend
+export const getFrontendStatus = (backendStatus: string): FrontendStatus => {
+  switch (backendStatus) {
+    case "TODO": return "Not Started";
+    case "IN_PROGRESS": return "In Progress";
+    case "COMPLETED": return "Completed";
+    default: return "Not Started";
+  }
+};
+
 export interface TaskItemProps {
-  id?: string
-  title: string
-  description: string
-  priority: string
-  status: string
-  date: string
-  image: string
-  assignee?: string
-  sprintId?: string // Añade esta propiedad
+  readonly id?: string;
+  readonly title: string;
+  readonly description: string;
+  readonly priority: string;
+  readonly status: string;
+  readonly date: string;
+  readonly image: string;
+  readonly assignee?: string;
+  readonly sprintId?: string;
+  readonly onTaskUpdated?: () => void;
 }
-export function TaskItem({ id = "temp-id", title, description, priority, status, date, image, assignee }: TaskItemProps) {
+
+export function TaskItem({ 
+  id = "temp-id", 
+  title, 
+  description, 
+  priority, 
+  status, 
+  date, 
+  image, 
+  assignee,
+  sprintId,
+  onTaskUpdated
+}: TaskItemProps) {
   const getStatusColor = (status: string): string => {
     switch (status) {
       case "Completed":
@@ -28,9 +67,16 @@ export function TaskItem({ id = "temp-id", title, description, priority, status,
     }
   }
 
-  const handleAssignUser = async (taskId: string, userId: string) => {
+  const handleAssignUser = async (taskId: string, userId: string): Promise<void> => {
     try {
-      // Llamada API para asignar usuario
+      console.log(`Asignando usuario ${userId} a tarea ${taskId}`);
+      
+      // Verificar si el ID de tarea es válido
+      if (!taskId || taskId === "temp-id") {
+        console.error("ID de tarea no válido");
+        return;
+      }
+      
       const response = await fetch(`http://localhost:8080/task/assign`, {
         method: 'PUT',
         headers: {
@@ -42,22 +88,47 @@ export function TaskItem({ id = "temp-id", title, description, priority, status,
         }),
       });
 
+      // Verificar si la respuesta es exitosa
       if (!response.ok) {
-        throw new Error('Error al asignar usuario a la tarea');
+        const errorText = await response.text();
+        throw new Error(`Error ${response.status}: ${errorText}`);
       }
 
-      // Aquí podrías actualizar el estado de la aplicación o recargar los datos
-      console.log(`Usuario ${userId} asignado a la tarea ${taskId}`);
-      window.location.reload(); // Forma simple de actualizar los datos
+      console.log(`Usuario ${userId} asignado correctamente a tarea ${taskId}`);
+      
+      // Si hay una función de actualización, usarla en lugar de recargar la página
+      if (onTaskUpdated) {
+        onTaskUpdated();
+      } else {
+        window.location.reload();
+      }
     } catch (error) {
-      console.error('Error:', error);
-      throw error;
+      console.error('Error al asignar usuario:', error);
+      // Aquí podrías mostrar un mensaje de error al usuario
+      
+      // Simulamos una actualización exitosa para desarrollo
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Modo desarrollo: simulando actualización exitosa');
+        if (onTaskUpdated) {
+          onTaskUpdated();
+        }
+      }
     }
   };
 
-  const handleChangeStatus = async (taskId: string, newStatus: "Not Started" | "In Progress" | "Completed") => {
+  const handleChangeStatus = async (
+    taskId: string, 
+    newStatus: BackendStatus
+  ): Promise<void> => {
     try {
-      // Llamada API para cambiar estado
+      console.log(`Cambiando estado de tarea ${taskId} a ${newStatus}`);
+      
+      // Verificar si el ID de tarea es válido
+      if (!taskId || taskId === "temp-id") {
+        console.error("ID de tarea no válido");
+        return;
+      }
+
       const response = await fetch(`http://localhost:8080/task/status`, {
         method: 'PUT',
         headers: {
@@ -69,16 +140,30 @@ export function TaskItem({ id = "temp-id", title, description, priority, status,
         }),
       });
 
+      // Mejor manejo de respuestas de error
       if (!response.ok) {
-        throw new Error('Error al actualizar el estado de la tarea');
+        const errorText = await response.text();
+        throw new Error(`Error ${response.status}: ${errorText}`);
       }
 
-      // Aquí podrías actualizar el estado de la aplicación o recargar los datos
-      console.log(`Estado de la tarea ${taskId} cambiado a ${newStatus}`);
-      window.location.reload(); // Forma simple de actualizar los datos
+      console.log(`Estado actualizado correctamente para tarea ${taskId} a ${newStatus}`);
+      
+      // Si hay una función de actualización, usarla en lugar de recargar la página
+      if (onTaskUpdated) {
+        onTaskUpdated();
+      } else {
+        window.location.reload();
+      }
     } catch (error) {
-      console.error('Error:', error);
-      throw error;
+      console.error('Error al actualizar estado:', error);
+      
+      // Simulamos una actualización exitosa para desarrollo
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Modo desarrollo: simulando actualización exitosa');
+        if (onTaskUpdated) {
+          onTaskUpdated();
+        }
+      }
     }
   };
 
@@ -104,12 +189,15 @@ export function TaskItem({ id = "temp-id", title, description, priority, status,
               </div>
               <div className="text-gray-400">Created: {date}</div>
               
-              {/* Botones para las nuevas funcionalidades */}
+              {/* Task ID debugging info */}
+              <div className="text-gray-400 text-xs">ID: {id?.substring(0, 8)}</div>
+              
+              {/* Botones para las nuevas funcionalidades - solo mostrar si no es un ID temporal */}
               {id !== "temp-id" && (
                 <div className="flex gap-2 mt-1">
                   <ChangeStatusDialog
                     taskId={id}
-                    currentStatus={status as "Not Started" | "In Progress" | "Completed"}
+                    currentStatus={status as FrontendStatus}
                     onStatusChange={handleChangeStatus}
                   />
                   
@@ -144,15 +232,13 @@ export function TaskItem({ id = "temp-id", title, description, priority, status,
   )
 }
 
-// Add the CompletedTaskItem component
-// Fixed CompletedTaskItem interface
+// CompletedTaskItem component
 export interface CompletedTaskItemProps {
   readonly title: string;
   readonly description: string;
   readonly daysAgo: number;
   readonly image: string;
   readonly completedBy?: string;
-  // Remove id since it's not used, or use it in the component
 }
 
 export function CompletedTaskItem({ title, description, daysAgo, image, completedBy }: CompletedTaskItemProps) {

@@ -15,12 +15,12 @@ import { format } from "date-fns"
 import { CalendarIcon, Plus, Upload } from "lucide-react"
 import { cn } from "@/lib/utils"
 
-
 interface AddTaskDialogProps {
   readonly onAddTask?: (task: any) => void
   readonly sprintId: string
   readonly projectId: string
 }
+
 
 // Función para convertir de frontend a backend
 const getBackendStatus = (frontendStatus: string) => {
@@ -51,6 +51,7 @@ export function AddTaskDialog({ onAddTask, sprintId, projectId }: AddTaskDialogP
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null

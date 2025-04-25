@@ -75,9 +75,63 @@ export default function Sprints() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [userProject, setUserProject] = useState<string | null>(null)
-  const [selectedTask, setSelectedTask] = useState<string | null>(null)
   const [tasksBySprint, setTasksBySprint] = useState<Record<string, Task[]>>({});
   const [loadedSprints, setLoadedSprints] = useState<Record<string, boolean>>({});
+
+  // Coloca primero fetchTasks
+  const fetchTasks = useCallback(async (sprintId: string) => {
+    if (!sprintId || loadedSprints[sprintId]) return;
+    
+    try {
+      setLoadedSprints((prev: Record<string, boolean>) => ({ ...prev, [sprintId]: true }));
+      
+      const response = await fetch(`http://localhost:8080/task/${sprintId}`);
+      
+      if (!response.ok) {
+        if (response.status === 404) {
+          console.log(`No tasks found for sprint ${sprintId}`);
+          setTasksBySprint((prev: Record<string, Task[]>) => ({ ...prev, [sprintId]: [] }));
+          return;
+        }
+        const errorText = await response.text();
+        console.error(`Error fetching tasks (${response.status}):`, errorText);
+        throw new Error(`Error fetching tasks: ${response.status} - ${errorText}`);
+      }
+      
+      const data = await response.json();
+      const transformedTasks = data.map((task: ServerTask) => ({
+        id: task.taskId,
+        title: task.title,
+        description: task.description,
+        sprintId: task.sprintId,
+        sprintName: "", 
+        date: task.createdAt ? new Date(task.createdAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+        priority: task.priority ?? "Low",
+        status: getFrontendStatus(task.status ?? "TODO"),
+        createdOn: task.createdAt ? new Date(task.createdAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+        image: task.image ?? "/placeholder.svg",
+        assignee: task.assignee ?? "",
+        storyPoints: task.storyPoints ?? 0,
+      }));
+      
+      setTasksBySprint((prev: Record<string, Task[]>) => ({
+        ...prev,
+        [sprintId]: transformedTasks
+      }));
+    } catch (error) {
+      console.error(`Error fetching tasks for sprint ${sprintId}:`, error);
+      setTasksBySprint((prev: Record<string, Task[]>) => ({ ...prev, [sprintId]: [] }));
+    }
+  }, [loadedSprints]);
+
+  // Ahora sí puedes definir handleTaskUpdate que depende de fetchTasks
+  const handleTaskUpdate = useCallback(async (sprintId: string) => {
+    // Marcar este sprint como no cargado para forzar una recarga
+    setLoadedSprints((prev: Record<string, boolean>) => ({ ...prev, [sprintId]: false }));
+    
+    // Recargar las tareas
+    await fetchTasks(sprintId);
+  }, [fetchTasks]);
 
   useEffect(() => {
     const fetchSprints = async () => {
@@ -125,61 +179,6 @@ export default function Sprints() {
     fetchSprints()
   }, [userProjects])
 
-  // Modificar fetchTasks en Sprints.tsx
-  const fetchTasks = useCallback(async (sprintId: string) => {
-    if (!sprintId || loadedSprints[sprintId]) return;
-    
-    try {
-      setLoadedSprints(prev => ({ ...prev, [sprintId]: true }));
-      
-      const response = await fetch(`http://localhost:8080/task/sprint/${sprintId}`);
-      
-      if (!response.ok) {
-        if (response.status === 404) {
-          console.log(`No tasks found for sprint ${sprintId}`);
-          setTasksBySprint(prev => ({ ...prev, [sprintId]: [] }));
-          return;
-        }
-        const errorText = await response.text();
-        console.error(`Error fetching tasks (${response.status}):`, errorText);
-        throw new Error(`Error fetching tasks: ${response.status} - ${errorText}`);
-      }
-      
-      const data = await response.json();
-      console.log(`Tasks for sprint ${sprintId}:`, data);
-      
-      const transformedTasks = data.map((task: ServerTask) => ({
-        id: task.taskId,
-        title: task.title,
-        description: task.description,
-        sprintId: task.sprintId,
-        sprintName: "", 
-        date: task.createdAt ? new Date(task.createdAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
-        priority: task.priority ?? "Low",
-        status: getFrontendStatus(task.status ?? "TODO"),
-        createdOn: task.createdAt ? new Date(task.createdAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
-        image: task.image ?? "/placeholder.svg",
-        assignee: task.assignee ?? "",
-        storyPoints: task.storyPoints ?? 0,
-      }));
-      
-      setTasksBySprint(prev => ({
-        ...prev,
-        [sprintId]: transformedTasks
-      }));
-    } catch (error) {
-      console.error(`Error fetching tasks for sprint ${sprintId}:`, error);
-      setTasksBySprint(prev => ({ ...prev, [sprintId]: [] }));
-    }
-  }, [loadedSprints]);
-
-  useEffect(() => {
-    if (expandedSprint) {
-      fetchTasks(expandedSprint);
-    }
-  }, [expandedSprint, fetchTasks]);
-
-  // Modificar handleAddTask en Sprints.tsx
   const handleAddTask = async (newTask: Task) => {
     try {
       if (!newTask.sprintId) {
@@ -188,7 +187,7 @@ export default function Sprints() {
       }
       
       // Forzar una recarga de las tareas para este sprint
-      setLoadedSprints(prev => ({ ...prev, [newTask.sprintId]: false }));
+      setLoadedSprints((prev: Record<string, boolean>) => ({ ...prev, [newTask.sprintId]: false }));
       
       // Si este sprint está actualmente expandido, obtener sus tareas inmediatamente
       if (expandedSprint === newTask.sprintId) {
@@ -379,7 +378,8 @@ export default function Sprints() {
                                         date={task.createdOn}
                                         image={task.image ?? "/placeholder.svg"}
                                         assignee={task.assignee}
-                                        sprintId={sprint.id} // Asegurarte de pasar el sprintId
+                                        sprintId={sprint.id}
+                                        onTaskUpdated={() => handleTaskUpdate(sprint.id)}
                                       />
                                     ))
                                   )}

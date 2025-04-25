@@ -104,7 +104,7 @@ public class TaskItem {
         return assignee;
     }
 
-    public void setAssignee(String assignee) {
+    public void setAsignee(String assignee) {
         this.assignee = assignee;
     }
 

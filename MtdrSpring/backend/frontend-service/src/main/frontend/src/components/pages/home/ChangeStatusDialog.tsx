@@ -1,31 +1,22 @@
 // @/components/pages/home/ChangeStatusDialog.tsx
+// @/components/pages/home/ChangeStatusDialog.tsx
 import { useState } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { CircleDot, Check } from "lucide-react"
-
-// Función para convertir de frontend a backend
-const getBackendStatus = (frontendStatus: string) => {
-  switch (frontendStatus) {
-    case "Not Started": return "TODO";
-    case "In Progress": return "IN_PROGRESS";
-    case "Completed": return "COMPLETED";
-    default: return "TODO";
-  }
-};
+import { BackendStatus, FrontendStatus, getBackendStatus } from "@/components/ui/Task-item"
 
 interface ChangeStatusDialogProps {
   taskId: string
-  currentStatus: "Not Started" | "In Progress" | "Completed"
-  onStatusChange: (taskId: string, status: "TODO" | "IN_PROGRESS" | "COMPLETED") => Promise<void>
+  currentStatus: FrontendStatus
+  onStatusChange: (taskId: string, status: BackendStatus) => Promise<void>
 }
 
 export function ChangeStatusDialog({ taskId, currentStatus, onStatusChange }: ChangeStatusDialogProps) {
   const [open, setOpen] = useState(false)
-  const [selectedStatus, setSelectedStatus] = useState<"Not Started" | "In Progress" | "Completed">(
-    currentStatus as "Not Started" | "In Progress" | "Completed"
-  )
+  const [selectedStatus, setSelectedStatus] = useState<FrontendStatus>(currentStatus)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const statusOptions = [
     { value: "Not Started", label: "No iniciada", color: "text-[#ff6b6b]" },
@@ -40,6 +31,7 @@ export function ChangeStatusDialog({ taskId, currentStatus, onStatusChange }: Ch
     }
     
     setIsSubmitting(true)
+    setError(null)
     try {
       // Convertir el estado al formato del backend
       const backendStatus = getBackendStatus(selectedStatus);
@@ -47,10 +39,14 @@ export function ChangeStatusDialog({ taskId, currentStatus, onStatusChange }: Ch
       setOpen(false)
     } catch (error) {
       console.error('Error changing status:', error)
+      setError('No se pudo cambiar el estado de la tarea. Inténtalo de nuevo.')
     } finally {
       setIsSubmitting(false)
     }
   }
+
+  // ID único para el DialogDescription para conectarlo con aria-describedby
+  const dialogDescriptionId = `status-dialog-description-${taskId}`;
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -59,15 +55,21 @@ export function ChangeStatusDialog({ taskId, currentStatus, onStatusChange }: Ch
           Cambiar Estado
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[400px]">
+      <DialogContent className="sm:max-w-[400px]" aria-describedby={dialogDescriptionId}>
         <DialogHeader>
           <DialogTitle className="text-xl font-bold border-b-2 border-[#ff6767] pb-1">
             Cambiar Estado de la Tarea
           </DialogTitle>
-          <DialogDescription className="text-sm text-gray-500">
+          <DialogDescription id={dialogDescriptionId} className="text-sm text-gray-500">
             Selecciona el nuevo estado para esta tarea.
           </DialogDescription>
         </DialogHeader>
+        
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 p-2 rounded-md text-sm mt-4">
+            {error}
+          </div>
+        )}
         
         <div className="mt-4 space-y-2">
           {statusOptions.map((status) => (
@@ -78,7 +80,7 @@ export function ChangeStatusDialog({ taskId, currentStatus, onStatusChange }: Ch
                   ? "bg-[#fff8f8] border border-[#ff6767]"
                   : "hover:bg-gray-100 border border-transparent"
               }`}
-              onClick={() => setSelectedStatus(status.value as "Not Started" | "In Progress" | "Completed")}
+              onClick={() => setSelectedStatus(status.value as FrontendStatus)}
             >
               <CircleDot className={`h-5 w-5 ${status.color}`} />
               <div className="flex-1">

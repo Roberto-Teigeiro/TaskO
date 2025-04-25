@@ -1,5 +1,6 @@
 // AssignUserDialog.tsx
 // @/components/pages/home/AssignUserDialog.tsx
+// @/components/pages/home/AssignUserDialog.tsx
 import { useState, useEffect } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
@@ -24,6 +25,7 @@ export function AssignUserDialog({ taskId, currentAssignee, onAssign }: AssignUs
   const [selectedUser, setSelectedUser] = useState<string | null>(currentAssignee || null)
   const [isLoading, setIsLoading] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     if (open) {
@@ -35,19 +37,26 @@ export function AssignUserDialog({ taskId, currentAssignee, onAssign }: AssignUs
 
   const fetchUsers = async () => {
     setIsLoading(true)
+    setError(null)
     try {
-      // Aquí iría la llamada a la API real para obtener usuarios
+      // Llamada a la API para obtener usuarios
       const response = await fetch('http://localhost:8080/users')
-      if (!response.ok) throw new Error('Failed to fetch users')
+      
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}: ${response.statusText}`)
+      }
+      
       const data = await response.json()
       setUsers(data)
     } catch (error) {
       console.error('Error fetching users:', error)
-      // Datos de ejemplo en caso de fallo
+      setError('No se pudieron cargar los usuarios. Usando datos de respaldo.')
+      
+      // Datos de ejemplo en caso de fallo para asegurar que la UI funcione
       setUsers([
-        { id: '1', name: 'Ana García', email: 'ana@example.com', avatar: 'https://i.pravatar.cc/150?img=1' },
-        { id: '2', name: 'Carlos López', email: 'carlos@example.com', avatar: 'https://i.pravatar.cc/150?img=2' },
-        { id: '3', name: 'Elena Martínez', email: 'elena@example.com', avatar: 'https://i.pravatar.cc/150?img=3' },
+        { id: '1', name: 'Ana García', email: 'ana@example.com', avatar: '/placeholder.svg' },
+        { id: '2', name: 'Carlos López', email: 'carlos@example.com', avatar: '/placeholder.svg' },
+        { id: '3', name: 'Elena Martínez', email: 'elena@example.com', avatar: '/placeholder.svg' },
       ])
     } finally {
       setIsLoading(false)
@@ -62,11 +71,15 @@ export function AssignUserDialog({ taskId, currentAssignee, onAssign }: AssignUs
         setOpen(false)
       } catch (error) {
         console.error('Error assigning user:', error)
+        setError('No se pudo asignar el usuario. Inténtalo de nuevo.')
       } finally {
         setIsSubmitting(false)
       }
     }
   }
+
+  // ID único para el DialogDescription para conectarlo con aria-describedby
+  const dialogDescriptionId = `assign-dialog-description-${taskId}`;
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -76,15 +89,21 @@ export function AssignUserDialog({ taskId, currentAssignee, onAssign }: AssignUs
           {currentAssignee ? "Reasignar" : "Asignar"}
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px]" aria-describedby={dialogDescriptionId}>
         <DialogHeader>
           <DialogTitle className="text-xl font-bold border-b-2 border-[#ff6767] pb-1">
             Asignar Usuario a la Tarea
           </DialogTitle>
-          <DialogDescription className="text-sm text-gray-500">
+          <DialogDescription id={dialogDescriptionId} className="text-sm text-gray-500">
             Selecciona un usuario para asignar a esta tarea.
           </DialogDescription>
         </DialogHeader>
+        
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 p-2 rounded-md text-sm mb-4">
+            {error}
+          </div>
+        )}
         
         <div className="py-4">
           {isLoading ? (
@@ -93,38 +112,42 @@ export function AssignUserDialog({ taskId, currentAssignee, onAssign }: AssignUs
             </div>
           ) : (
             <div className="space-y-2 max-h-[300px] overflow-y-auto">
-              {users.map((user) => (
-                <div
-                  key={user.id}
-                  className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer ${
-                    selectedUser === user.id
-                      ? "bg-[#fff8f8] border border-[#ff6767]"
-                      : "hover:bg-gray-100 border border-transparent"
-                  }`}
-                  onClick={() => setSelectedUser(user.id)}
-                >
-                  <div className="flex-shrink-0">
-                    {user.avatar ? (
-                      <img
-                        src={user.avatar}
-                        alt={user.name}
-                        className="h-10 w-10 rounded-full object-cover"
-                      />
-                    ) : (
-                      <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
-                        <User className="h-6 w-6 text-gray-500" />
-                      </div>
+              {users.length === 0 ? (
+                <p className="text-center text-gray-500 py-4">No hay usuarios disponibles</p>
+              ) : (
+                users.map((user) => (
+                  <div
+                    key={user.id}
+                    className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer ${
+                      selectedUser === user.id
+                        ? "bg-[#fff8f8] border border-[#ff6767]"
+                        : "hover:bg-gray-100 border border-transparent"
+                    }`}
+                    onClick={() => setSelectedUser(user.id)}
+                  >
+                    <div className="flex-shrink-0">
+                      {user.avatar ? (
+                        <img
+                          src={user.avatar}
+                          alt={user.name}
+                          className="h-10 w-10 rounded-full object-cover"
+                        />
+                      ) : (
+                        <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
+                          <User className="h-6 w-6 text-gray-500" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-medium">{user.name}</h4>
+                      <p className="text-sm text-gray-500">{user.email}</p>
+                    </div>
+                    {selectedUser === user.id && (
+                      <Check className="h-5 w-5 text-[#ff6767]" />
                     )}
                   </div>
-                  <div className="flex-1">
-                    <h4 className="font-medium">{user.name}</h4>
-                    <p className="text-sm text-gray-500">{user.email}</p>
-                  </div>
-                  {selectedUser === user.id && (
-                    <Check className="h-5 w-5 text-[#ff6767]" />
-                  )}
-                </div>
-              ))}
+                ))
+              )}
             </div>
           )}
         </div>

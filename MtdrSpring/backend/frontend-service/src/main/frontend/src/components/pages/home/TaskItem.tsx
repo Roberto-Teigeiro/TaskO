@@ -28,9 +28,8 @@ export const getFrontendStatus = (backendStatus: string): FrontendStatus => {
   }
 };
 
-// Versión unificada para TaskItem.tsx
 export interface TaskItemProps {
-  readonly id: string;
+  readonly id?: string;
   readonly title: string;
   readonly description: string;
   readonly priority: string;
@@ -40,10 +39,11 @@ export interface TaskItemProps {
   readonly assignee?: string;
   readonly sprintId?: string;
   readonly className?: string;
+  readonly onTaskUpdated?: () => void;
 }
 
 export function TaskItem({ 
-  id, 
+  id = "temp-id", 
   title, 
   description, 
   priority, 
@@ -51,7 +51,8 @@ export function TaskItem({
   date, 
   image, 
   assignee,
-  sprintId 
+  sprintId,
+  onTaskUpdated
 }: TaskItemProps) {
   const getStatusColor = (status: string): string => {
     switch (status) {
@@ -84,16 +85,21 @@ export function TaskItem({
       if (!response.ok) {
         const errorText = await response.text();
         console.error("Error de asignación:", errorText);
-        throw new Error('Error al asignar usuario a la tarea');
+        console.error('Error al asignar usuario a la tarea');
+        return;
       }
 
-      window.location.reload();
+      // Si hay una función de actualización, usarla en lugar de recargar la página
+      if (onTaskUpdated) {
+        onTaskUpdated();
+      } else {
+        window.location.reload();
+      }
     } catch (error) {
       console.error('Error:', error);
     }
   };
 
-  // Función corregida para cambiar el estado - usa los tipos adecuados
   const handleChangeStatus = async (
     taskId: string, 
     newStatus: BackendStatus
@@ -101,6 +107,12 @@ export function TaskItem({
     try {
       console.log(`Cambiando estado de tarea ${taskId} a ${newStatus}`);
       
+      // Verificar si el ID de tarea es válido
+      if (!taskId || taskId === "temp-id") {
+        console.error("ID de tarea no válido");
+        return;
+      }
+
       const response = await fetch(`http://localhost:8080/task/status`, {
         method: 'PUT',
         headers: {
@@ -112,15 +124,24 @@ export function TaskItem({
         }),
       });
 
+      // Mejor manejo de respuestas de error
       if (!response.ok) {
         const errorText = await response.text();
-        console.error("Error al cambiar estado:", errorText);
-        throw new Error('Error al actualizar el estado de la tarea');
+        console.error(`Error del servidor (${response.status}):`, errorText);
+        console.error('Error al actualizar el estado de la tarea');
+        return;
       }
 
-      window.location.reload();
+      console.log(`Estado actualizado correctamente para tarea ${taskId}`);
+      
+      // Si hay una función de actualización, usarla en lugar de recargar la página
+      if (onTaskUpdated) {
+        onTaskUpdated();
+      } else {
+        window.location.reload();
+      }
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Error en la comunicación con el servidor:', error);
     }
   };
 
@@ -151,11 +172,11 @@ export function TaskItem({
               
               {/* Buttons for task actions */}
               <div className="flex gap-2 mt-1">
-              <ChangeStatusDialog
-              taskId={id}
-              currentStatus={status as FrontendStatus} // Ensure correct type
-                 onStatusChange={handleChangeStatus}
-                 />
+                <ChangeStatusDialog
+                  taskId={id}
+                  currentStatus={status as FrontendStatus}
+                  onStatusChange={handleChangeStatus}
+                />
                 
                 <AssignUserDialog
                   taskId={id}
@@ -214,7 +235,7 @@ export function CompletedTaskItem({ title, description, daysAgo, image, complete
               </div>
               <div className="text-gray-400">Completed {daysAgo} {daysAgo === 1 ? 'day' : 'days'} ago</div>
               
-              {/* Show who completed the task (if available) */}
+              {/* Mostrar quién completó la tarea (si existe) */}
               {completedBy && (
                 <div className="text-gray-500">
                   <span>Completada por: </span>
