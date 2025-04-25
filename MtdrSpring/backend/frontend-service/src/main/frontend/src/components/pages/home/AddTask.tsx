@@ -4,7 +4,6 @@
 import type React from "react"
 
 import { useState } from "react"
-import { useParams } from "react-router-dom"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -17,12 +16,13 @@ import { cn } from "@/lib/utils"
 
 interface AddTaskDialogProps {
   onAddTask?: (task: any) => void
+  sprintId:string
+  projectId:string
+
 }
 
-export function AddTaskDialog({ onAddTask }: AddTaskDialogProps) {
-  const params = useParams()
-  const projectId = params.projectId as string
-  const sprintId = params.sprintId as string
+export function AddTaskDialog({ onAddTask, sprintId,projectId}: AddTaskDialogProps) {
+  console.log("addtask"+sprintId)
   const [open, setOpen] = useState(false)
   const [date, setDate] = useState<Date>()
   const [priority, setPriority] = useState<string>("Moderate")

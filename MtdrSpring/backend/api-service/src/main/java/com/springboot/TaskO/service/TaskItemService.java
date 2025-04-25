@@ -49,6 +49,11 @@ public class TaskItemService {
         }
     }
 
+    public List<TaskItem> findAllBySprintId(UUID sprintId) {
+        List<TaskItem> todoItems = toDoItemRepository.findBySprintId(sprintId);
+        return todoItems;
+    }
+
     public TaskItem updateTaskItem(UUID id, TaskItem t){
         Optional<TaskItem> toDoItemData = toDoItemRepository.findById(id);
         if(toDoItemData.isPresent()){

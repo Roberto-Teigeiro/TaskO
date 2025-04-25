@@ -1,5 +1,6 @@
 #!/bin/bash
 SCRIPT_DIR=$(pwd)
+export CURRENTTIME=$(date +%Y-%m-%d_%H:%M:%S)
 
 #Validation
 if [ -z "$DOCKER_REGISTRY" ]; then
@@ -57,27 +58,28 @@ if [ -z "$BOT_USERNAME" ]; then
     exit 1
 fi
 
+
 echo "Creating springboot deployments and services"
 echo CURRENTTIME is $CURRENTTIME  ...this will be appended to generated deployment yaml
-cp tasko-springboot.yaml tasko-springboot-$CURRENTTIME.yaml
+cp tasko.yaml tasko-$CURRENTTIME.yaml
 
 # Replace all variables in the YAML file
-sed -e "s|%DOCKER_REGISTRY%|${DOCKER_REGISTRY}|g" tasko-springboot-${CURRENTTIME}.yaml > /tmp/tasko-springboot-${CURRENTTIME}.yaml
-mv -- /tmp/tasko-springboot-$CURRENTTIME.yaml tasko-springboot-$CURRENTTIME.yaml
-sed -e "s|%TODO_PDB_NAME%|${TODO_PDB_NAME}|g" tasko-springboot-${CURRENTTIME}.yaml > /tmp/tasko-springboot-${CURRENTTIME}.yaml
-mv -- /tmp/tasko-springboot-$CURRENTTIME.yaml tasko-springboot-$CURRENTTIME.yaml
-sed -e "s|%OCI_REGION%|${OCI_REGION}|g" tasko-springboot-${CURRENTTIME}.yaml > /tmp/tasko-springboot-$CURRENTTIME.yaml
-mv -- /tmp/tasko-springboot-$CURRENTTIME.yaml tasko-springboot-$CURRENTTIME.yaml
-sed -e "s|%UI_USERNAME%|${UI_USERNAME}|g" tasko-springboot-${CURRENTTIME}.yaml > /tmp/tasko-springboot-$CURRENTTIME.yaml
-mv -- /tmp/tasko-springboot-$CURRENTTIME.yaml tasko-springboot-$CURRENTTIME.yaml
-sed -e "s|%BOT_TOKEN%|${BOT_TOKEN}|g" tasko-springboot-${CURRENTTIME}.yaml > /tmp/tasko-springboot-$CURRENTTIME.yaml
-mv -- /tmp/tasko-springboot-$CURRENTTIME.yaml tasko-springboot-$CURRENTTIME.yaml
-sed -e "s|%BOT_USERNAME%|${BOT_USERNAME}|g" tasko-springboot-${CURRENTTIME}.yaml > /tmp/tasko-springboot-$CURRENTTIME.yaml
-mv -- /tmp/tasko-springboot-$CURRENTTIME.yaml tasko-springboot-$CURRENTTIME.yaml
+sed -e "s|%DOCKER_REGISTRY%|${DOCKER_REGISTRY}|g" tasko-${CURRENTTIME}.yaml > /tmp/tasko-${CURRENTTIME}.yaml
+mv -- /tmp/tasko-$CURRENTTIME.yaml tasko-$CURRENTTIME.yaml
+sed -e "s|%TODO_PDB_NAME%|${TODO_PDB_NAME}|g" tasko-${CURRENTTIME}.yaml > /tmp/tasko-${CURRENTTIME}.yaml
+mv -- /tmp/tasko-$CURRENTTIME.yaml tasko-$CURRENTTIME.yaml
+sed -e "s|%OCI_REGION%|${OCI_REGION}|g" tasko-${CURRENTTIME}.yaml > /tmp/tasko-$CURRENTTIME.yaml
+mv -- /tmp/tasko-$CURRENTTIME.yaml tasko-$CURRENTTIME.yaml
+sed -e "s|%UI_USERNAME%|${UI_USERNAME}|g" tasko-${CURRENTTIME}.yaml > /tmp/tasko-$CURRENTTIME.yaml
+mv -- /tmp/tasko-$CURRENTTIME.yaml tasko-$CURRENTTIME.yaml
+sed -e "s|%BOT_TOKEN%|${BOT_TOKEN}|g" tasko-${CURRENTTIME}.yaml > /tmp/tasko-$CURRENTTIME.yaml
+mv -- /tmp/tasko-$CURRENTTIME.yaml tasko-$CURRENTTIME.yaml
+sed -e "s|%BOT_USERNAME%|${BOT_USERNAME}|g" tasko-${CURRENTTIME}.yaml > /tmp/tasko-$CURRENTTIME.yaml
+mv -- /tmp/tasko-$CURRENTTIME.yaml tasko-$CURRENTTIME.yaml
 
 # Apply the configuration
 if [ -z "$1" ]; then
-    kubectl apply -f $SCRIPT_DIR/tasko-springboot-$CURRENTTIME.yaml -n mtdrworkshop
+    kubectl apply -f $SCRIPT_DIR/tasko-$CURRENTTIME.yaml -n mtdrworkshop
 else
-    kubectl apply -f <(istioctl kube-inject -f $SCRIPT_DIR/tasko-springboot-$CURRENTTIME.yaml) -n mtdrworkshop
+    kubectl apply -f <(istioctl kube-inject -f $SCRIPT_DIR/tasko-$CURRENTTIME.yaml) -n mtdrworkshop
 fi

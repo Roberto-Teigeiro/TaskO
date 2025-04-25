@@ -30,7 +30,6 @@ public class TaskItem {
     private String title;
     @Column(name = "DESCRIPTION")
     private String description;
-    //@Type(type = "uuid-binary") // Correct mapping for RAW(16)
     @Column(name = "ASSIGNEE")
     private String assignee;
     @Column(name = "STATUS")
