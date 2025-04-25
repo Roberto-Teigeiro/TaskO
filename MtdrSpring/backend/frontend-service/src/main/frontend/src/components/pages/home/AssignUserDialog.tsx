@@ -1,28 +1,36 @@
 // AssignUserDialog.tsx
-// @/components/pages/home/AssignUserDialog.tsx
+// AssignUserDialog.tsx
 // @/components/pages/home/AssignUserDialog.tsx
 import { useState, useEffect } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { UserPlus, User, Check } from "lucide-react"
+import { useProjects } from "../../../context/ProjectContext"
 
+// Definir las interfaces basadas en los datos reales del API
 interface UserType {
-  id: string
-  name: string
-  email: string
-  avatar?: string
+  readonly id?: string
+  readonly userId?: string
+  readonly name?: string
+  readonly email?: string
+  readonly avatar?: string
+  readonly role?: string | null
 }
 
 interface AssignUserDialogProps {
-  taskId: string
-  currentAssignee?: string
-  onAssign: (taskId: string, userId: string) => Promise<void>
+  readonly taskId: string
+  readonly currentAssignee?: string
+  readonly onAssign: (taskId: string, userId: string) => Promise<void>
 }
 
 export function AssignUserDialog({ taskId, currentAssignee, onAssign }: AssignUserDialogProps) {
+  // Obtener el projectId desde el contexto
+  const { userProjects } = useProjects();
+  const projectId = userProjects && userProjects.length > 0 ? userProjects[0].projectId : null;
+  
   const [open, setOpen] = useState(false)
   const [users, setUsers] = useState<UserType[]>([])
-  const [selectedUser, setSelectedUser] = useState<string | null>(currentAssignee || null)
+  const [selectedUser, setSelectedUser] = useState<string | null>(currentAssignee ?? null)
   const [isLoading, setIsLoading] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -32,29 +40,47 @@ export function AssignUserDialog({ taskId, currentAssignee, onAssign }: AssignUs
       fetchUsers()
     }
     // Reset selected user when dialog opens
-    setSelectedUser(currentAssignee || null)
+    setSelectedUser(currentAssignee ?? null)
   }, [open, currentAssignee])
 
   const fetchUsers = async () => {
     setIsLoading(true)
     setError(null)
     try {
+      // Verificar si tenemos un projectId válido
+      if (!projectId) {
+        throw new Error('No se ha seleccionado un proyecto');
+      }
+      
       // Llamada a la API para obtener usuarios
-      const response = await fetch('http://localhost:8080/users')
+      const response = await fetch(`http://localhost:8080/projects/${projectId}/members`)
       
       if (!response.ok) {
         throw new Error(`Error ${response.status}: ${response.statusText}`)
       }
       
       const data = await response.json()
-      setUsers(data)
+      
+      // Transformar los datos recibidos al formato esperado
+      const formattedUsers: UserType[] = data.map((user: any) => {
+        // Extraer el ID de usuario desde el objeto recibido
+        return {
+          id: user.userId, // Usar userId como id
+          name: user.name || `Usuario ${user.userId.slice(-4)}`, // Usar nombre o fallback
+          email: user.email || '',
+          avatar: user.avatar || null,
+          role: user.role
+        }
+      });
+      
+      setUsers(formattedUsers)
     } catch (error) {
       console.error('Error fetching users:', error)
       setError('No se pudieron cargar los usuarios. Usando datos de respaldo.')
       
       // Datos de ejemplo en caso de fallo para asegurar que la UI funcione
       setUsers([
-        { id: '1', name: 'Ana García', email: 'ana@example.com', avatar: '/placeholder.svg' },
+        { id: 'user_2wCDemERnBiP3fgOlBNPDwV3ncB', name: 'Ana García', email: 'ana@example.com', avatar: '/placeholder.svg' },
         { id: '2', name: 'Carlos López', email: 'carlos@example.com', avatar: '/placeholder.svg' },
         { id: '3', name: 'Elena Martínez', email: 'elena@example.com', avatar: '/placeholder.svg' },
       ])
@@ -75,6 +101,14 @@ export function AssignUserDialog({ taskId, currentAssignee, onAssign }: AssignUs
       } finally {
         setIsSubmitting(false)
       }
+    }
+  }
+
+  // Manejadores para accesibilidad de teclado
+  const handleUserKeyDown = (e: React.KeyboardEvent, userId: string) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      setSelectedUser(userId);
     }
   }
 
@@ -123,13 +157,17 @@ export function AssignUserDialog({ taskId, currentAssignee, onAssign }: AssignUs
                         ? "bg-[#fff8f8] border border-[#ff6767]"
                         : "hover:bg-gray-100 border border-transparent"
                     }`}
-                    onClick={() => setSelectedUser(user.id)}
+                    onClick={() => setSelectedUser(user.id || '')}
+                    onKeyDown={(e) => user.id && handleUserKeyDown(e, user.id)}
+                    tabIndex={0}
+                    role="button"
+                    aria-pressed={selectedUser === user.id}
                   >
                     <div className="flex-shrink-0">
                       {user.avatar ? (
                         <img
                           src={user.avatar}
-                          alt={user.name}
+                          alt={user.name || 'Usuario'}
                           className="h-10 w-10 rounded-full object-cover"
                         />
                       ) : (
@@ -139,8 +177,8 @@ export function AssignUserDialog({ taskId, currentAssignee, onAssign }: AssignUs
                       )}
                     </div>
                     <div className="flex-1">
-                      <h4 className="font-medium">{user.name}</h4>
-                      <p className="text-sm text-gray-500">{user.email}</p>
+                      <h4 className="font-medium">{user.name || `Usuario ${user.id?.slice(-4)}`}</h4>
+                      <p className="text-sm text-gray-500">{user.email || (user.role && `Rol: ${user.role}`) || ''}</p>
                     </div>
                     {selectedUser === user.id && (
                       <Check className="h-5 w-5 text-[#ff6767]" />

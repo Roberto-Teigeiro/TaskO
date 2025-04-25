@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils"
 import { useProjects } from '../../../context/ProjectContext';
 
 interface AddSprintDialogProps {
-  onAddSprint?: (sprint: any) => void
+  readonly onAddSprint?: (sprint: any) => void
 }
 
 export function AddSprintDialog({ onAddSprint }: AddSprintDialogProps) {
@@ -30,6 +30,9 @@ export function AddSprintDialog({ onAddSprint }: AddSprintDialogProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  // ID único para el DialogDescription
+  const dialogDescriptionId = "add-sprint-dialog-description";
+
   const handleSubmit = async () => {
     if (!name || !startDate || !endDate) {
       setError("Please fill in all required fields");
@@ -45,12 +48,12 @@ export function AddSprintDialog({ onAddSprint }: AddSprintDialogProps) {
     setError(null);
 
     try {
-      // Formatea las fechas correctamente
+      // Formatea las fechas correctamente con manejo explícito de timezone
       const sprintData = {
         name,
         description,
-        startDate: startDate.toISOString(), // Formato ISO completo
-        endDate: endDate.toISOString(),     // Formato ISO completo
+        startDate: startDate.toISOString(), // Formato ISO 8601 completo con timezone
+        endDate: endDate.toISOString(),     // Formato ISO 8601 completo con timezone
         projectId
       };
 
@@ -65,7 +68,8 @@ export function AddSprintDialog({ onAddSprint }: AddSprintDialogProps) {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to create sprint');
+        const errorText = await response.text();
+        throw new Error(`Failed to create sprint: ${response.status} - ${errorText}`);
       }
 
       const newSprint = await response.json();
@@ -94,10 +98,10 @@ export function AddSprintDialog({ onAddSprint }: AddSprintDialogProps) {
           <Plus className="h-4 w-4 mr-1" /> Add Sprint
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px] p-6">
+      <DialogContent className="sm:max-w-[500px] p-6" aria-describedby={dialogDescriptionId}>
         <DialogHeader>
           <DialogTitle className="text-xl font-bold border-b-2 border-[#ff6767] pb-1">Add New Sprint</DialogTitle>
-          <DialogDescription className="text-sm text-gray-500">
+          <DialogDescription id={dialogDescriptionId} className="text-sm text-gray-500">
             Crea un nuevo sprint para organizar tus tareas del proyecto.
           </DialogDescription>
         </DialogHeader>
