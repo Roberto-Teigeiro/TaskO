@@ -37,7 +37,7 @@ interface SprintType {
   startDate: string
   endDate: string
   progress: number
-  status: "Active" | "Completed" | "Planned"
+  status: "Completed" | "In Progress" | "Not Started"
   tasks: Task[]
 }
 
@@ -157,15 +157,37 @@ export default function Sprints() {
         }
         
         const data = await response.json()
-        const transformedSprints = data.map((sprint: any) => ({
-          id: sprint.sprintId,
-          name: sprint.name,
-          startDate: new Date(sprint.startDate).toISOString().split('T')[0],
-          endDate: new Date(sprint.endDate).toISOString().split('T')[0],
-          progress: 0,
-          status: "Active" as const,
-          tasks: []
-        }))
+        console.log('Received sprints data:', data)
+        
+        if (!Array.isArray(data)) {
+          throw new Error('Invalid response format from server')
+        }
+        
+        const currentDate = new Date()
+        const transformedSprints = data.map((sprint) => {
+          console.log('Processing sprint:', sprint)
+          const startDate = new Date(sprint.startDate)
+          const endDate = new Date(sprint.endDate)
+          
+          let status: "Completed" | "In Progress" | "Not Started"
+          if (currentDate > endDate) {
+            status = "Completed"
+          } else if (currentDate >= startDate && currentDate <= endDate) {
+            status = "In Progress"
+          } else {
+            status = "Not Started"
+          }
+          
+          return {
+            id: sprint.sprintId,
+            name: sprint.name,
+            startDate: startDate.toISOString().split('T')[0],
+            endDate: endDate.toISOString().split('T')[0],
+            progress: 0,
+            status,
+            tasks: []
+          }
+        })
         setSprints(transformedSprints)
         setError(null)
       } catch (err) {
@@ -225,12 +247,12 @@ export default function Sprints() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "Active":
-        return "bg-blue-100 text-blue-800"
+      case "In Progress":
+        return "bg-[#4169E1] text-white"
       case "Completed":
-        return "bg-green-100 text-green-800"
-      case "Planned":
-        return "bg-amber-100 text-amber-800"
+        return "bg-[#32CD32] text-white"
+      case "Not Started":
+        return "bg-[#ff6b6b] text-white"
       default:
         return "bg-gray-100 text-gray-800"
     }
@@ -266,7 +288,7 @@ export default function Sprints() {
   return (
     <div className="min-h-screen bg-[#f8f8fb] flex flex-col">
       {/* Top Navigation */}
-      <Header day="Tuesday" date="20/06/2023" title="To" titleSpan="Do"/>
+      <Header title = "To" titleSpan = "Do"/>
 
       {/* Main Content */}
       <div className="flex flex-1">
@@ -296,12 +318,12 @@ export default function Sprints() {
             ) : (
               <>
                 <div className="p-4 border-b">
-                  <Tabs defaultValue="all" onValueChange={setActiveTab}>
-                    <TabsList className="grid grid-cols-4 w-full max-w-md">
+                  <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
+                    <TabsList>
                       <TabsTrigger value="all">All</TabsTrigger>
-                      <TabsTrigger value="active">Active</TabsTrigger>
                       <TabsTrigger value="completed">Completed</TabsTrigger>
-                      <TabsTrigger value="planned">Planned</TabsTrigger>
+                      <TabsTrigger value="in progress">In Progress</TabsTrigger>
+                      <TabsTrigger value="not started">Not Started</TabsTrigger>
                     </TabsList>
                   </Tabs>
                 </div>

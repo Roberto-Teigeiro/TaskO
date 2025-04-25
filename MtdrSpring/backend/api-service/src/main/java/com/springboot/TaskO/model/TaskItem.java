@@ -34,6 +34,7 @@ public class TaskItem {
     @Column(name = "ASSIGNEE")
     private String assignee;
     @Column(name = "STATUS")
+    @Enumerated(EnumType.STRING)
     private Status status;
     @Column(name = "STARTDATE")
     private OffsetDateTime startDate;
@@ -42,11 +43,13 @@ public class TaskItem {
     @Column(name = "COMMENTS")
     private String comments;
     @Column(name = "STORYPOINTS")
-    private int storyPoints;
+    private Integer storyPoints;
+    @Column(name = "ESTIMATED_HOURS")
+    private Double estimatedHours;
 
     public TaskItem(){
     }
-    public TaskItem(UUID projectId, UUID sprintId, UUID taskId, String title, String description, String assignee, Status status, OffsetDateTime startDate, OffsetDateTime endDate, String comments, int storyPoints) {
+    public TaskItem(UUID projectId, UUID sprintId, UUID taskId, String title, String description, String assignee, Status status, OffsetDateTime startDate, OffsetDateTime endDate, String comments, Integer storyPoints, Double estimatedHours) {
         this.projectId = projectId;
         this.sprintId = sprintId;
         this.taskId = taskId;
@@ -58,6 +61,7 @@ public class TaskItem {
         this.endDate = endDate;
         this.comments = comments;
         this.storyPoints = storyPoints;
+        this.estimatedHours = estimatedHours;
     }
 
     public UUID getProjectId() {
@@ -104,7 +108,7 @@ public class TaskItem {
         return assignee;
     }
 
-    public void setAsignee(String assignee) {
+    public void setAssignee(String assignee) {
         this.assignee = assignee;
     }
 
@@ -140,16 +144,24 @@ public class TaskItem {
         this.comments = comments;
     }
 
-    public int getStoryPoints() {
+    public Integer getStoryPoints() {
         return storyPoints;
     }
 
-    public void setStoryPoints(int storyPoints) {
+    public void setStoryPoints(Integer storyPoints) {
         this.storyPoints = storyPoints;
     }
 
     public OffsetDateTime getCreation_ts() {
         return startDate;
+    }
+
+    public Double getEstimatedHours() {
+        return estimatedHours;
+    }
+
+    public void setEstimatedHours(Double estimatedHours) {
+        this.estimatedHours = estimatedHours;
     }
    
     @Override
@@ -166,6 +178,7 @@ public class TaskItem {
                 ", endDate=" + endDate +
                 ", comments='" + comments + '\'' +
                 ", storyPoints=" + storyPoints +
+                ", estimatedHours=" + estimatedHours +
                 '}';
     }
 }

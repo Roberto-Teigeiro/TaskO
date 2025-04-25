@@ -28,10 +28,8 @@ public interface TaskItemRepository extends JpaRepository<TaskItem,UUID> {
     @Query("SELECT t FROM TaskItem t WHERE t.assignee = ?1")
     List<TaskItem> findByAssignee(String assignee);
 
+
     @Query("SELECT t FROM TaskItem t WHERE t.sprintId = ?1")
     List<TaskItem> findBySprintId(UUID sprintId);
-
-
-
 
 }

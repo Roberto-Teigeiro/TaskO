@@ -58,13 +58,23 @@ public class TaskItemService {
         Optional<TaskItem> toDoItemData = toDoItemRepository.findById(id);
         if(toDoItemData.isPresent()){
             TaskItem toDoItem = toDoItemData.get();
-            toDoItem.setID(id);
-            toDoItem.setStartDate(t.getStartDate());
-            toDoItem.setDescription(t.getDescription());
+            // Solo actualiza los campos necesarios, NO cambies assignee
+            toDoItem.setSprintId(t.getSprintId());
             toDoItem.setStatus(t.getStatus());
+            toDoItem.setEndDate(t.getEndDate());
+            toDoItem.setComments(t.getComments());
             return toDoItemRepository.save(toDoItem);
         }else{
             return null;
+        }
+    }
+
+    public List<TaskItem> getTaskItemsByTaskId(UUID taskId) {
+        List<TaskItem> tasks = toDoItemRepository.findByTaskId(taskId);
+        if (tasks.isEmpty()) {
+            return null; // or throw an exception if you prefer
+        } else {
+            return tasks;
         }
     }
 
