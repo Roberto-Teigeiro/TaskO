@@ -32,19 +32,23 @@ public class SprintItem {
     @Column(name = "ENDDATE")
     private OffsetDateTime endDate;
 
+    @Column(name = "ACTIVE")
+    private boolean active;
+
     // Constructors, getters, and setters
 
     public SprintItem() {
         
     }
 
-    public SprintItem(UUID sprintId, UUID projectId, String name, String description, OffsetDateTime startDate, OffsetDateTime endDate) {
+    public SprintItem(UUID sprintId, UUID projectId, String name, String description, OffsetDateTime startDate, OffsetDateTime endDate, boolean active) {
         this.sprintId = sprintId;
         this.projectId = projectId;
         this.name = name;
         this.description = description;
         this.startDate = startDate;
         this.endDate = endDate;
+        this.active = active;
     }
 
     public UUID getSprintId() {
@@ -95,6 +99,14 @@ public class SprintItem {
         this.endDate = endDate;
     }
 
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
+    }
+
     @Override
     public String toString() {
         return "SprintItem{" +
@@ -104,6 +116,7 @@ public class SprintItem {
                 ", description='" + description + '\'' +
                 ", startDate=" + startDate +
                 ", endDate=" + endDate +
+                ", active=" + active +
                 '}';
     }
 }
