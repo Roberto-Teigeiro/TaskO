@@ -59,7 +59,7 @@ export function AddSprintDialog({ onAddSprint }: AddSprintDialogProps) {
 
       console.log("Sprint data being sent:", JSON.stringify(sprintData));
 
-      const response = await fetch('http://localhost:8080/sprint/add', {
+      const response = await fetch('/api/sprint/add', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
