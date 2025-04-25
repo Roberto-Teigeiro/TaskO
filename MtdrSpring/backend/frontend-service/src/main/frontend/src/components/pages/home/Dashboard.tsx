@@ -215,7 +215,7 @@ export default function Dashboard() {
             <div className="flex flex-col gap-4">
               {/* Task Status */}
               <div className="bg-white rounded-xl p-4 shadow-sm">
-                <h3 className="font-medium mb-4 text-xl">Sprints Status KPI</h3>
+                <h3 className="font-medium mb-4 text-xl">Sprints Status per Project KPI</h3>
 
                 {/* Progress Circles */}
                 <div className="flex justify-center gap-6 items-center">
@@ -270,7 +270,7 @@ export default function Dashboard() {
                           <h4 className="font-semibold text-gray-700">{sprint.name}</h4>
                           <div className="flex items-center gap-2">
                             <span className="text-sm text-gray-500">Completion Rate:</span>
-                            <span className="font-semibold bg-blue-500 text-gray-100 rounded-md border-2 border-blue-700 px-2 py-1">
+                            <span className="font-semibold bg-blue-500 text-white rounded-md border-2 border-blue-700 px-2 py-1">
                               {completionRate}%
                             </span>
                             <span className="text-sm text-gray-500">
@@ -288,7 +288,7 @@ export default function Dashboard() {
                                   </Avatar>
                                   <span>{task.userName}</span>
                                 </div>
-                                <span className="font-semibold bg-green-500 text-gray-100 rounded-md border-2 border-green-700 px-2 py-1">{task.count}</span>
+                                <span className="font-semibold bg-green-500 text-white rounded-md border-2 border-green-700 px-2 py-1">{task.count} task(s) completed</span>
                               </div>
                             ))
                           ) : (
