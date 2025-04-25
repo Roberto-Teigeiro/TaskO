@@ -51,7 +51,7 @@ export function TaskItem({
   date, 
   image, 
   assignee,
-  sprintId,
+  //sprintId,
   onTaskUpdated
 }: TaskItemProps) {
   const getStatusColor = (status: string): string => {
