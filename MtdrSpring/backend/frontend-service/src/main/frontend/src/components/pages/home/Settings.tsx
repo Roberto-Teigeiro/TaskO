@@ -254,9 +254,9 @@ export default function Settings() {
   };
 
   // Get current date in the required format
-  const currentDate = new Date();
-  const day = currentDate.toLocaleDateString("en-US", { weekday: "long" });
-  const date = currentDate.toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric" });
+  // const currentDate = new Date();
+  // const day = currentDate.toLocaleDateString("en-US", { weekday: "long" });
+  // const date = currentDate.toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric" });
 
   const faqItems = [
     {
@@ -280,7 +280,7 @@ export default function Settings() {
   return (
     <div className="min-h-screen bg-[#f8f8fb] flex flex-col">
       {/* Top Navigation */}
-      <Header day={day} date={date} title="To" titleSpan="Do" />
+      <Header title="To" titleSpan="Do" />
 
       {/* Main Content */}
       <div className="flex flex-1">
