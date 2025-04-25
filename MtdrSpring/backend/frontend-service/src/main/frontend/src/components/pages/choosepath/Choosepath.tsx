@@ -1,12 +1,29 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState } from "react";
-import { useUser } from "@clerk/react-router";
+import { useAuth, useUser } from "@clerk/react-router";
 import NewProjectModal from "./NewProjectModal";
+import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { LogOut } from "lucide-react";
 
 const Choosepath = () => {
   const { user } = useUser();
   const [userMetadata, setUserMetadata] = useState<any>(null);
   const [showProjectModal, setProjectModal] = useState(false);
   const [showJoinProjectModal, setJoinProjectModal] = useState(false);
+  const { signOut } = useAuth(); // Clerk's signOut para manejar la sesión
+  const navigate = useNavigate();
+  
+  const handleLogout = async () => {
+    try {
+      await signOut(); // Cerrar sesión
+      localStorage.removeItem("userData"); // Limpiar localStorage
+      navigate("/"); // Redirigir al login
+    } catch (error) {
+      console.error("Error during logout:", error);
+      alert("An error occurred while logging out. Please try again.");
+    }
+  };
 
   useEffect(() => {
     const fetchAuth = async () => {
@@ -136,7 +153,18 @@ const Choosepath = () => {
           </div>
         </div>
       )}
+      <div className="p-4 absolute bottom-0 left-0 right-0 bg-red-300">
+        <Button
+          onClick={handleLogout}
+          variant="ghost"
+          className="w-full justify-start text-white hover:bg-white/20 rounded-xl"
+        >
+          <LogOut className="mr-2 h-5 w-5" />
+          Logout
+        </Button>
+      </div>
     </div>
+    
   );
 };
 
