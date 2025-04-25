@@ -1,7 +1,8 @@
+///Users/santosa/Documents/GitHub/TaskO/MtdrSpring/backend/frontend-service/src/main/frontend/src/components/pages/home/AddSprint.tsx
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client"
 import { useState } from "react"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Calendar } from "@/components/ui/calendar"
@@ -12,12 +13,15 @@ import { cn } from "@/lib/utils"
 import { useProjects } from '../../../context/ProjectContext';
 
 interface AddSprintDialogProps {
-  onAddSprint?: (sprint: any) => void
+  readonly onAddSprint?: (sprint: any) => void
 }
 
 export function AddSprintDialog({ onAddSprint }: AddSprintDialogProps) {
   const { userProjects } = useProjects();
-  console.log(userProjects[0].projectId, "sprintlog")
+  const projectId = Array.isArray(userProjects) && userProjects.length > 0 
+    ? userProjects[0].projectId 
+    : null;
+
   const [open, setOpen] = useState(false)
   const [name, setName] = useState("")
   const [startDate, setStartDate] = useState<Date>()
@@ -26,52 +30,64 @@ export function AddSprintDialog({ onAddSprint }: AddSprintDialogProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  // ID único para el DialogDescription
+  const dialogDescriptionId = "add-sprint-dialog-description";
+
   const handleSubmit = async () => {
     if (!name || !startDate || !endDate) {
-      setError("Please fill in all required fields")
-      return
+      setError("Please fill in all required fields");
+      return;
     }
 
-    setIsLoading(true)
-    setError(null)
+    if (!projectId) {
+      setError("No hay proyectos disponibles para crear sprints");
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
 
     try {
+      // Formatea las fechas correctamente con manejo explícito de timezone
+      const sprintData = {
+        name,
+        description,
+        startDate: startDate.toISOString(), // Formato ISO 8601 completo con timezone
+        endDate: endDate.toISOString(),     // Formato ISO 8601 completo con timezone
+        projectId
+      };
+
+      console.log("Sprint data being sent:", JSON.stringify(sprintData));
+
       const response = await fetch('http://localhost:8080/sprint/add', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          name,
-          description,
-          startDate: startDate.toISOString(),
-          endDate: endDate.toISOString(),
-          projectId: Array.isArray(userProjects) && userProjects[0] ? userProjects[0].projectId : null
-        })
-      })
+        body: JSON.stringify(sprintData)
+      });
 
       if (!response.ok) {
-        throw new Error('Failed to create sprint')
-      } else{
-        console.log("Sprint created successfully")
+        const errorText = await response.text();
+        throw new Error(`Failed to create sprint: ${response.status} - ${errorText}`);
       }
 
-      const newSprint = await response.json()
+      const newSprint = await response.json();
 
       if (onAddSprint) {
-        onAddSprint(newSprint)
+        onAddSprint(newSprint);
       }
 
       // Reset form
-      setName("")
-      setStartDate(undefined)
-      setEndDate(undefined)
-      setDescription("")
-      setOpen(false)
+      setName("");
+      setStartDate(undefined);
+      setEndDate(undefined);
+      setDescription("");
+      setOpen(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred')
+      setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
   }
 
@@ -82,9 +98,12 @@ export function AddSprintDialog({ onAddSprint }: AddSprintDialogProps) {
           <Plus className="h-4 w-4 mr-1" /> Add Sprint
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px] p-6">
+      <DialogContent className="sm:max-w-[500px] p-6" aria-describedby={dialogDescriptionId}>
         <DialogHeader>
           <DialogTitle className="text-xl font-bold border-b-2 border-[#ff6767] pb-1">Add New Sprint</DialogTitle>
+          <DialogDescription id={dialogDescriptionId} className="text-sm text-gray-500">
+            Crea un nuevo sprint para organizar tus tareas del proyecto.
+          </DialogDescription>
         </DialogHeader>
         
         <div className="space-y-4">

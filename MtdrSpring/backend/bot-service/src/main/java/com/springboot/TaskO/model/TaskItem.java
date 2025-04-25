@@ -24,6 +24,10 @@ public class TaskItem {
     private UUID sprintId;
     private UUID projectId;
     private UUID assignedTo;
+    private double estimatedHours; // Added to match controller
+    private String comments;
+    private String assignee;
+    private String title;
     
     // Default constructor needed for JSON deserialization
     public TaskItem() {
@@ -31,7 +35,7 @@ public class TaskItem {
     
     public TaskItem(UUID taskId, String name, String description, Status status, 
                   OffsetDateTime startDate, OffsetDateTime dateCreated, OffsetDateTime dateCompleted,
-                  UUID sprintId, UUID projectId, UUID assignedTo) {
+                  UUID sprintId, UUID projectId, UUID assignedTo, double estimatedHours, String comments) {
         this.taskId = taskId;
         this.name = name;
         this.description = description;
@@ -42,6 +46,8 @@ public class TaskItem {
         this.sprintId = sprintId;
         this.projectId = projectId;
         this.assignedTo = assignedTo;
+        this.estimatedHours = estimatedHours;
+        this.comments = comments;
     }
 
     // Updated getters and setters
@@ -133,6 +139,46 @@ public class TaskItem {
     public void setAssignedTo(UUID assignedTo) {
         this.assignedTo = assignedTo;
     }
+
+    public double getEstimatedHours() {
+        return estimatedHours;
+    }
+
+    public void setEstimatedHours(double estimatedHours) {
+        this.estimatedHours = estimatedHours;
+    }
+
+    public OffsetDateTime getEndDate() {
+        return dateCompleted;
+    }
+
+    public void setEndDate(OffsetDateTime endDate) {
+        this.dateCompleted = endDate;
+    }
+
+    public String getComments() {
+        return comments;
+    }
+
+    public void setComments(String comments) {
+        this.comments = comments;
+    }
+
+    public String getAssignee() {
+        return assignee;
+    }
+
+    public void setAssignee(String assignee) {
+        this.assignee = assignee;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
     
     @Override
     public String toString() {
@@ -147,6 +193,8 @@ public class TaskItem {
                 ", sprintId=" + sprintId +
                 ", projectId=" + projectId +
                 ", assignedTo=" + assignedTo +
+                ", estimatedHours=" + estimatedHours +
+                ", comments='" + comments + '\'' +
                 '}';
     }
 }

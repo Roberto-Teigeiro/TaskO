@@ -54,17 +54,40 @@ public class TaskItemService {
         return todoItems;
     }
 
-    public TaskItem updateTaskItem(UUID id, TaskItem t){
+    public TaskItem updateTaskItem(UUID id, TaskItem t) {
         Optional<TaskItem> toDoItemData = toDoItemRepository.findById(id);
-        if(toDoItemData.isPresent()){
+        if (toDoItemData.isPresent()) {
             TaskItem toDoItem = toDoItemData.get();
-            toDoItem.setID(id);
-            toDoItem.setStartDate(t.getStartDate());
-            toDoItem.setDescription(t.getDescription());
-            toDoItem.setStatus(t.getStatus());
+            
+            // Only update fields that are not null in the input object
+            if (t.getSprintId() != null) {
+                toDoItem.setSprintId(t.getSprintId());
+            }
+            if (t.getStatus() != null) {
+                toDoItem.setStatus(t.getStatus());
+            }
+            if (t.getEndDate() != null) {
+                toDoItem.setEndDate(t.getEndDate());
+            }
+            if (t.getComments() != null) {
+                toDoItem.setComments(t.getComments());
+            }
+            if (t.getAssignee() != null) {
+                toDoItem.setAssignee(t.getAssignee());
+            }
+            
             return toDoItemRepository.save(toDoItem);
-        }else{
+        } else {
             return null;
+        }
+    }
+
+    public List<TaskItem> getTaskItemsByTaskId(UUID taskId) {
+        List<TaskItem> tasks = toDoItemRepository.findByTaskId(taskId);
+        if (tasks.isEmpty()) {
+            return null; // or throw an exception if you prefer
+        } else {
+            return tasks;
         }
     }
 

@@ -14,6 +14,7 @@ public class SprintItem {
     private OffsetDateTime endDate;
     private UUID projectId;
     private boolean active;
+    private String name;
     
     // Default constructor needed for JSON deserialization
     public SprintItem() {
@@ -38,7 +39,7 @@ public class SprintItem {
     }
     
     public String getSprintName() {
-        return sprintName;
+        return sprintName != null ? sprintName : name;
     }
     
     public void setSprintName(String sprintName) {
@@ -75,6 +76,14 @@ public class SprintItem {
     
     public void setActive(boolean active) {
         this.active = active;
+    }
+
+    public String getName() {
+        return name != null ? name : sprintName;
+    }
+    
+    public void setName(String name) {
+        this.name = name;
     }
     
     @Override

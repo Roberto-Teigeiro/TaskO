@@ -1,14 +1,16 @@
-import { useState, useEffect } from "react"
+///Users/santosa/Documents/GitHub/TaskO/MtdrSpring/backend/frontend-service/src/main/frontend/src/components/pages/home/Sprints.tsx
+import { useState, useEffect, useCallback } from "react"
 import { Header } from "@/components/Header"
 import { Sidebar } from "@/components/Sidebar"
 import { Button } from "@/components/ui/button"
-import { Calendar, ChevronDown, ChevronRight, Users, CircleDot, Edit, Trash2 } from "lucide-react"
+import { Calendar, ChevronDown, ChevronRight, Users } from "lucide-react"
 import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { AddTaskDialog } from "@/components/pages/home/AddTask"
 import { AddSprintDialog } from "@/components/pages/home/AddSprint"
 import { useProjects } from "../../../context/ProjectContext"
+import { TaskItem } from "@/components/ui/Task-item"
 
 interface Task {
   id: string
@@ -26,6 +28,7 @@ interface Task {
   fullDescription?: string
   additionalNotes?: string[]
   deadline?: string
+  sprintId: string
 }
 
 interface SprintType {
@@ -34,23 +37,102 @@ interface SprintType {
   startDate: string
   endDate: string
   progress: number
-  status: "Active" | "Completed" | "Planned"
+  status: "Completed" | "In Progress" | "Not Started"
   tasks: Task[]
 }
 
+interface ServerTask {
+  taskId: string;
+  title: string;
+  description: string;
+  sprintId: string;
+  assignee?: string; 
+  status?: string;
+  startDate?: string;
+  endDate?: string;
+  comments?: string;
+  storyPoints?: number;
+  priority?: string;
+  image?: string;
+  createdAt?: string; // Para compatibilidad con la UI actual
+}
 
+// Función para convertir status del backend al frontend
+const getFrontendStatus = (backendStatus: string) => {
+  switch (backendStatus) {
+    case "TODO": return "Not Started";
+    case "IN_PROGRESS": return "In Progress";
+    case "COMPLETED": return "Completed";
+    default: return "Not Started";
+  }
+};
 
 export default function Sprints() {
   const { userProjects } = useProjects()
-  const [tasks, setTasks] = useState<Task[]>([])
   const [expandedSprint, setExpandedSprint] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState("all")
-  const [selectedTask, setSelectedTask] = useState<string | null>(null)
-  const [isOpen, setIsOpen] = useState(false)
   const [sprints, setSprints] = useState<SprintType[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [userProject, setUserProject] = useState<string | null>(null)
+  const [tasksBySprint, setTasksBySprint] = useState<Record<string, Task[]>>({});
+  const [loadedSprints, setLoadedSprints] = useState<Record<string, boolean>>({});
+
+  // Coloca primero fetchTasks
+  const fetchTasks = useCallback(async (sprintId: string) => {
+    if (!sprintId || loadedSprints[sprintId]) return;
+    
+    try {
+      setLoadedSprints((prev: Record<string, boolean>) => ({ ...prev, [sprintId]: true }));
+      
+      const response = await fetch(`http://localhost:8080/task/sprint/${sprintId}`);
+      
+      if (!response.ok) {
+        if (response.status === 404) {
+          console.log(`No tasks found for sprint ${sprintId}`);
+          setTasksBySprint((prev: Record<string, Task[]>) => ({ ...prev, [sprintId]: [] }));
+          return;
+        }
+        const errorText = await response.text();
+        console.error(`Error fetching tasks (${response.status}):`, errorText);
+        throw new Error(`Error fetching tasks: ${response.status} - ${errorText}`);
+      }
+      
+      const data = await response.json();
+      const transformedTasks = data.map((task: ServerTask) => ({
+        id: task.taskId,
+        title: task.title,
+        description: task.description,
+        sprintId: task.sprintId,
+        sprintName: "", 
+        date: task.createdAt ? new Date(task.createdAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+        priority: task.priority ?? "Low",
+        status: getFrontendStatus(task.status ?? "TODO"),
+        createdOn: task.createdAt ? new Date(task.createdAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+        image: task.image ?? "/placeholder.svg",
+        assignee: task.assignee ?? "",
+        storyPoints: task.storyPoints ?? 0,
+      }));
+      
+      setTasksBySprint((prev: Record<string, Task[]>) => ({
+        ...prev,
+        [sprintId]: transformedTasks
+      }));
+    } catch (error) {
+      console.error(`Error fetching tasks for sprint ${sprintId}:`, error);
+      setTasksBySprint((prev: Record<string, Task[]>) => ({ ...prev, [sprintId]: [] }));
+    }
+  }, [loadedSprints]);
+
+  // Ahora sí puedes definir handleTaskUpdate que depende de fetchTasks
+  const handleTaskUpdate = useCallback(async (sprintId: string) => {
+    // Marcar este sprint como no cargado para forzar una recarga
+    setLoadedSprints((prev: Record<string, boolean>) => ({ ...prev, [sprintId]: false }));
+    
+    // Recargar las tareas
+    await fetchTasks(sprintId);
+  }, [fetchTasks]);
+
   useEffect(() => {
     const fetchSprints = async () => {
       if (!userProjects || userProjects.length === 0) {
@@ -62,19 +144,13 @@ export default function Sprints() {
       try {
         const projectId = userProjects[0].projectId
         setUserProject(projectId)
-        console.log('Fetching sprints for project:', projectId)
-        
         const response = await fetch(`http://localhost:8080/sprintlist/${projectId}`)
-        console.log('Response status:', response.status)
         
         if (!response.ok) {
           if (response.status === 404) {
-            // No sprints found is not an error, just an empty state
             setSprints([])
             setError(null)
           } else {
-            const errorText = await response.text()
-            console.error('Error response:', errorText)
             throw new Error(`Failed to fetch sprints: ${response.status} ${response.statusText}`)
           }
           return
@@ -87,22 +163,34 @@ export default function Sprints() {
           throw new Error('Invalid response format from server')
         }
         
+        const currentDate = new Date()
         const transformedSprints = data.map((sprint) => {
           console.log('Processing sprint:', sprint)
+          const startDate = new Date(sprint.startDate)
+          const endDate = new Date(sprint.endDate)
+          
+          let status: "Completed" | "In Progress" | "Not Started"
+          if (currentDate > endDate) {
+            status = "Completed"
+          } else if (currentDate >= startDate && currentDate <= endDate) {
+            status = "In Progress"
+          } else {
+            status = "Not Started"
+          }
+          
           return {
             id: sprint.sprintId,
             name: sprint.name,
-            startDate: new Date(sprint.startDate).toISOString().split('T')[0],
-            endDate: new Date(sprint.endDate).toISOString().split('T')[0],
+            startDate: startDate.toISOString().split('T')[0],
+            endDate: endDate.toISOString().split('T')[0],
             progress: 0,
-            status: "Active" as const,
+            status,
             tasks: []
           }
         })
         setSprints(transformedSprints)
         setError(null)
       } catch (err) {
-        console.error('Error fetching sprints:', err)
         setError(err instanceof Error ? err.message : 'An error occurred while fetching sprints')
         setSprints([])
       } finally {
@@ -113,35 +201,60 @@ export default function Sprints() {
     fetchSprints()
   }, [userProjects])
 
-  const handleAddTask = (newTask: Task) => {
-    setTasks((prevTasks) => [...prevTasks, newTask])
+  const handleAddTask = async (newTask: Task) => {
+    try {
+      if (!newTask.sprintId) {
+        console.error('Error: sprintId is undefined');
+        return;
+      }
+      
+      // Forzar una recarga de las tareas para este sprint
+      setLoadedSprints((prev: Record<string, boolean>) => ({ ...prev, [newTask.sprintId]: false }));
+      
+      // Si este sprint está actualmente expandido, obtener sus tareas inmediatamente
+      if (expandedSprint === newTask.sprintId) {
+        await fetchTasks(newTask.sprintId);
+      }
+      
+    } catch (error) {
+      console.error('Error processing new task:', error);
+    }
   }
   
   const handleAddSprint = (newSprint: SprintType) => {
-    setSprints((prevSprints) => [...prevSprints, newSprint])
+    setSprints((prevSprints) => [...prevSprints, newSprint]);
+    setExpandedSprint(newSprint.id);
   }
 
-  const currentTask = tasks.find((task) => task.id === selectedTask)
-
-  const filteredSprints =
-    activeTab === "all" ? sprints : sprints.filter((sprint) => sprint.status.toLowerCase() === activeTab)
+  const filteredSprints = activeTab === "all" 
+    ? sprints 
+    : sprints.filter((sprint) => sprint.status.toLowerCase() === activeTab);
 
   const toggleSprint = (sprintId: string) => {
     if (expandedSprint === sprintId) {
       setExpandedSprint(null)
     } else {
       setExpandedSprint(sprintId)
+      // Fetch tasks when expanding a sprint
+      fetchTasks(sprintId);
+    }
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent, sprintId: string) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      toggleSprint(sprintId);
     }
   }
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "Active":
-        return "bg-blue-100 text-blue-800"
+      case "In Progress":
+        return "bg-[#4169E1] text-white"
       case "Completed":
-        return "bg-green-100 text-green-800"
-      case "Planned":
-        return "bg-amber-100 text-amber-800"
+        return "bg-[#32CD32] text-white"
+      case "Not Started":
+        return "bg-[#ff6b6b] text-white"
       default:
         return "bg-gray-100 text-gray-800"
     }
@@ -177,7 +290,7 @@ export default function Sprints() {
   return (
     <div className="min-h-screen bg-[#f8f8fb] flex flex-col">
       {/* Top Navigation */}
-      <Header day="Tuesday" date="20/06/2023" title = "To" titleSpan = "Do"/>
+      <Header title = "To" titleSpan = "Do"/>
 
       {/* Main Content */}
       <div className="flex flex-1">
@@ -193,7 +306,6 @@ export default function Sprints() {
               </h2>
               <p className="text-gray-500 mt-1">Manage your project sprints and associated tasks</p>
             </div>
-
             <div className="flex items-center gap-2 mt-2 md:mt-0">
               <AddSprintDialog onAddSprint={handleAddSprint}/>
             </div>
@@ -208,12 +320,12 @@ export default function Sprints() {
             ) : (
               <>
                 <div className="p-4 border-b">
-                  <Tabs defaultValue="all" onValueChange={setActiveTab}>
-                    <TabsList className="grid grid-cols-4 w-full max-w-md">
+                  <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
+                    <TabsList>
                       <TabsTrigger value="all">All</TabsTrigger>
-                      <TabsTrigger value="active">Active</TabsTrigger>
                       <TabsTrigger value="completed">Completed</TabsTrigger>
-                      <TabsTrigger value="planned">Planned</TabsTrigger>
+                      <TabsTrigger value="in progress">In Progress</TabsTrigger>
+                      <TabsTrigger value="not started">Not Started</TabsTrigger>
                     </TabsList>
                   </Tabs>
                 </div>
@@ -222,23 +334,21 @@ export default function Sprints() {
                   <div className="space-y-4">
                     {filteredSprints.map((sprint) => (
                       <div key={sprint.id} className="border rounded-lg overflow-hidden">
-                        
-                        <div
+                        <button
                           className="p-4 bg-gray-50 flex flex-col md:flex-row justify-between items-start md:items-center cursor-pointer"
-                          onClick={() => {console.log(sprint.id);
-                            toggleSprint(sprint.id);
-                            }}
+                          onClick={() => toggleSprint(sprint.id)}
+                          onKeyDown={(e) => handleKeyDown(e, sprint.id)}
+                          type="button"
+                          aria-expanded={expandedSprint === sprint.id}
                         >
-                          <div
-
-                          className="flex items-center">
+                          <div className="flex items-center">
                             {expandedSprint === sprint.id ? (
                               <ChevronDown className="h-5 w-5 text-gray-500 mr-2" />
                             ) : (
                               <ChevronRight className="h-5 w-5 text-gray-500 mr-2" />
                             )}
                             <div>
-                              <h3 className="font-medium text-lg">{sprint.name+sprint.id}</h3>
+                              <h3 className="font-medium text-lg">{sprint.name}</h3>
                               <div className="flex flex-wrap items-center gap-3 mt-1 text-sm text-gray-500">
                                 <div className="flex items-center">
                                   <Calendar className="h-4 w-4 mr-1" />
@@ -246,12 +356,11 @@ export default function Sprints() {
                                 </div>
                                 <div className="flex items-center">
                                   <Users className="h-4 w-4 mr-1" />
-                                  {/*{sprint.tasks.length} tasks  */}
+                                  {(tasksBySprint[sprint.id]?.length ?? 0)} tasks
                                 </div>
                               </div>
                             </div>
                           </div>
-
                           <div className="flex flex-col md:flex-row items-start md:items-center gap-3 mt-3 md:mt-0">
                             <div className="flex items-center gap-2 w-full md:w-auto">
                               <div className="text-sm font-medium">{sprint.progress}%</div>
@@ -261,226 +370,46 @@ export default function Sprints() {
                             </div>
                             <Badge className={`${getStatusColor(sprint.status)}`}>{sprint.status}</Badge>
                           </div>
-                        </div>
+                        </button>
 
                         {expandedSprint === sprint.id && (
                           <div className="p-4 border-t">
                             <h4 className="font-medium p-2">Tasks in this Sprint</h4>
                             <div className="">
-                              
                               <div className="bg-white rounded-xl p-6 shadow-sm">
                                 <div className="mb-2">
-                                <AddTaskDialog 
-                                  onAddTask={(task) => handleAddTask({ ...task, sprintId: sprint.id })} 
-                                  sprintId={sprint.id} 
-                                  projectId={userProject? userProject : "error"}
-                                />
+                                  <AddTaskDialog 
+                                    onAddTask={(task) => handleAddTask({ ...task, sprintId: sprint.id })} 
+                                    sprintId={sprint.id} 
+                                    projectId={userProject ?? "error"}
+                                  />
                                 </div>
 
-                                <div className="space-y-11">
-                                  {tasks
-                                  .filter((task) => task.sprintName === sprint.name)
-                                  .map((task) => (
-                                    
-                                    <div
-                                      
-                                      key={task.id}
-                                      className={`border rounded-lg p-4 cursor-pointer transition-colors ${
-                                        selectedTask === task.id
-                                          ? "border-[#ff6767] bg-[#fff8f8]"
-                                          : "border-gray-100 hover:border-gray-300"
-                                      }`}
-                                      
-                                      onClick={() => {
-                                        console.log("Clicked Task ID:", task.id); // Debugging
-                                        setSelectedTask(task.id);
-                                        setIsOpen(true);
-                                      }}
-                                      
-                                    >
-                                      
-                                      <div className="flex justify-between items-start">
-                                        <div className="flex items-start gap-3">
-                                          <CircleDot
-                                            className={`h-5 w-5 mt-1 ${
-                                              task.status === "Not Started"
-                                                ? "text-[#ff6767]"
-                                                : task.status === "In Progress"
-                                                  ? "text-blue-500"
-                                                  : "text-green-500"
-                                            }`}
-                                          />
-                                          <div>
-                                            <h3 className="font-medium">{task.title}</h3>
-                                            <p className="text-sm text-gray-500 mt-1">{task.description}</p>
-
-                                            <div className="flex items-center gap-4 mt-2 text-xs">
-                                              <div>
-                                                <span className="text-gray-500">Priority: </span>
-                                                <span
-                                                  className={
-                                                    task.priority === "Extreme"
-                                                      ? "text-red-500"
-                                                      : task.priority === "High"
-                                                        ? "text-orange-500"
-                                                        : task.priority === "Moderate"
-                                                          ? "text-amber-500"
-                                                          : "text-green-500"
-                                                  }
-                                                >
-                                                  {task.priority}
-                                                </span>
-                                              </div>
-                                              <div>
-                                                <span className="text-gray-500">Status: </span>
-                                                <span
-                                                  className={
-                                                    task.status === "Not Started"
-                                                      ? "text-[#ff6767]"
-                                                      : task.status === "In Progress"
-                                                        ? "text-blue-500"
-                                                        : "text-green-500"
-                                                  }
-                                                >
-                                                  {task.status}
-                                                </span>
-                                              </div>
-                                            </div>
-                                          </div>
-                                        </div>
-
-                                        <div className="flex-shrink-0">
-                                          <img
-                                            src={task.image || "/placeholder.svg"}
-                                            alt={task.title}
-                                            className="w-16 h-16 rounded-lg object-cover"
-                                          />
-                                        </div>
-                                      </div>
-                                      <div className="text-xs text-gray-400 mt-2">Created on: {task.createdOn}</div>
+                                <div className="space-y-4">
+                                  {(tasksBySprint[sprint.id] ?? []).length === 0 ? (
+                                    <div className="text-center py-4 text-gray-500">
+                                      No hay tareas en este sprint. ¡Agrega una nueva tarea!
                                     </div>
-                                  ))}
+                                  ) : (
+                                    tasksBySprint[sprint.id].map((task) => (
+                                      <TaskItem
+                                        key={task.id}
+                                        id={task.id}
+                                        title={task.title}
+                                        description={task.description}
+                                        priority={task.priority}
+                                        status={task.status}
+                                        date={task.createdOn}
+                                        image={task.image ?? "/placeholder.svg"}
+                                        assignee={task.assignee}
+                                        sprintId={sprint.id}
+                                        onTaskUpdated={() => handleTaskUpdate(sprint.id)}
+                                      />
+                                    ))
+                                  )}
                                 </div>
                               </div>
-
-                              
-                              {currentTask && isOpen &&(
-                                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-                                <div className="bg-white rounded-xl p-6 my-2 shadow-sm">
-                                  <div className="flex items-start mb-6">
-                                    <div className="flex-1">
-                                      <div className="flex items-center gap-3 mb-4">
-                                        <img
-                                          src={currentTask.image || "/placeholder.svg"}
-                                          className="w-24 h-24 rounded-lg object-cover"
-                                        />
-                                        <div>
-                                          <h2 className="text-xl font-semibold">{currentTask.title}</h2>
-                                          <div className="flex flex-col gap-1 mt-2">
-                                            <div className="text-sm">
-                                              <span className="text-gray-500">Priority: </span>
-                                              <span
-                                                className={
-                                                  currentTask.priority === "Extreme"
-                                                    ? "text-red-500"
-                                                    : currentTask.priority === "High"
-                                                      ? "text-orange-500"
-                                                      : currentTask.priority === "Moderate"
-                                                        ? "text-amber-500"
-                                                        : "text-green-500"
-                                                }
-                                              >
-                                                {currentTask.priority}
-                                              </span>
-                                            </div>
-                                            <div className="text-sm">
-                                              <span className="text-gray-500">Status: </span>
-                                              <span
-                                                className={
-                                                  currentTask.status === "Not Started"
-                                                    ? "text-[#ff6767]"
-                                                    : currentTask.status === "In Progress"
-                                                      ? "text-blue-500"
-                                                      : "text-green-500"
-                                                }
-                                              >
-                                                {currentTask.status}
-                                              </span>
-                                            </div>
-                                            <div className="text-sm text-gray-500">Created on: {currentTask.createdOn}</div>
-                                          </div>
-                                        </div>
-                                      </div>
-
-                                      <div className="space-y-4">
-                                        <div>
-                                          <h3 className="font-medium text-gray-700">Task Title:</h3>
-                                          <p>{currentTask.title}</p>
-                                        </div>
-
-                                        {currentTask.objective && (
-                                          <div>
-                                            <h3 className="font-medium text-gray-700">Objective:</h3>
-                                            <p>{currentTask.objective}</p>
-                                          </div>
-                                        )}
-
-                                        {currentTask.fullDescription && (
-                                          <div>
-                                            <h3 className="font-medium text-gray-700">Task Description:</h3>
-                                            <p className="text-gray-600">{currentTask.fullDescription}</p>
-                                          </div>
-                                        )}
-
-                                        {currentTask.additionalNotes && currentTask.additionalNotes.length > 0 && (
-                                          <div>
-                                            <h3 className="font-medium text-gray-700">Additional Notes:</h3>
-                                            <ul className="list-disc pl-5 text-gray-600">
-                                              {currentTask.additionalNotes.map((note, index) => (
-                                                <li key={index}>{note}</li>
-                                              ))}
-                                            </ul>
-                                          </div>
-                                        )}
-
-                                        {currentTask.deadline && (
-                                          <div>
-                                            <h3 className="font-medium text-gray-700">Deadline for Submission:</h3>
-                                            <p className="text-gray-600">{currentTask.deadline}</p>
-                                          </div>
-                                        )}
-                                      </div>
-                                    </div>
-                                  </div>
-
-                                  <div className="flex justify-end gap-2 mt-8">
-                                    <Button
-                                      variant="outline"
-                                      size="icon"
-                                      className="rounded-full bg-gray-100 hover:bg-gray-200 border-none"
-                                    >
-                                      <Trash2 className="h-5 w-5 text-[#ff6767]" />
-                                    </Button>
-                                    <Button
-                                      variant="outline"
-                                      size="icon"
-                                      className="rounded-full bg-[#ff6767] hover:bg-[#ff5252] border-none"
-                                    >
-                                      <Edit className="h-5 w-5 text-white" />
-                                    </Button>
-                                    <Button
-                                      variant="outline"
-                                      size="icon"
-                                      className="rounded-full bg-gray-100 hover:bg-gray-200 border-none"
-                                      onClick={() => setIsOpen(false)}
-                                      ></Button>
-                                  </div>
-                                </div>
-                                </div>
-                              )}
-                              </div>
-
-                                          
+                            </div>
                           </div>
                         )}
                       </div>
@@ -495,4 +424,3 @@ export default function Sprints() {
     </div>
   )
 }
-

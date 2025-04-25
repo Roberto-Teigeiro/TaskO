@@ -15,6 +15,7 @@ import com.springboot.TaskO.model.SprintItem;
 import com.springboot.TaskO.model.UserItem;
 import com.springboot.TaskO.model.ProjectMemberItem;
 
+import org.apache.tomcat.jni.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,7 +36,7 @@ public class ApiClientService {
     // Task operations
     public List<TaskItem> getAllTasks() {
         TaskItem[] tasks = restTemplate.getForObject(
-                apiBaseUrl + "/tasks", 
+                apiBaseUrl + "/task/all", 
                 TaskItem[].class);
         return Arrays.asList(tasks != null ? tasks : new TaskItem[0]);
     }
@@ -49,24 +50,24 @@ public class ApiClientService {
     
     public TaskItem addTask(TaskItem task) {
         return restTemplate.postForObject(
-                apiBaseUrl + "/tasks",
+                apiBaseUrl + "/task/add",
                 task,
                 TaskItem.class);
     }
     
     public TaskItem getTaskById(UUID id) {
         return restTemplate.getForObject(
-                apiBaseUrl + "/tasks/{id}", 
+                apiBaseUrl + "/task/{id}", 
                 TaskItem.class,
                 id);
     }
     
     public void updateTask(TaskItem task, UUID id) {
-        restTemplate.put(apiBaseUrl + "/tasks/{id}", task, id);
+        restTemplate.put(apiBaseUrl + "/task/{id}", task, id);
     }
     
     public void deleteTask(UUID id) {
-        restTemplate.delete(apiBaseUrl + "/tasks/{id}", id);
+        restTemplate.delete(apiBaseUrl + "/task/{id}", id);
     }
     
     // User operations
@@ -113,5 +114,31 @@ public class ApiClientService {
                 ProjectMemberItem[].class,
                 projectId);
         return Arrays.asList(members != null ? members : new ProjectMemberItem[0]);
+    }
+
+    public UserItem getUserByTelegramUsername(String telegramUsername) {
+        return restTemplate.getForObject(
+            apiBaseUrl + "/users/by-telegram/" + telegramUsername,
+            UserItem.class
+        );
+    }
+
+    public List<SprintItem> getAllSprints() {
+        SprintItem[] sprints = restTemplate.getForObject(
+                apiBaseUrl + "/sprintlist",
+                SprintItem[].class);
+        return Arrays.asList(sprints != null ? sprints : new SprintItem[0]);
+    }
+
+    public UserItem registerUserByEmail(String email, String telegramId) {
+        try {
+            return restTemplate.postForObject(
+                    apiBaseUrl +  "/users/register",
+                    Map.of("email", email, "telegramId", telegramId),
+                    UserItem.class);
+        } catch (Exception e) {
+            logger.error("Failed to register user with email: " + email + " and telegram: " + telegramId, e);
+            throw new RuntimeException("Registration failed: " + e.getMessage(), e);
+        }
     }
 }
