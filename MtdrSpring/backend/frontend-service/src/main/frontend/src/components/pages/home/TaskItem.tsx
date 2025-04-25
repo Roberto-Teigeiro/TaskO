@@ -71,7 +71,7 @@ export function TaskItem({
     try {
       console.log(`Asignando usuario ${userId} a tarea ${taskId}`);
       
-      const response = await fetch(`http://localhost:8080/task/assign`, {
+      const response = await fetch(`/api/task/assign`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -114,7 +114,7 @@ export function TaskItem({
       }
 
       
-      const response = await fetch(`http://localhost:8080/task/status`, {
+      const response = await fetch(`/api/task/status`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

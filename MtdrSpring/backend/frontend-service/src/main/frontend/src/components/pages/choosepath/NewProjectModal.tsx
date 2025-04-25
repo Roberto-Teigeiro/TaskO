@@ -33,7 +33,7 @@ export default function NewProjectModal() {
     let savedProjectData: any;
     
     // First create the project
-    fetch("http://localhost:8080/project/new", {
+    fetch("/api/project/new", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -59,7 +59,7 @@ export default function NewProjectModal() {
       }
       
       // Then create the team with the returned project ID
-      return fetch("http://localhost:8080/team/add", {
+      return fetch("/api/team/add", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -107,7 +107,7 @@ export default function NewProjectModal() {
       console.log("Using team ID:", teamId);
       
       // Now use savedProjectData instead of projectData
-      return fetch(`http://localhost:8080/project/${savedProjectData.projectId}/adduser/${teamId}`, {
+      return fetch(`/api/project/${savedProjectData.projectId}/adduser/${teamId}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
