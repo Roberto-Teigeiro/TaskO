@@ -63,6 +63,7 @@ public class TaskItemService {
             toDoItem.setStatus(t.getStatus());
             toDoItem.setEndDate(t.getEndDate());
             toDoItem.setComments(t.getComments());
+            toDoItem.setAssignee(t.getAssignee());
             return toDoItemRepository.save(toDoItem);
         }else{
             return null;
