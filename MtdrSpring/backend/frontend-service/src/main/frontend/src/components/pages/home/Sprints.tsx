@@ -85,7 +85,7 @@ export default function Sprints() {
     try {
       setLoadedSprints((prev: Record<string, boolean>) => ({ ...prev, [sprintId]: true }));
       
-      const response = await fetch(`http://localhost:8080/task/${sprintId}`);
+      const response = await fetch(`http://localhost:8080/task/sprint/${sprintId}`);
       
       if (!response.ok) {
         if (response.status === 404) {
@@ -235,6 +235,8 @@ export default function Sprints() {
       setExpandedSprint(null)
     } else {
       setExpandedSprint(sprintId)
+      // Fetch tasks when expanding a sprint
+      fetchTasks(sprintId);
     }
   }
 
