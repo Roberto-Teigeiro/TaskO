@@ -35,6 +35,19 @@ public class ProjectMemberItemController {
         }
     }
 
+    @GetMapping("/projects/{projectId}/members")
+    public ResponseEntity<List<ProjectMemberItem>> getProjectMembers(@PathVariable UUID projectId) {
+        try {
+            List<ProjectMemberItem> members = projectMemberItemService.getProjectMembers(projectId);
+            return new ResponseEntity<>(members, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+
+    @GetMapping("/")
+
     @PostMapping(value = "/project/{projectId}/adduser/{teamId}")
     public ResponseEntity<ProjectMemberItem> addUserToProject(@RequestBody Map<String, String> payload, @PathVariable UUID projectId, @PathVariable UUID teamId) {
         String userId = payload.get("userId");

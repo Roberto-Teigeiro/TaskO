@@ -41,6 +41,10 @@ public class ProjectMemberItemService {
         return false;
     }
 
+    public List<ProjectMemberItem> getProjectMembers(UUID projectId) {
+        return projectMemberItemRepository.findByProjectId(projectId);
+    }
+
     public ProjectMemberItem addProjectItem(ProjectMemberItem projectMemberItem) {
         return projectMemberItemRepository.save(projectMemberItem);
     }

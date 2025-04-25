@@ -17,4 +17,8 @@ public interface ProjectMemberItemRepository extends JpaRepository<ProjectMember
     
     @Query("SELECT p.projectId FROM ProjectMemberItem p WHERE p.userId = ?1")
     List<UUID> findProjectIdsByUserId(String userId);
+
+    @Query("SELECT p FROM ProjectMemberItem p WHERE p.projectId = ?1")
+    List<ProjectMemberItem> findByProjectId(UUID projectId);
+
 }
