@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 ///Users/santosa/Documents/GitHub/oraclefront/src/components/pages/register/Register.tsx
 "use client"
 import { useNavigate } from "react-router-dom" 
@@ -22,7 +23,7 @@ export default function Register() {
   useEffect(() => {
     // Redirect to dashboard if already signed in
     if (isSignedIn) {
-      navigate("/Dashboard");
+      navigate("/dashboard");
     }
   }, [isSignedIn, navigate]);
 
@@ -104,7 +105,7 @@ export default function Register() {
           }
         }
         
-        navigate("/Dashboard");
+        navigate("/dashboard");
       } else if (result.status === "missing_requirements") {
         const missingFields = result.missingFields || [];
         if (missingFields.includes("email_address")) {

@@ -1,14 +1,12 @@
 ///Users/santosa/Documents/GitHub/oraclefront/src/components/Header.tsx
-import { Button } from "@/components/ui/button"
-import { Bell } from "lucide-react"
-import { useProjects } from "@/context/ProjectContext"
 
+import { useProjects } from "@/context/ProjectContext"
+import oracleLogo from "../assets/oracleLogo.svg"
 interface HeaderProps {
   title: string
-  titleSpan: string
 }
 
-export function Header({ title, titleSpan }: HeaderProps) {
+export function Header({ title }: HeaderProps) {
   const { currentProject, loading } = useProjects()
   
   // Get current date and format it
@@ -21,33 +19,33 @@ export function Header({ title, titleSpan }: HeaderProps) {
   })
 
   return (
-    <header className="bg-white py-3 px-6 flex items-center justify-between border-b">
-      <div className="flex items-center gap-4">
-        <h1 className="text-2xl font-bold">
-          <span className="text-[#ff6767]">{title}</span>-{titleSpan}
-        </h1>
-        <div className="text-sm text-gray-500">
-          Current Project: <span className="font-medium text-gray-700">
-            {loading ? "Loading..." : currentProject?.projectName || "No Project Selected"}
-          </span>
+    <div className="flex flex-col">
+      <header className="bg-[#312D2A] py-4 px-8 flex items-center justify-between">
+        <div className="flex items-center gap-8">
+          <div className="flex items-center gap-4 ">
+            <img src={oracleLogo} alt="logo" className="w-32 h-8" />
+            <h1 className="text-2xl font-medium tracking-tight text-gray-200">
+              <span>{title}</span>
+            </h1>
+          </div>
+          <div className="text-sm text-gray-400 border-l border-gray-600 pl-6">
+            Current Project: <span className="font-medium text-white">
+              {loading ? "Loading..." : currentProject?.projectName || "No Project Selected"}
+            </span>
+          </div>
         </div>
-      </div>
 
-      <div className="flex items-center gap-4">
-        <Button
-          size="icon"
-          variant="outline"
-          className="rounded-full border-gray-200 bg-[#ff6767] text-white hover:bg-[#ff5252]"
-        >
-          <Bell className="h-5 w-5" />
-        </Button>
-        
-        <div className="text-right text-sm">
-          <div className="font-medium">{day}</div>
-          <div className="text-[#ff6767]">{date}</div>
+        <div className="flex items-center gap-6">
+          
+          
+          <div className="text-right">
+            <div className="font-medium text-white">{day}</div>
+            <div className="text-gray-400 text-sm">{date}</div>
+          </div>
         </div>
-      </div>
-    </header>
+      </header>
+      
+    </div>
   )
 }
 

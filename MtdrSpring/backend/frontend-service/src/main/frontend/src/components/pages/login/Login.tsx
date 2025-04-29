@@ -22,7 +22,7 @@ export default function Login() {
   useEffect(() => {
     // Redirect to dashboard if already signed in
     if (isSignedIn) {
-      navigate("/Dashboard");
+      navigate("/dashboard");
     }
   }, [isSignedIn, navigate]);
 
@@ -70,7 +70,7 @@ export default function Login() {
         }
         
         await setActive({ session: result.createdSessionId });
-        navigate("/Dashboard");
+        navigate("/dashboard");
       } else if (result.status === "needs_second_factor") {
         // Handle 2FA if implemented
         setError("Two-factor authentication required. Please check your authentication app.");

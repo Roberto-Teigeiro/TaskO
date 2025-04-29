@@ -300,7 +300,7 @@ export default function Sprints() {
 
   return (
     <div className="min-h-screen bg-[#f8f8fb] flex flex-col">
-      <Header title="Sprints" titleSpan="" />
+      <Header title="Sprints" />
       <div className="flex flex-1">
         <Sidebar />
         <div className="p-6 flex-1">
