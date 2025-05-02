@@ -1,116 +1,145 @@
 // AssignUserDialog.tsx
 // AssignUserDialog.tsx
 // @/components/pages/home/AssignUserDialog.tsx
-import { useState, useEffect } from "react"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { UserPlus, User, Check } from "lucide-react"
-import { useProjects } from "../../../context/ProjectContext"
+import { useState, useEffect } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { UserPlus, User, Check } from "lucide-react";
+import { useProjects } from "../../../context/ProjectContext";
 
 // Definir las interfaces basadas en los datos reales del API
 interface UserType {
-  readonly id?: string
-  readonly userId?: string
-  readonly name?: string
-  readonly email?: string
-  readonly avatar?: string
-  readonly role?: string | null
+  readonly id?: string;
+  readonly userId?: string;
+  readonly name?: string;
+  readonly email?: string;
+  readonly avatar?: string;
+  readonly role?: string | null;
 }
 
 interface AssignUserDialogProps {
-  readonly taskId: string
-  readonly currentAssignee?: string
-  readonly onAssign: (taskId: string, userId: string) => Promise<void>
+  readonly taskId: string;
+  readonly currentAssignee?: string;
+  readonly onAssign: (taskId: string, userId: string) => Promise<void>;
 }
 
-export function AssignUserDialog({ taskId, currentAssignee, onAssign }: AssignUserDialogProps) {
+export function AssignUserDialog({
+  taskId,
+  currentAssignee,
+  onAssign,
+}: AssignUserDialogProps) {
   // Obtener el projectId desde el contexto
   const { userProjects } = useProjects();
-  const projectId = userProjects && userProjects.length > 0 ? userProjects[0].projectId : null;
-  
-  const [open, setOpen] = useState(false)
-  const [users, setUsers] = useState<UserType[]>([])
-  const [selectedUser, setSelectedUser] = useState<string | null>(currentAssignee ?? null)
-  const [isLoading, setIsLoading] = useState(false)
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const projectId =
+    userProjects && userProjects.length > 0 ? userProjects[0].projectId : null;
+
+  const [open, setOpen] = useState(false);
+  const [users, setUsers] = useState<UserType[]>([]);
+  const [selectedUser, setSelectedUser] = useState<string | null>(
+    currentAssignee ?? null,
+  );
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (open) {
-      fetchUsers()
+      fetchUsers();
     }
     // Reset selected user when dialog opens
-    setSelectedUser(currentAssignee ?? null)
-  }, [open, currentAssignee])
+    setSelectedUser(currentAssignee ?? null);
+  }, [open, currentAssignee]);
 
   const fetchUsers = async () => {
-    setIsLoading(true)
-    setError(null)
+    setIsLoading(true);
+    setError(null);
     try {
       // Verificar si tenemos un projectId válido
       if (!projectId) {
-        throw new Error('No se ha seleccionado un proyecto');
+        throw new Error("No se ha seleccionado un proyecto");
       }
-      
+
       // Llamada a la API para obtener usuarios
-      const response = await fetch(`/api/projects/${projectId}/members`)
-      
+      const response = await fetch(`/api/projects/${projectId}/members`);
+
       if (!response.ok) {
-        throw new Error(`Error ${response.status}: ${response.statusText}`)
+        throw new Error(`Error ${response.status}: ${response.statusText}`);
       }
-      
-      const data = await response.json()
-      
+
+      const data = await response.json();
+
       // Transformar los datos recibidos al formato esperado
       const formattedUsers: UserType[] = data.map((user: any) => {
         // Extraer el ID de usuario desde el objeto recibido
         return {
           id: user.userId, // Usar userId como id
           name: user.name || `Usuario ${user.userId.slice(-4)}`, // Usar nombre o fallback
-          email: user.email || '',
+          email: user.email || "",
           avatar: user.avatar || null,
-          role: user.role
-        }
+          role: user.role,
+        };
       });
-      
-      setUsers(formattedUsers)
+
+      setUsers(formattedUsers);
     } catch (error) {
-      console.error('Error fetching users:', error)
-      setError('No se pudieron cargar los usuarios. Usando datos de respaldo.')
-      
+      console.error("Error fetching users:", error);
+      setError("No se pudieron cargar los usuarios. Usando datos de respaldo.");
+
       // Datos de ejemplo en caso de fallo para asegurar que la UI funcione
       setUsers([
-        { id: 'user_2wCDemERnBiP3fgOlBNPDwV3ncB', name: 'Ana García', email: 'ana@example.com', avatar: '/placeholder.svg' },
-        { id: '2', name: 'Carlos López', email: 'carlos@example.com', avatar: '/placeholder.svg' },
-        { id: '3', name: 'Elena Martínez', email: 'elena@example.com', avatar: '/placeholder.svg' },
-      ])
+        {
+          id: "user_2wCDemERnBiP3fgOlBNPDwV3ncB",
+          name: "Ana García",
+          email: "ana@example.com",
+          avatar: "/placeholder.svg",
+        },
+        {
+          id: "2",
+          name: "Carlos López",
+          email: "carlos@example.com",
+          avatar: "/placeholder.svg",
+        },
+        {
+          id: "3",
+          name: "Elena Martínez",
+          email: "elena@example.com",
+          avatar: "/placeholder.svg",
+        },
+      ]);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleAssign = async () => {
     if (selectedUser) {
-      setIsSubmitting(true)
+      setIsSubmitting(true);
       try {
-        await onAssign(taskId, selectedUser)
-        setOpen(false)
+        await onAssign(taskId, selectedUser);
+        setOpen(false);
       } catch (error) {
-        console.error('Error assigning user:', error)
-        setError('No se pudo asignar el usuario. Inténtalo de nuevo.')
+        console.error("Error assigning user:", error);
+        setError("No se pudo asignar el usuario. Inténtalo de nuevo.");
       } finally {
-        setIsSubmitting(false)
+        setIsSubmitting(false);
       }
     }
-  }
+  };
 
   // Manejadores para accesibilidad de teclado
   const handleUserKeyDown = (e: React.KeyboardEvent, userId: string) => {
-    if (e.key === 'Enter' || e.key === ' ') {
+    if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
       setSelectedUser(userId);
     }
-  }
+  };
 
   // ID único para el DialogDescription para conectarlo con aria-describedby
   const dialogDescriptionId = `assign-dialog-description-${taskId}`;
@@ -123,22 +152,28 @@ export function AssignUserDialog({ taskId, currentAssignee, onAssign }: AssignUs
           {currentAssignee ? "Reasignar" : "Asignar"}
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]" aria-describedby={dialogDescriptionId}>
+      <DialogContent
+        className="sm:max-w-[425px]"
+        aria-describedby={dialogDescriptionId}
+      >
         <DialogHeader>
           <DialogTitle className="text-xl font-bold border-b-2 border-[#ff6767] pb-1">
             Asignar Usuario a la Tarea
           </DialogTitle>
-          <DialogDescription id={dialogDescriptionId} className="text-sm text-gray-500">
+          <DialogDescription
+            id={dialogDescriptionId}
+            className="text-sm text-gray-500"
+          >
             Selecciona un usuario para asignar a esta tarea.
           </DialogDescription>
         </DialogHeader>
-        
+
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 p-2 rounded-md text-sm mb-4">
             {error}
           </div>
         )}
-        
+
         <div className="py-4">
           {isLoading ? (
             <div className="flex justify-center p-4">
@@ -147,7 +182,9 @@ export function AssignUserDialog({ taskId, currentAssignee, onAssign }: AssignUs
           ) : (
             <div className="space-y-2 max-h-[300px] overflow-y-auto">
               {users.length === 0 ? (
-                <p className="text-center text-gray-500 py-4">No hay usuarios disponibles</p>
+                <p className="text-center text-gray-500 py-4">
+                  No hay usuarios disponibles
+                </p>
               ) : (
                 users.map((user) => (
                   <div
@@ -157,7 +194,7 @@ export function AssignUserDialog({ taskId, currentAssignee, onAssign }: AssignUs
                         ? "bg-[#fff8f8] border border-[#ff6767]"
                         : "hover:bg-gray-100 border border-transparent"
                     }`}
-                    onClick={() => setSelectedUser(user.id || '')}
+                    onClick={() => setSelectedUser(user.id || "")}
                     onKeyDown={(e) => user.id && handleUserKeyDown(e, user.id)}
                     tabIndex={0}
                     role="button"
@@ -167,7 +204,7 @@ export function AssignUserDialog({ taskId, currentAssignee, onAssign }: AssignUs
                       {user.avatar ? (
                         <img
                           src={user.avatar}
-                          alt={user.name || 'Usuario'}
+                          alt={user.name || "Usuario"}
                           className="h-10 w-10 rounded-full object-cover"
                         />
                       ) : (
@@ -177,8 +214,12 @@ export function AssignUserDialog({ taskId, currentAssignee, onAssign }: AssignUs
                       )}
                     </div>
                     <div className="flex-1">
-                      <h4 className="font-medium">{user.name || `Usuario ${user.id?.slice(-4)}`}</h4>
-                      <p className="text-sm text-gray-500">{user.email || (user.role && `Rol: ${user.role}`) || ''}</p>
+                      <h4 className="font-medium">
+                        {user.name || `Usuario ${user.id?.slice(-4)}`}
+                      </h4>
+                      <p className="text-sm text-gray-500">
+                        {user.email || (user.role && `Rol: ${user.role}`) || ""}
+                      </p>
                     </div>
                     {selectedUser === user.id && (
                       <Check className="h-5 w-5 text-[#ff6767]" />
@@ -189,7 +230,7 @@ export function AssignUserDialog({ taskId, currentAssignee, onAssign }: AssignUs
             </div>
           )}
         </div>
-        
+
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={() => setOpen(false)}>
             Cancelar
@@ -204,5 +245,5 @@ export function AssignUserDialog({ taskId, currentAssignee, onAssign }: AssignUs
         </div>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

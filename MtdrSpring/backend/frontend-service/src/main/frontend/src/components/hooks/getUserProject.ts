@@ -1,17 +1,15 @@
-
 export const getUserProject = async (userId: string) => {
-    try {
-    const response = await fetch(`/api/projects/${userId}`)
+  try {
+    const response = await fetch(`/api/projects/${userId}`);
     if (!response.ok) {
-      throw new Error('Failed to fetch projects')
+      throw new Error("Failed to fetch projects");
     }
-    
-    const data = await response.json()
-    console.log(data)
-    return data 
-    
+
+    const data = await response.json();
+    console.log(data);
+    return data;
   } catch (error) {
-    console.error('Error fetching projects:', error)
-    return []
+    console.error("Error fetching projects:", error);
+    return [];
   }
-}
+};
