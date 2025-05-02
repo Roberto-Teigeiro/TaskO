@@ -1,9 +1,11 @@
 name: reviewdog
+
 on:
   push:
     branches:
       - main
   pull_request:
+
 jobs:
   checkstyle:
     name: runner / checkstyle
@@ -15,4 +17,5 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           reporter: github-pr-review
           level: warning
-          filter_mode: nofilter  # or remove this line entirely
+          filter_mode: nofilter
+          checkstyle_config: google_checks.xml
