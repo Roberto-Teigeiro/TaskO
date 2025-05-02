@@ -179,7 +179,7 @@ export default function SchedulePage() {
   return (
     <div className="min-h-screen bg-[#f8f8fb] flex flex-col">
       {/* Top Navigation */}
-      <Header title="To" titleSpan="Do"/>
+      <Header title="Calendar"/>
 
       {/* Main Content */}
       <div className="flex flex-1">

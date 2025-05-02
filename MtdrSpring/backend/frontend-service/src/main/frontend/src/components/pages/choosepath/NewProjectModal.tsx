@@ -2,6 +2,7 @@
 import { useState } from "react";
 import React from "react";
 import { useAuth } from "@clerk/clerk-react";
+
 export default function NewProjectModal() {
   const { userId } = useAuth();
   const [projectName, setProjectName] = useState("");
@@ -132,24 +133,19 @@ export default function NewProjectModal() {
   };
 
   return (
-    <div className="p-6 relative">
-      {/* Rainbow border effect */}
-      <div className="absolute inset-0 rounded-lg p-0.5 bg-gradient-to-r from-indigo-500 via-purple-500 via-pink-500 via-red-500 via-yellow-500 via-green-500 via-teal-500 to-blue-500">
-        <div className="bg-white h-full w-full rounded-md"></div>
-      </div>
-      
+    <div className="p-8">
       <div className="relative z-10">
-        <h2 className="text-2xl font-bold text-purple-800 mb-4">
+        <h2 className="text-2xl font-medium text-white mb-2">
           {step === 1 ? "Create a Project" : "Create Your First Team"}
         </h2>
-        <p className="text-gray-600 mb-6">
+        <p className="text-gray-400 mb-8">
           {step === 1 ? "Name your project to get started" : "Create a team you'll be part of"}
         </p>
         
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} className="space-y-6">
           {step === 1 ? (
-            <div className="mb-6">
-              <label htmlFor="projectName" className="block text-sm font-medium text-gray-700 mb-2">
+            <div>
+              <label htmlFor="projectName" className="block text-sm font-medium text-gray-300 mb-2">
                 Project name
               </label>
               <input
@@ -160,14 +156,15 @@ export default function NewProjectModal() {
                   setProjectName(e.target.value);
                   setError("");
                 }}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all"
+                className="w-full px-4 py-3 bg-[#3F3A36] border border-[#4A4541] rounded-lg text-white placeholder-gray-400
+                          focus:outline-none focus:ring-2 focus:ring-[#C74634] focus:border-transparent transition-all"
                 placeholder="My awesome project"
                 autoFocus
               />
             </div>
           ) : (
-            <div className="mb-6">
-              <label htmlFor="teamName" className="block text-sm font-medium text-gray-700 mb-2">
+            <div>
+              <label htmlFor="teamName" className="block text-sm font-medium text-gray-300 mb-2">
                 Team name
               </label>
               <input
@@ -178,26 +175,29 @@ export default function NewProjectModal() {
                   setTeamName(e.target.value);
                   setError("");
                 }}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all"
+                className="w-full px-4 py-3 bg-[#3F3A36] border border-[#4A4541] rounded-lg text-white placeholder-gray-400
+                          focus:outline-none focus:ring-2 focus:ring-[#C74634] focus:border-transparent transition-all"
                 placeholder="Core team"
                 autoFocus
               />
             </div>
           )}
 
-          {error && <p className="mt-2 text-sm text-red-500">{error}</p>}
+          {error && <p className="mt-2 text-sm text-[#C74634]">{error}</p>}
 
           <div className="flex justify-end gap-3 pt-4">
             <button
               type="button"
-              className="px-5 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+              className="px-5 py-2.5 text-sm font-medium text-gray-300 bg-[#3F3A36] hover:bg-[#4A4541] 
+                       border border-[#4A4541] rounded-lg transition-colors"
               onClick={() => step === 1 ? window.history.back() : setStep(1)}
             >
               {step === 1 ? "Cancel" : "Back"}
             </button>
             <button
               type="submit"
-              className="px-5 py-2 text-sm font-medium text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 rounded-lg shadow-sm transition-colors"
+              className="px-5 py-2.5 text-sm font-medium text-white bg-[#C74634] hover:bg-[#B33D2B] 
+                       rounded-lg shadow-sm transition-colors"
             >
               {step === 1 ? "Next" : "Create Team"}
             </button>

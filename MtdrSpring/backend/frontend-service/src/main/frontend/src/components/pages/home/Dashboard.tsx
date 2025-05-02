@@ -169,7 +169,7 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-[#f8f8fb] flex flex-col">
       {/* Header */}
-      <Header title="Dash" titleSpan="Board" />
+      <Header title="Dashboard" />
 
       {/* Main Content */}
       <div className="flex flex-1">
