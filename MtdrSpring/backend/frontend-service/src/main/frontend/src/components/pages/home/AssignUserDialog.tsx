@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // AssignUserDialog.tsx
 // AssignUserDialog.tsx
 // @/components/pages/home/AssignUserDialog.tsx
@@ -53,7 +54,7 @@ export function AssignUserDialog({ taskId, currentAssignee, onAssign }: AssignUs
       }
       
       // Llamada a la API para obtener usuarios
-      const response = await fetch(`/api/projects/${projectId}/members`)
+      const response = await fetch(`http://localhost:8080/projects/${projectId}/members`)
       
       if (!response.ok) {
         throw new Error(`Error ${response.status}: ${response.statusText}`)

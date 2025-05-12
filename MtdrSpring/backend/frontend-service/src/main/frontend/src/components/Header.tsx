@@ -24,11 +24,11 @@ export function Header({ title }: HeaderProps) {
         <div className="flex items-center gap-8">
           <div className="flex items-center gap-4 ">
             <img src={oracleLogo} alt="logo" className="w-32 h-8" />
-            <h1 className="text-2xl font-medium tracking-tight text-gray-200">
+            <h1 className="text-3xl font-medium tracking-tight text-gray-200">
               <span>{title}</span>
             </h1>
           </div>
-          <div className="text-sm text-gray-400 border-l border-gray-600 pl-6">
+          <div className="text-sm text-gray-400 border-l border-gray-200 pl-6">
             Current Project: <span className="font-medium text-white">
               {loading ? "Loading..." : currentProject?.projectName || "No Project Selected"}
             </span>

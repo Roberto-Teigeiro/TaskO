@@ -72,7 +72,7 @@ export default function SchedulePage() {
       }
   
       try {
-        const response = await fetch(`/api/sprintlist/${currentProject.projectId}`)
+        const response = await fetch(`http://localhost:8080/sprintlist/${currentProject.projectId}`)
         if (!response.ok) {
           throw new Error('Failed to fetch sprints')
         }

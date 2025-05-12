@@ -28,7 +28,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
 
     const fetchProjectDetails = async (projectId: string) => {
         try {
-            const response = await fetch(`/api/project/${projectId}`);
+            const response = await fetch(`http://localhost:8080/project/${projectId}`);
             if (!response.ok) {
                 throw new Error('Failed to fetch project details');
             }

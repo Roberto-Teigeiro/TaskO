@@ -56,7 +56,7 @@ export default function Dashboard() {
       if (!user?.id) return;
       
       try {
-        const response = await fetch(`/api/projects/${user.id}/any`);
+        const response = await fetch(`http://localhost:8080/projects/${user.id}/any`);
         if (!response.ok) {
           throw new Error('Failed to check user projects');
         }
@@ -80,7 +80,7 @@ export default function Dashboard() {
       if (!currentProject?.projectId) return;
 
       try {
-        const response = await fetch(`/api/sprintlist/${currentProject.projectId}`);
+        const response = await fetch(`http://localhost:8080/sprintlist/${currentProject.projectId}`);
         if (!response.ok) {
           throw new Error('Failed to fetch sprints');
         }
@@ -116,7 +116,7 @@ export default function Dashboard() {
         const tasksBySprint: Record<string, Task[]> = {};
         for (const sprint of sprintsWithStatus) {
           try {
-            const tasksResponse = await fetch(`/api/task/sprint/${sprint.sprintId}`);
+            const tasksResponse = await fetch(`http://localhost:8080/task/sprint/${sprint.sprintId}`);
             if (!tasksResponse.ok) {
               throw new Error(`Failed to fetch tasks for sprint ${sprint.sprintId}`);
             }

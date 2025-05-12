@@ -114,7 +114,7 @@ export function AddTaskDialog({ onAddTask, sprintId, projectId }: AddTaskDialogP
     
     console.log('Task data:', taskData);
     
-    const response = await fetch('/api/task/add', {
+    const response = await fetch('http://localhost:8080/task/add', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

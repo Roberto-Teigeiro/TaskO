@@ -20,7 +20,7 @@ export function useProjects() {
   useEffect(() => {
     const fetchProjects = async () => {
       try {
-        const response = await fetch('/api/project/all')
+        const response = await fetch('http://localhost:8080/project/all')
         if (!response.ok) {
           throw new Error('Failed to fetch projects')
         }
