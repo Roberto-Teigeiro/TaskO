@@ -5,7 +5,7 @@ import NewProjectModal from "./NewProjectModal";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { LogOut, Users, FolderPlus } from "lucide-react";
-
+import { Header } from "../../Header";
 const Choosepath = () => {
   const { user } = useUser();
   const [userMetadata, setUserMetadata] = useState<any>(null);
@@ -41,6 +41,8 @@ const Choosepath = () => {
   const toggleJoinModal = () => setJoinProjectModal(!showJoinProjectModal);
 
   return (
+    <div>
+    <Header title="Choose Path!" />
     <div className="min-h-screen w-full bg-[#312D2A] flex flex-col">
       {/* Main content */}
       <div className="flex-1 flex flex-col md:flex-row p-8 gap-8">
@@ -133,6 +135,7 @@ const Choosepath = () => {
           </div>
         </div>
       )}
+    </div>
     </div>
   );
 };

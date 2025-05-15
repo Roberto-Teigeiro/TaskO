@@ -41,9 +41,7 @@ export function Sidebar() {
     }
   };
 
-  const handleMyTask = () => {
-    navigate("/tasks");
-  };
+  
 
   const handleDashboard = () => {
     navigate("/dashboard");
@@ -62,7 +60,7 @@ export function Sidebar() {
   };
 
   return (
-    <div className="hidden md:flex w-64 bg-[#C74634] text-white flex-col border-r border-gray-200 shadow-lg">
+    <div className="hidden md:flex w-64 bg-[#C74634] text-white h-screen sticky top-18 flex-col border-r border-gray-200 shadow-lg">
       <div className="p-6 flex flex-col items-center text-center border-b border-white/20">
         <Avatar className="w-20 h-20 border-2 border-white shadow-lg">
           <AvatarImage
@@ -112,16 +110,7 @@ export function Sidebar() {
             Calendar
           </Button>
 
-          <Button
-            onClick={handleMyTask}
-            variant="ghost"
-            className={`w-full justify-start text-white hover:bg-white/10 rounded-lg transition-all duration-200 ${
-              location.pathname === "/tasks" ? "bg-white/20 font-medium" : ""
-            }`}
-          >
-            <CircleDot className="mr-2 h-5 w-5" />
-            My Task
-          </Button>
+          
 
           <Button
             onClick={handleSettings}
@@ -136,7 +125,7 @@ export function Sidebar() {
         </div>
       </nav>
 
-      <div className="p-4 border-t border-white/20">
+      <div className="p-4 mb-18 justify-center items-center border-t border-white/20">
         <Button
           onClick={handleLogout}
           variant="ghost"

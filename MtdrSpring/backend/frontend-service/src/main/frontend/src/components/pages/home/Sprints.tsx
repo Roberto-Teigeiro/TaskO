@@ -10,6 +10,7 @@ import { AddTaskDialog } from "@/components/pages/home/AddTask"
 import { AddSprintDialog } from "@/components/pages/home/AddSprint"
 import { useProjects } from "../../../context/ProjectContext"
 import { TaskItem } from "@/components/ui/Task-item"
+import { useUser } from "@clerk/clerk-react"
 
 interface Task {
   id: string
@@ -28,6 +29,8 @@ interface Task {
   additionalNotes?: string[]
   deadline?: string
   sprintId: string
+  estimatedHours?: number;
+  realHours?: number;
 }
 
 interface SprintType {
@@ -54,6 +57,8 @@ interface ServerTask {
   priority?: string;
   image?: string;
   createdAt?: string; // Para compatibilidad con la UI actual
+  estimatedHours?: number;
+  realHours?: number;
 }
 
 // Función para convertir status del backend al frontend
@@ -68,6 +73,7 @@ const getFrontendStatus = (backendStatus: string) => {
 
 export default function Sprints() {
   const { userProjects } = useProjects()
+  const { user } = useUser()
   const [expandedSprint, setExpandedSprint] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState("all")
   const [sprints, setSprints] = useState<SprintType[]>([])
@@ -111,6 +117,9 @@ export default function Sprints() {
         image: task.image ?? "/placeholder.svg",
         assignee: task.assignee ?? "",
         storyPoints: task.storyPoints ?? 0,
+        estimatedHours: task.estimatedHours ?? 0,
+        realHours: task.realHours ?? 0,
+
       }));
       
       setTasksBySprint((prev: Record<string, Task[]>) => ({
@@ -402,6 +411,9 @@ export default function Sprints() {
                             image={task.image}
                             assignee={task.assignee}
                             sprintId={sprint.id}
+                            estimatedHours={task.estimatedHours}
+                            realHours={task.realHours}
+                            currentUserId={user?.id}
                             onTaskUpdated={() => handleTaskUpdate(sprint.id)}
                           />
                         ))}

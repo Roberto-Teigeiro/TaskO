@@ -106,6 +106,16 @@ export default function NewProjectModal() {
       const teamId = teamData.teamId;
       
       console.log("Using team ID:", teamId);
+      console.log("Using project ID:", savedProjectData.projectId);
+      
+      // Validate IDs before making the request
+      if (!savedProjectData || !savedProjectData.projectId) {
+        throw new Error("Project ID is missing or invalid");
+      }
+      
+      if (!teamId) {
+        throw new Error("Team ID is missing or invalid");
+      }
       
       // Now use savedProjectData instead of projectData
       return fetch(`http://localhost:8080/project/${savedProjectData.projectId}/adduser/${teamId}`, {
@@ -120,7 +130,11 @@ export default function NewProjectModal() {
     })
     .then(response => {
       if (!response.ok) {
-        throw new Error("Failed to add user to team");
+        // Log detailed error information
+        return response.text().then(text => {
+          console.error("Error response:", text);
+          throw new Error(`Failed to add user to team: ${response.status} ${response.statusText}`);
+        });
       }
       console.log("User added to team successfully");
       // Redirect to dashboard or show success message

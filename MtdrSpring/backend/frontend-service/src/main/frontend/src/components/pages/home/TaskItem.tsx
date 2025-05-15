@@ -39,6 +39,7 @@ export interface TaskItemProps {
   readonly assignee?: string;
   readonly sprintId?: string;
   readonly className?: string;
+  
   readonly onTaskUpdated?: () => void;
 }
 
