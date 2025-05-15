@@ -12,20 +12,28 @@ export type FrontendStatus = "Not Started" | "In Progress" | "Completed";
 // Función para convertir estado del frontend al backend
 export const getBackendStatus = (frontendStatus: string): BackendStatus => {
   switch (frontendStatus) {
-    case "Not Started": return "TODO";
-    case "In Progress": return "IN_PROGRESS";
-    case "Completed": return "COMPLETED";
-    default: return "TODO";
+    case "Not Started":
+      return "TODO";
+    case "In Progress":
+      return "IN_PROGRESS";
+    case "Completed":
+      return "COMPLETED";
+    default:
+      return "TODO";
   }
 };
 
 // Función para convertir estado del backend al frontend
 export const getFrontendStatus = (backendStatus: string): FrontendStatus => {
   switch (backendStatus) {
-    case "TODO": return "Not Started";
-    case "IN_PROGRESS": return "In Progress";
-    case "COMPLETED": return "Completed";
-    default: return "Not Started";
+    case "TODO":
+      return "Not Started";
+    case "IN_PROGRESS":
+      return "In Progress";
+    case "COMPLETED":
+      return "Completed";
+    default:
+      return "Not Started";
   }
 };
 
@@ -45,14 +53,14 @@ export interface TaskItemProps {
   readonly currentUserId?: string;
 }
 
-export function TaskItem({ 
-  id = "temp-id", 
-  title, 
-  description, 
-  priority, 
-  status, 
-  date, 
-  image, 
+export function TaskItem({
+  id = "temp-id",
+  title,
+  description,
+  priority,
+  status,
+  date,
+  image,
   assignee,
   estimatedHours = 0,
   realHours = 0,
@@ -69,43 +77,46 @@ export function TaskItem({
   const getStatusColor = (status: string): string => {
     switch (status) {
       case "Completed":
-        return "text-[#32CD32]"
+        return "text-[#32CD32]";
       case "In Progress":
-        return "text-[#4169E1]"
+        return "text-[#4169E1]";
       case "Not Started":
-        return "text-[#ff6b6b]"
+        return "text-[#ff6b6b]";
       default:
-        return "text-gray-500"
+        return "text-gray-500";
     }
-  }
+  };
 
-  const handleAssignUser = async (taskId: string, userId: string): Promise<void> => {
+  const handleAssignUser = async (
+    taskId: string,
+    userId: string,
+  ): Promise<void> => {
     try {
       console.log(`Asignando usuario ${userId} a tarea ${taskId}`);
-      
+
       // Verificar si el ID de tarea es válido
       if (!taskId || taskId === "temp-id") {
         console.error("ID de tarea no válido");
         return;
       }
-      
+
       // First, get the current task to preserve all fields
       const getResponse = await fetch(`http://localhost:8080/task/${taskId}`);
-      
+
       if (!getResponse.ok) {
         throw new Error(`Error al obtener la tarea: ${getResponse.status}`);
       }
-      
+
       const currentTask = await getResponse.json();
-      
+
       // Update only the assignee field
       currentTask.assignee = userId;
 
       // Call the generic update endpoint with the complete object
       const response = await fetch(`http://localhost:8080/task/${taskId}`, {
-        method: 'PUT',
+        method: "PUT",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(currentTask),
       });
@@ -115,7 +126,7 @@ export function TaskItem({
         const errorText = await response.text();
         throw new Error(`Error ${response.status}: ${errorText}`);
       }
-      
+
       // Si hay una función de actualización, usarla en lugar de recargar la página
       if (onTaskUpdated) {
         onTaskUpdated();
@@ -123,17 +134,17 @@ export function TaskItem({
         window.location.reload();
       }
     } catch (error) {
-      console.error('Error al asignar usuario:', error);
+      console.error("Error al asignar usuario:", error);
     }
   };
 
   const handleChangeStatus = async (
-    taskId: string, 
-    newStatus: BackendStatus
+    taskId: string,
+    newStatus: BackendStatus,
   ): Promise<void> => {
     try {
       console.log(`Cambiando estado de tarea ${taskId} a ${newStatus}`);
-      
+
       // Verificar si el ID de tarea es válido
       if (!taskId || taskId === "temp-id") {
         console.error("ID de tarea no válido");
@@ -142,21 +153,21 @@ export function TaskItem({
 
       // Primero, obtener la tarea actual para no perder datos
       const getResponse = await fetch(`http://localhost:8080/task/${taskId}`);
-      
+
       if (!getResponse.ok) {
         throw new Error(`Error al obtener la tarea: ${getResponse.status}`);
       }
-      
+
       const currentTask = await getResponse.json();
-      
+
       // Actualizar solo el estado
       currentTask.status = newStatus;
 
       // Llamar al endpoint genérico de actualización con el objeto completo
       const response = await fetch(`http://localhost:8080/task/${taskId}`, {
-        method: 'PUT',
+        method: "PUT",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(currentTask),
       });
@@ -167,8 +178,10 @@ export function TaskItem({
         throw new Error(`Error ${response.status}: ${errorText}`);
       }
 
-      console.log(`Estado actualizado correctamente para tarea ${taskId} a ${newStatus}`);
-      
+      console.log(
+        `Estado actualizado correctamente para tarea ${taskId} a ${newStatus}`,
+      );
+
       // Actualizar UI
       if (onTaskUpdated) {
         onTaskUpdated();
@@ -243,7 +256,9 @@ export function TaskItem({
           </div>
           <div className="flex-1 min-w-0">
             <h4 className="font-medium truncate">{title}</h4>
-            <p className="text-sm text-gray-500 mt-1 line-clamp-2">{description}</p>
+            <p className="text-sm text-gray-500 mt-1 line-clamp-2">
+              {description}
+            </p>
 
             <div className="flex flex-wrap items-center gap-2 md:gap-4 mt-2 text-xs">
               <div>
@@ -285,8 +300,10 @@ export function TaskItem({
               </div>
               
               {/* Task ID debugging info */}
-              <div className="text-gray-400 text-xs">ID: {id?.substring(0, 8)}</div>
-              
+              <div className="text-gray-400 text-xs">
+                ID: {id?.substring(0, 8)}
+              </div>
+
               {/* Botones para las nuevas funcionalidades - solo mostrar si no es un ID temporal */}
               {id !== "temp-id" && (
                 <div className="flex gap-2 mt-1">
@@ -295,7 +312,7 @@ export function TaskItem({
                     currentStatus={status as FrontendStatus}
                     onStatusChange={handleChangeStatus}
                   />
-                  
+
                   <AssignUserDialog
                     taskId={id}
                     currentAssignee={assignee}
@@ -304,7 +321,7 @@ export function TaskItem({
                 </div>
               )}
             </div>
-            
+
             {/* Mostrar asignado a (si existe) */}
             {assignee && (
               <div className="mt-2 text-xs text-gray-500">
@@ -324,7 +341,7 @@ export function TaskItem({
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 // CompletedTaskItem component
@@ -336,7 +353,13 @@ export interface CompletedTaskItemProps {
   readonly completedBy?: string;
 }
 
-export function CompletedTaskItem({ title, description, daysAgo, image, completedBy }: CompletedTaskItemProps) {
+export function CompletedTaskItem({
+  title,
+  description,
+  daysAgo,
+  image,
+  completedBy,
+}: CompletedTaskItemProps) {
   return (
     <div className="border border-gray-100 rounded-lg p-3">
       <div className="flex justify-between items-start">
@@ -346,15 +369,19 @@ export function CompletedTaskItem({ title, description, daysAgo, image, complete
           </div>
           <div className="flex-1 min-w-0">
             <h4 className="font-medium truncate">{title}</h4>
-            <p className="text-sm text-gray-500 mt-1 line-clamp-2">{description}</p>
+            <p className="text-sm text-gray-500 mt-1 line-clamp-2">
+              {description}
+            </p>
 
             <div className="flex flex-wrap items-center gap-2 md:gap-4 mt-2 text-xs">
               <div>
                 <span className="text-gray-500">Status: </span>
                 <span className="text-[#32CD32]">Completed</span>
               </div>
-              <div className="text-gray-400">Completed {daysAgo} {daysAgo === 1 ? 'day' : 'days'} ago</div>
-              
+              <div className="text-gray-400">
+                Completed {daysAgo} {daysAgo === 1 ? "day" : "days"} ago
+              </div>
+
               {/* Mostrar quién completó la tarea (si existe) */}
               {completedBy && (
                 <div className="text-gray-500">
@@ -375,5 +402,5 @@ export function CompletedTaskItem({ title, description, daysAgo, image, complete
         </div>
       </div>
     </div>
-  )
+  );
 }

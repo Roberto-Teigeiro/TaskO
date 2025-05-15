@@ -1,8 +1,8 @@
 ///Users/santosa/Documents/GitHub/TaskO/MtdrSpring/backend/frontend-service/src/main/frontend/src/components/pages/home/AddTask.tsx
 /* eslint-disable @typescript-eslint/no-explicit-any */
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
 import { useState } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
@@ -16,29 +16,36 @@ import { CalendarIcon, Plus } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 interface AddTaskDialogProps {
-  readonly onAddTask?: (task: any) => void
-  readonly sprintId: string
-  readonly projectId: string
+  readonly onAddTask?: (task: any) => void;
+  readonly sprintId: string;
+  readonly projectId: string;
 }
-
 
 // Función para convertir de frontend a backend
 const getBackendStatus = (frontendStatus: string) => {
   switch (frontendStatus) {
-    case "Not Started": return "TODO";
-    case "In Progress": return "IN_PROGRESS";
-    case "Completed": return "COMPLETED";
-    default: return "TODO";
+    case "Not Started":
+      return "TODO";
+    case "In Progress":
+      return "IN_PROGRESS";
+    case "Completed":
+      return "COMPLETED";
+    default:
+      return "TODO";
   }
 };
 
 // Function to convert backend status to frontend status
 const getFrontendStatus = (backendStatus: string) => {
   switch (backendStatus) {
-    case "TODO": return "Not Started";
-    case "IN_PROGRESS": return "In Progress";
-    case "COMPLETED": return "Completed";
-    default: return "Not Started";
+    case "TODO":
+      return "Not Started";
+    case "IN_PROGRESS":
+      return "In Progress";
+    case "COMPLETED":
+      return "Completed";
+    default:
+      return "Not Started";
   }
 };
 export function AddTaskDialog({ onAddTask, sprintId, projectId }: AddTaskDialogProps) {
@@ -56,20 +63,20 @@ export function AddTaskDialog({ onAddTask, sprintId, projectId }: AddTaskDialogP
 
 
 
- const handleSubmit = async () => {
-  if (!title || !date) {
-    setError("Please fill in all required fields");
-    return;
-  }
+  const handleSubmit = async () => {
+    if (!title || !date) {
+      setError("Please fill in all required fields");
+      return;
+    }
 
-  // Verificar que sprintId esté definido
-  if (!sprintId) {
-    setError("No se puede crear una tarea sin un sprint asociado");
-    return;
-  }
+    // Verificar que sprintId esté definido
+    if (!sprintId) {
+      setError("No se puede crear una tarea sin un sprint asociado");
+      return;
+    }
 
-  setIsLoading(true);
-  setError(null);
+    setIsLoading(true);
+    setError(null);
 
   try {
     console.log('Creating task with sprintId:', sprintId);
@@ -100,27 +107,29 @@ export function AddTaskDialog({ onAddTask, sprintId, projectId }: AddTaskDialogP
       body: JSON.stringify(taskData)
     });
 
-    // Mejor manejo de errores
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("Error response:", response.status, response.statusText);
-      console.error("Error details:", errorText);
-      throw new Error(`Failed to create task: ${response.status} ${errorText}`);
-    }
+      // Mejor manejo de errores
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Error response:", response.status, response.statusText);
+        console.error("Error details:", errorText);
+        throw new Error(
+          `Failed to create task: ${response.status} ${errorText}`,
+        );
+      }
 
-    // Registro de respuesta exitosa
-    const newTask = await response.json();
-    console.log("Task created successfully:", newTask);
-    
-    if (onAddTask) {
-      onAddTask({
-        ...newTask,
-        priority: priority,
-        status: getFrontendStatus(newTask.status) || "Not Started", // Convertir de backend a frontend
-        createdOn: newTask.startDate || new Date().toISOString(),
-        image: imagePreview || "/placeholder.svg",
-      });
-    }
+      // Registro de respuesta exitosa
+      const newTask = await response.json();
+      console.log("Task created successfully:", newTask);
+
+      if (onAddTask) {
+        onAddTask({
+          ...newTask,
+          priority: priority,
+          status: getFrontendStatus(newTask.status) || "Not Started", // Convertir de backend a frontend
+          createdOn: newTask.startDate || new Date().toISOString(),
+          image: imagePreview || "/placeholder.svg",
+        });
+      }
 
     // Resetear formulario
     setTitle("");
@@ -152,7 +161,11 @@ export function AddTaskDialog({ onAddTask, sprintId, projectId }: AddTaskDialogP
             <DialogTitle className="text-xl font-bold border-b-2 border-[#ff6767] pb-1 pr-4 inline-block">
               Add New Task
             </DialogTitle>
-            <Button variant="ghost" className="text-gray-500 hover:text-gray-700" onClick={() => setOpen(false)}>
+            <Button
+              variant="ghost"
+              className="text-gray-500 hover:text-gray-700"
+              onClick={() => setOpen(false)}
+            >
               Go Back
             </Button>
           </div>
@@ -162,7 +175,10 @@ export function AddTaskDialog({ onAddTask, sprintId, projectId }: AddTaskDialogP
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="md:col-span-2 space-y-4">
               <div>
-                <label htmlFor="title" className="block text-sm font-medium mb-1">
+                <label
+                  htmlFor="title"
+                  className="block text-sm font-medium mb-1"
+                >
                   Title *
                 </label>
                 <Input
@@ -174,27 +190,40 @@ export function AddTaskDialog({ onAddTask, sprintId, projectId }: AddTaskDialogP
               </div>
 
               <div>
-                <label htmlFor="date" className="block text-sm font-medium mb-1">
+                <label
+                  htmlFor="date"
+                  className="block text-sm font-medium mb-1"
+                >
                   Date *
                 </label>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
-                      className={cn("w-full justify-start text-left font-normal", !date && "text-muted-foreground")}
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !date && "text-muted-foreground",
+                      )}
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
                       {date ? format(date, "PPP") : <span>Select a date</span>}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar mode="single" selected={date} onSelect={setDate} initialFocus />
+                    <Calendar
+                      mode="single"
+                      selected={date}
+                      onSelect={setDate}
+                      initialFocus
+                    />
                   </PopoverContent>
                 </Popover>
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1">Priority</label>
+                <label className="block text-sm font-medium mb-1">
+                  Priority
+                </label>
                 <div className="flex items-center space-x-6">
                   <div className="flex items-center space-x-2">
                     <div
@@ -221,7 +250,10 @@ export function AddTaskDialog({ onAddTask, sprintId, projectId }: AddTaskDialogP
               </div>
 
               <div>
-                <label htmlFor="description" className="block text-sm font-medium mb-1">
+                <label
+                  htmlFor="description"
+                  className="block text-sm font-medium mb-1"
+                >
                   Task Description
                 </label>
                 <Textarea
@@ -236,7 +268,10 @@ export function AddTaskDialog({ onAddTask, sprintId, projectId }: AddTaskDialogP
 
             <div className="space-y-4">
               <div>
-                <label htmlFor="storyPoints" className="block text-sm font-medium mb-1">
+                <label
+                  htmlFor="storyPoints"
+                  className="block text-sm font-medium mb-1"
+                >
                   Story points
                 </label>
                 <Input
@@ -269,13 +304,11 @@ export function AddTaskDialog({ onAddTask, sprintId, projectId }: AddTaskDialogP
             </div>
           </div>
 
-          {error && (
-            <div className="mt-4 text-red-500 text-sm">{error}</div>
-          )}
+          {error && <div className="mt-4 text-red-500 text-sm">{error}</div>}
 
           <div className="mt-6">
-            <Button 
-              className="bg-[#ff6767] hover:bg-[#ff5252] text-white" 
+            <Button
+              className="bg-[#ff6767] hover:bg-[#ff5252] text-white"
               onClick={handleSubmit}
               disabled={isLoading}
             >
@@ -285,5 +318,5 @@ export function AddTaskDialog({ onAddTask, sprintId, projectId }: AddTaskDialogP
         </div>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
