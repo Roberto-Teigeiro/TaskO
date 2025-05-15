@@ -13,7 +13,7 @@ const Choosepath = () => {
   const [showJoinProjectModal, setJoinProjectModal] = useState(false);
   const { signOut } = useAuth();
   const navigate = useNavigate();
-  
+
   const handleLogout = async () => {
     try {
       await signOut();
@@ -30,13 +30,13 @@ const Choosepath = () => {
       if (user) {
         const publicMetadata = user.publicMetadata;
         setUserMetadata(publicMetadata);
-        console.log(userMetadata)
+        console.log(userMetadata);
       }
     };
-    
+
     fetchAuth();
   }, [user]);
-      
+
   const toggleCreateModal = () => setProjectModal(!showProjectModal);
   const toggleJoinModal = () => setJoinProjectModal(!showJoinProjectModal);
 
@@ -105,8 +105,19 @@ const Choosepath = () => {
               className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors"
               aria-label="Close"
             >
-              <svg className="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+              <svg
+                className="h-6 w-6"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             </button>
             <NewProjectModal />
@@ -124,8 +135,19 @@ const Choosepath = () => {
               className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors"
               aria-label="Close"
             >
-              <svg className="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+              <svg
+                className="h-6 w-6"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             </button>
             <div className="p-8">

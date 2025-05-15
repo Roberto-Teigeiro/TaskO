@@ -12,7 +12,7 @@ export default function NewProjectModal() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (step === 1) {
       if (!projectName.trim()) {
         setError("Please enter a project name");
@@ -32,12 +32,12 @@ export default function NewProjectModal() {
   const createProjectAndTeam = () => {
     // Create a variable to store projectData outside the promise chain
     let savedProjectData: any;
-    
+
     // First create the project
     fetch("http://localhost:8080/project/new", {
       method: "POST",
       headers: {
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({ projectName: projectName }),
     })

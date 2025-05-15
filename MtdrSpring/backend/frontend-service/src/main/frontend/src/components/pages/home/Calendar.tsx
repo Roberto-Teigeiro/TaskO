@@ -1,21 +1,32 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { Header } from "@/components/Header"
-import { Sidebar } from "@/components/Sidebar"
-import { Button } from "@/components/ui/button"
+import { useState, useEffect } from "react";
+import { Header } from "@/components/Header";
+import { Sidebar } from "@/components/Sidebar";
+import { Button } from "@/components/ui/button";
 import {
   CalendarIcon,
   ChevronLeft,
   ChevronRight,
   X,
   CalendarIcon as CalendarIconFull,
-} from "lucide-react"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Badge } from "@/components/ui/badge"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { useProjects } from "../../../context/ProjectContext"
+} from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { useProjects } from "../../../context/ProjectContext";
 import {
   format,
   addMonths,
@@ -26,128 +37,133 @@ import {
   isSameDay,
   parseISO,
   isWithinInterval,
-} from "date-fns"
+} from "date-fns";
 
 interface SprintType {
-  sprintId: string
-  projectId: string
-  name: string
-  startDate: string
-  endDate: string
-  status: "Completed" | "In Progress" | "Not Started"
+  sprintId: string;
+  projectId: string;
+  name: string;
+  startDate: string;
+  endDate: string;
+  status: "Completed" | "In Progress" | "Not Started";
 }
-
 
 const getStatusColor = (status: string) => {
-  console.log("status:" , status)
+  console.log("status:", status);
   switch (status) {
     case "Completed":
-      return "bg-[#32CD32] text-white"
+      return "bg-[#32CD32] text-white";
     case "In Progress":
-      return "bg-[#4169E1] text-white"
+      return "bg-[#4169E1] text-white";
     case "Not Started":
-      return "bg-[#ff6b6b] text-white"
+      return "bg-[#ff6b6b] text-white";
     default:
-      return "bg-gray-100 text-gray-800"
+      return "bg-gray-100 text-gray-800";
   }
-}
+};
 
 export default function SchedulePage() {
-  const { currentProject } = useProjects()
-  const [currentDate, setCurrentDate] = useState(new Date())
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null)
-  const [view, setView] = useState<"month" | "week" | "day">("month")
-  const [selectedEvent, setSelectedEvent] = useState<{ type: "sprint"; data: SprintType } | null>(null)
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [sprints, setSprints] = useState<SprintType[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const { currentProject } = useProjects();
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [view, setView] = useState<"month" | "week" | "day">("month");
+  const [selectedEvent, setSelectedEvent] = useState<{
+    type: "sprint";
+    data: SprintType;
+  } | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [sprints, setSprints] = useState<SprintType[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchSprints = async () => {
       if (!currentProject?.projectId) {
-        setError('No project selected')
-        setIsLoading(false)
-        return
+        setError("No project selected");
+        setIsLoading(false);
+        return;
       }
-  
+
       try {
         const response = await fetch(`http://localhost:8080/sprintlist/${currentProject.projectId}`)
         if (!response.ok) {
-          throw new Error('Failed to fetch sprints')
+          throw new Error("Failed to fetch sprints");
         }
-  
-        const data = await response.json()
-  
+
+        const data = await response.json();
+
         if (!Array.isArray(data)) {
-          throw new Error('Invalid response format from server')
+          throw new Error("Invalid response format from server");
         }
-  
-        const currentDate = new Date()
+
+        const currentDate = new Date();
         const transformedSprints = data.map((sprint) => {
-          const startDate = new Date(sprint.startDate)
-          const endDate = new Date(sprint.endDate)
-  
-          let status: "Completed" | "In Progress" | "Not Started"
+          const startDate = new Date(sprint.startDate);
+          const endDate = new Date(sprint.endDate);
+
+          let status: "Completed" | "In Progress" | "Not Started";
           if (currentDate > endDate) {
-            status = "Completed"
+            status = "Completed";
           } else if (currentDate >= startDate && currentDate <= endDate) {
-            status = "In Progress"
+            status = "In Progress";
           } else {
-            status = "Not Started"
+            status = "Not Started";
           }
-  
+
           return {
             ...sprint,
             status,
-            startDate: startDate.toISOString().split('T')[0],
-            endDate: endDate.toISOString().split('T')[0],
-          }
-        })
-  
-        setSprints(transformedSprints)
-        setError(null)
+            startDate: startDate.toISOString().split("T")[0],
+            endDate: endDate.toISOString().split("T")[0],
+          };
+        });
+
+        setSprints(transformedSprints);
+        setError(null);
       } catch (err) {
-        console.error('Error fetching sprints:', err)
-        setError(err instanceof Error ? err.message : 'An error occurred while fetching sprints')
-        setSprints([])
+        console.error("Error fetching sprints:", err);
+        setError(
+          err instanceof Error
+            ? err.message
+            : "An error occurred while fetching sprints",
+        );
+        setSprints([]);
       } finally {
-        setIsLoading(false)
+        setIsLoading(false);
       }
-    }
-  
-    fetchSprints()
-  }, [currentProject?.projectId])
-  
+    };
+
+    fetchSprints();
+  }, [currentProject?.projectId]);
 
   // Navigation functions
-  const nextMonth = () => setCurrentDate(addMonths(currentDate, 1))
-  const prevMonth = () => setCurrentDate(subMonths(currentDate, 1))
+  const nextMonth = () => setCurrentDate(addMonths(currentDate, 1));
+  const prevMonth = () => setCurrentDate(subMonths(currentDate, 1));
 
   // Get days for the current month view
-  const monthStart = startOfMonth(currentDate)
-  const monthEnd = endOfMonth(currentDate)
-  const monthDays = eachDayOfInterval({ start: monthStart, end: monthEnd })
+  const monthStart = startOfMonth(currentDate);
+  const monthEnd = endOfMonth(currentDate);
+  const monthDays = eachDayOfInterval({ start: monthStart, end: monthEnd });
 
   // Check if a date has sprints
   const getSprintsForDate = (date: Date) => {
     return sprints.filter((sprint) => {
-      const startDate = parseISO(sprint.startDate)
-      const endDate = parseISO(sprint.endDate)
-      return isWithinInterval(date, { start: startDate, end: endDate })
-    })
-  }
+      const startDate = parseISO(sprint.startDate);
+      const endDate = parseISO(sprint.endDate);
+      return isWithinInterval(date, { start: startDate, end: endDate });
+    });
+  };
 
   // Handle date click
   const handleDateClick = (date: Date) => {
-    setSelectedDate(date)
-  }
+    setSelectedDate(date);
+  };
 
   // Handle sprint click
   const handleEventClick = (sprint: SprintType) => {
-    setSelectedEvent({ type: "sprint", data: sprint })
-    setIsDialogOpen(true)
-  }
+    setSelectedEvent({ type: "sprint", data: sprint });
+    setIsDialogOpen(true);
+  };
 
   if (isLoading) {
     return (
@@ -157,7 +173,7 @@ export default function SchedulePage() {
           <p className="mt-4 text-gray-600">Loading sprints...</p>
         </div>
       </div>
-    )
+    );
   }
 
   if (error) {
@@ -165,7 +181,7 @@ export default function SchedulePage() {
       <div className="min-h-screen bg-[#f8f8fb] flex items-center justify-center">
         <div className="text-center">
           <p className="text-red-500">{error}</p>
-          <Button 
+          <Button
             className="mt-4 bg-[#ff6767] hover:bg-[#ff5252] text-white"
             onClick={() => window.location.reload()}
           >
@@ -173,7 +189,7 @@ export default function SchedulePage() {
           </Button>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -184,9 +200,7 @@ export default function SchedulePage() {
       {/* Main Content */}
       <div className="flex flex-1">
         {/* Sidebar */}
-        <Sidebar
-          
-        />
+        <Sidebar />
 
         {/* Main Content Area */}
         <div className="p-4 md:p-6 flex-1">
@@ -196,11 +210,16 @@ export default function SchedulePage() {
                 <CalendarIconFull className="mr-2 h-6 w-6 text-[#ff6767]" />
                 Calendar
               </h2>
-              <p className="text-gray-500 mt-1">View your project sprints in a calendar view</p>
+              <p className="text-gray-500 mt-1">
+                View your project sprints in a calendar view
+              </p>
             </div>
 
             <div className="flex items-center gap-2 mt-2 md:mt-0">
-              <Select value={view} onValueChange={(value: any) => setView(value)}>
+              <Select
+                value={view}
+                onValueChange={(value: any) => setView(value)}
+              >
                 <SelectTrigger className="w-[120px]">
                   <SelectValue placeholder="View" />
                 </SelectTrigger>
@@ -220,12 +239,17 @@ export default function SchedulePage() {
                 <Button variant="outline" size="icon" onClick={prevMonth}>
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
-                <h3 className="text-lg font-medium">{format(currentDate, "MMMM yyyy")}</h3>
+                <h3 className="text-lg font-medium">
+                  {format(currentDate, "MMMM yyyy")}
+                </h3>
                 <Button variant="outline" size="icon" onClick={nextMonth}>
                   <ChevronRight className="h-4 w-4" />
                 </Button>
               </div>
-              <Button variant="outline" onClick={() => setCurrentDate(new Date())}>
+              <Button
+                variant="outline"
+                onClick={() => setCurrentDate(new Date())}
+              >
                 Today
               </Button>
             </div>
@@ -235,23 +259,35 @@ export default function SchedulePage() {
               <div className="p-4">
                 {/* Day names */}
                 <div className="grid grid-cols-7 gap-1 mb-2">
-                  {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
-                    <div key={day} className="text-center font-medium text-sm py-2">
-                      {day}
-                    </div>
-                  ))}
+                  {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(
+                    (day) => (
+                      <div
+                        key={day}
+                        className="text-center font-medium text-sm py-2"
+                      >
+                        {day}
+                      </div>
+                    ),
+                  )}
                 </div>
 
                 {/* Calendar days */}
                 <div className="grid grid-cols-7 gap-1">
-                  {Array.from({ length: monthStart.getDay() }).map((_, index) => (
-                    <div key={`empty-${index}`} className="h-32 p-1 bg-gray-50 rounded-md"></div>
-                  ))}
+                  {Array.from({ length: monthStart.getDay() }).map(
+                    (_, index) => (
+                      <div
+                        key={`empty-${index}`}
+                        className="h-32 p-1 bg-gray-50 rounded-md"
+                      ></div>
+                    ),
+                  )}
 
                   {monthDays.map((day) => {
-                    const daySprints = getSprintsForDate(day)
-                    const isToday = isSameDay(day, new Date())
-                    const isSelected = selectedDate ? isSameDay(day, selectedDate) : false
+                    const daySprints = getSprintsForDate(day);
+                    const isToday = isSameDay(day, new Date());
+                    const isSelected = selectedDate
+                      ? isSameDay(day, selectedDate)
+                      : false;
 
                     return (
                       <div
@@ -281,18 +317,22 @@ export default function SchedulePage() {
                               key={sprint.sprintId}
                               className={`text-xs p-1 rounded truncate cursor-pointer ${getStatusColor(sprint.status)}`}
                               onClick={(e) => {
-                                e.stopPropagation()
-                                handleEventClick(sprint)
+                                e.stopPropagation();
+                                handleEventClick(sprint);
                               }}
                             >
-                              
-                              <div className="font-semibold text-sm mb-0.5">{sprint.name}</div>
-                              <div className="text-xs text-white">{format(parseISO(sprint.startDate), "MMM d")} - {format(parseISO(sprint.endDate), "MMM d")}</div>
+                              <div className="font-semibold text-sm mb-0.5">
+                                {sprint.name}
+                              </div>
+                              <div className="text-xs text-white">
+                                {format(parseISO(sprint.startDate), "MMM d")} -{" "}
+                                {format(parseISO(sprint.endDate), "MMM d")}
+                              </div>
                             </div>
                           ))}
                         </div>
                       </div>
-                    )
+                    );
                   })}
                 </div>
               </div>
@@ -321,8 +361,14 @@ export default function SchedulePage() {
           {selectedDate && (
             <div className="mt-6 bg-white rounded-xl shadow-sm p-4">
               <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-medium">{format(selectedDate, "MMMM d, yyyy")}</h3>
-                <Button variant="ghost" size="sm" onClick={() => setSelectedDate(null)}>
+                <h3 className="text-lg font-medium">
+                  {format(selectedDate, "MMMM d, yyyy")}
+                </h3>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSelectedDate(null)}
+                >
                   <X className="h-4 w-4" />
                 </Button>
               </div>
@@ -347,11 +393,19 @@ export default function SchedulePage() {
                               <h5 className="font-medium">{sprint.name}</h5>
                               <div className="flex items-center text-sm text-gray-500 mt-1">
                                 <CalendarIcon className="h-4 w-4 mr-1" />
-                                {format(parseISO(sprint.startDate), "MMM d")} -{" "}
-                                {format(parseISO(sprint.endDate), "MMM d, yyyy")}
+                                {format(
+                                  parseISO(sprint.startDate),
+                                  "MMM d",
+                                )} -{" "}
+                                {format(
+                                  parseISO(sprint.endDate),
+                                  "MMM d, yyyy",
+                                )}
                               </div>
                             </div>
-                            <Badge className={getStatusColor(sprint.status)}>{sprint.status}</Badge>
+                            <Badge className={getStatusColor(sprint.status)}>
+                              {sprint.status}
+                            </Badge>
                           </div>
                         </div>
                       ))}
@@ -360,7 +414,9 @@ export default function SchedulePage() {
                 )}
 
                 {getSprintsForDate(selectedDate).length === 0 && (
-                  <div className="text-center py-4 text-gray-500">No sprints scheduled for this day</div>
+                  <div className="text-center py-4 text-gray-500">
+                    No sprints scheduled for this day
+                  </div>
                 )}
               </div>
             </div>
@@ -378,23 +434,27 @@ export default function SchedulePage() {
           {selectedEvent?.type === "sprint" && (
             <div className="space-y-4">
               <div>
-                <h3 className="text-xl font-medium">{selectedEvent.data.name}</h3>
+                <h3 className="text-xl font-medium">
+                  {selectedEvent.data.name}
+                </h3>
                 <div className="flex items-center text-sm text-gray-500 mt-1">
                   <CalendarIcon className="h-4 w-4 mr-1" />
-                  {format(parseISO(selectedEvent.data.startDate), "MMM d")} -{" "}
+                  {format(
+                    parseISO(selectedEvent.data.startDate),
+                    "MMM d",
+                  )} -{" "}
                   {format(parseISO(selectedEvent.data.endDate), "MMM d, yyyy")}
                 </div>
                 <div className="flex items-center gap-2 mt-2">
-                  <Badge className={getStatusColor(selectedEvent.data.status)}>{selectedEvent.data.status}</Badge>
+                  <Badge className={getStatusColor(selectedEvent.data.status)}>
+                    {selectedEvent.data.status}
+                  </Badge>
                 </div>
               </div>
-
-              
             </div>
           )}
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }
-

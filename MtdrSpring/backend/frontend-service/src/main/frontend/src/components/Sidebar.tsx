@@ -64,11 +64,14 @@ export function Sidebar() {
       <div className="p-6 flex flex-col items-center text-center border-b border-white/20">
         <Avatar className="w-20 h-20 border-2 border-white shadow-lg">
           <AvatarImage
-            src={userData.profilePicture || "/placeholder.svg?height=80&width=80"}
+            src={
+              userData.profilePicture || "/placeholder.svg?height=80&width=80"
+            }
             alt={`${userData.firstName} ${userData.lastName}`}
           />
           <AvatarFallback>
-            {userData.firstName.charAt(0) || "?"}{userData.lastName.charAt(0) || "?"}
+            {userData.firstName.charAt(0) || "?"}
+            {userData.lastName.charAt(0) || "?"}
           </AvatarFallback>
         </Avatar>
         <h3 className="mt-2 font-semibold text-lg tracking-wide">{userData.firstName} {userData.lastName}</h3>

@@ -1,7 +1,7 @@
 ///Users/santosa/Documents/GitHub/TaskO/MtdrSpring/backend/frontend-service/src/main/frontend/src/components/pages/home/TaskItem.tsx
-import { CircleDot } from "lucide-react"
-import { AssignUserDialog } from "@/components/pages/home/AssignUserDialog"
-import { ChangeStatusDialog } from "@/components/pages/home/ChangeStatusDialog"
+import { CircleDot } from "lucide-react";
+import { AssignUserDialog } from "@/components/pages/home/AssignUserDialog";
+import { ChangeStatusDialog } from "@/components/pages/home/ChangeStatusDialog";
 
 // Tipo de estado para el backend
 export type BackendStatus = "TODO" | "IN_PROGRESS" | "COMPLETED";
@@ -11,20 +11,28 @@ export type FrontendStatus = "Not Started" | "In Progress" | "Completed";
 // Función para convertir estado del frontend al backend
 export const getBackendStatus = (frontendStatus: string): BackendStatus => {
   switch (frontendStatus) {
-    case "Not Started": return "TODO";
-    case "In Progress": return "IN_PROGRESS";
-    case "Completed": return "COMPLETED";
-    default: return "TODO";
+    case "Not Started":
+      return "TODO";
+    case "In Progress":
+      return "IN_PROGRESS";
+    case "Completed":
+      return "COMPLETED";
+    default:
+      return "TODO";
   }
 };
 
 // Función para convertir estado del backend al frontend
 export const getFrontendStatus = (backendStatus: string): FrontendStatus => {
   switch (backendStatus) {
-    case "TODO": return "Not Started";
-    case "IN_PROGRESS": return "In Progress";
-    case "COMPLETED": return "Completed";
-    default: return "Not Started";
+    case "TODO":
+      return "Not Started";
+    case "IN_PROGRESS":
+      return "In Progress";
+    case "COMPLETED":
+      return "Completed";
+    default:
+      return "Not Started";
   }
 };
 
@@ -43,39 +51,42 @@ export interface TaskItemProps {
   readonly onTaskUpdated?: () => void;
 }
 
-export function TaskItem({ 
-  id = "temp-id", 
-  title, 
-  description, 
-  priority, 
-  status, 
-  date, 
-  image, 
+export function TaskItem({
+  id = "temp-id",
+  title,
+  description,
+  priority,
+  status,
+  date,
+  image,
   assignee,
   //sprintId,
-  onTaskUpdated
+  onTaskUpdated,
 }: TaskItemProps) {
   const getStatusColor = (status: string): string => {
     switch (status) {
       case "Completed":
-        return "text-[#32CD32]"
+        return "text-[#32CD32]";
       case "In Progress":
-        return "text-[#4169E1]"
+        return "text-[#4169E1]";
       case "Not Started":
-        return "text-[#ff6b6b]"
+        return "text-[#ff6b6b]";
       default:
-        return "text-gray-500"
+        return "text-gray-500";
     }
-  }
+  };
 
-  const handleAssignUser = async (taskId: string, userId: string): Promise<void> => {
+  const handleAssignUser = async (
+    taskId: string,
+    userId: string,
+  ): Promise<void> => {
     try {
       console.log(`Asignando usuario ${userId} a tarea ${taskId}`);
       
       const response = await fetch(`http://localhost:8080/task/assign`, {
         method: 'PUT',
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           taskId,
@@ -86,7 +97,7 @@ export function TaskItem({
       if (!response.ok) {
         const errorText = await response.text();
         console.error("Error de asignación:", errorText);
-        console.error('Error al asignar usuario a la tarea');
+        console.error("Error al asignar usuario a la tarea");
         return;
       }
 
@@ -97,17 +108,17 @@ export function TaskItem({
         window.location.reload();
       }
     } catch (error) {
-      console.error('Error:', error);
+      console.error("Error:", error);
     }
   };
 
   const handleChangeStatus = async (
-    taskId: string, 
-    newStatus: BackendStatus
+    taskId: string,
+    newStatus: BackendStatus,
   ): Promise<void> => {
     try {
       console.log(`Cambiando estado de tarea ${taskId} a ${newStatus}`);
-      
+
       // Verificar si el ID de tarea es válido
       if (!taskId || taskId === "temp-id") {
         console.error("ID de tarea no válido");
@@ -118,7 +129,7 @@ export function TaskItem({
       const response = await fetch(`http://localhost:8080/task/status`, {
         method: 'PUT',
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           taskId,
@@ -130,12 +141,12 @@ export function TaskItem({
       if (!response.ok) {
         const errorText = await response.text();
         console.error(`Error del servidor (${response.status}):`, errorText);
-        console.error('Error al actualizar el estado de la tarea');
+        console.error("Error al actualizar el estado de la tarea");
         return;
       }
 
       console.log(`Estado actualizado correctamente para tarea ${taskId}`);
-      
+
       // Si hay una función de actualización, usarla en lugar de recargar la página
       if (onTaskUpdated) {
         onTaskUpdated();
@@ -143,7 +154,7 @@ export function TaskItem({
         window.location.reload();
       }
     } catch (error) {
-      console.error('Error en la comunicación con el servidor:', error);
+      console.error("Error en la comunicación con el servidor:", error);
     }
   };
 
@@ -156,7 +167,9 @@ export function TaskItem({
           </div>
           <div className="flex-1 min-w-0">
             <h4 className="font-medium truncate">{title}</h4>
-            <p className="text-sm text-gray-500 mt-1 line-clamp-2">{description}</p>
+            <p className="text-sm text-gray-500 mt-1 line-clamp-2">
+              {description}
+            </p>
 
             <div className="flex flex-wrap items-center gap-2 md:gap-4 mt-2 text-xs">
               <div>
@@ -168,10 +181,12 @@ export function TaskItem({
                 <span className={getStatusColor(status)}>{status}</span>
               </div>
               <div className="text-gray-400">Created: {date}</div>
-              
+
               {/* Task ID debugging info */}
-              <div className="text-gray-400 text-xs">ID: {id?.substring(0, 8)}</div>
-              
+              <div className="text-gray-400 text-xs">
+                ID: {id?.substring(0, 8)}
+              </div>
+
               {/* Buttons for task actions */}
               <div className="flex gap-2 mt-1">
                 <ChangeStatusDialog
@@ -179,7 +194,7 @@ export function TaskItem({
                   currentStatus={status as FrontendStatus}
                   onStatusChange={handleChangeStatus}
                 />
-                
+
                 <AssignUserDialog
                   taskId={id}
                   currentAssignee={assignee}
@@ -187,7 +202,7 @@ export function TaskItem({
                 />
               </div>
             </div>
-            
+
             {/* Show assignee (if exists) */}
             {assignee && (
               <div className="mt-2 text-xs text-gray-500">
@@ -207,7 +222,7 @@ export function TaskItem({
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 export interface CompletedTaskItemProps {
@@ -218,7 +233,13 @@ export interface CompletedTaskItemProps {
   readonly completedBy?: string;
 }
 
-export function CompletedTaskItem({ title, description, daysAgo, image, completedBy }: CompletedTaskItemProps) {
+export function CompletedTaskItem({
+  title,
+  description,
+  daysAgo,
+  image,
+  completedBy,
+}: CompletedTaskItemProps) {
   return (
     <div className="border border-gray-100 rounded-lg p-3">
       <div className="flex justify-between items-start">
@@ -228,15 +249,19 @@ export function CompletedTaskItem({ title, description, daysAgo, image, complete
           </div>
           <div className="flex-1 min-w-0">
             <h4 className="font-medium truncate">{title}</h4>
-            <p className="text-sm text-gray-500 mt-1 line-clamp-2">{description}</p>
+            <p className="text-sm text-gray-500 mt-1 line-clamp-2">
+              {description}
+            </p>
 
             <div className="flex flex-wrap items-center gap-2 md:gap-4 mt-2 text-xs">
               <div>
                 <span className="text-gray-500">Status: </span>
                 <span className="text-[#32CD32]">Completed</span>
               </div>
-              <div className="text-gray-400">Completed {daysAgo} {daysAgo === 1 ? 'day' : 'days'} ago</div>
-              
+              <div className="text-gray-400">
+                Completed {daysAgo} {daysAgo === 1 ? "day" : "days"} ago
+              </div>
+
               {/* Mostrar quién completó la tarea (si existe) */}
               {completedBy && (
                 <div className="text-gray-500">
@@ -257,5 +282,5 @@ export function CompletedTaskItem({ title, description, daysAgo, image, complete
         </div>
       </div>
     </div>
-  )
+  );
 }

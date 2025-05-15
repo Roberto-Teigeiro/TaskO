@@ -79,19 +79,19 @@ export default function Dashboard() {
   useEffect(() => {
     const checkUserProjects = async () => {
       if (!user?.id) return;
-      
+
       try {
         const response = await fetch(`http://localhost:8080/projects/${user.id}/any`);
         if (!response.ok) {
-          throw new Error('Failed to check user projects');
+          throw new Error("Failed to check user projects");
         }
-        
+
         const hasProjects = await response.json();
         if (!hasProjects) {
-          navigate('/choosepath');
+          navigate("/choosepath");
         }
       } catch (err) {
-        console.error('Error checking user projects:', err);
+        console.error("Error checking user projects:", err);
       }
     };
 
@@ -107,18 +107,18 @@ export default function Dashboard() {
       try {
         const response = await fetch(`http://localhost:8080/sprintlist/${selectedProject}`);
         if (!response.ok) {
-          throw new Error('Failed to fetch sprints');
+          throw new Error("Failed to fetch sprints");
         }
-        
-        const data = await response.json() as BackendSprint[];
-        console.log('Fetched sprints:', data);
-        
+
+        const data = (await response.json()) as BackendSprint[];
+        console.log("Fetched sprints:", data);
+
         const currentDate = new Date();
-        
+
         const sprintsWithStatus = data.map((sprint) => {
           const startDate = new Date(sprint.startDate);
           const endDate = new Date(sprint.endDate);
-          
+
           let status: "Completed" | "In Progress" | "Not Started";
           if (currentDate > endDate) {
             status = "Completed";
@@ -127,14 +127,14 @@ export default function Dashboard() {
           } else {
             status = "Not Started";
           }
-          
+
           return {
             ...sprint,
-            status
+            status,
           };
         });
 
-        console.log('Sprints with status:', sprintsWithStatus);
+        console.log("Sprints with status:", sprintsWithStatus);
         setSprints(sprintsWithStatus);
 
         // Fetch tasks for each sprint
@@ -143,16 +143,21 @@ export default function Dashboard() {
           try {
             const tasksResponse = await fetch(`http://localhost:8080/task/sprint/${sprint.sprintId}`);
             if (!tasksResponse.ok) {
-              throw new Error(`Failed to fetch tasks for sprint ${sprint.sprintId}`);
+              throw new Error(
+                `Failed to fetch tasks for sprint ${sprint.sprintId}`,
+              );
             }
-            const tasks = await tasksResponse.json() as Task[];
+            const tasks = (await tasksResponse.json()) as Task[];
             tasksBySprint[sprint.sprintId] = tasks;
           } catch (err) {
-            console.error(`Error fetching tasks for sprint ${sprint.sprintId}:`, err);
+            console.error(
+              `Error fetching tasks for sprint ${sprint.sprintId}:`,
+              err,
+            );
             tasksBySprint[sprint.sprintId] = [];
           }
         }
-        console.log('Tasks by sprint:', tasksBySprint);
+        console.log("Tasks by sprint:", tasksBySprint);
         setSprintTasks(tasksBySprint);
       } catch (err) {
         console.error('Error fetching sprints:', err);
@@ -263,7 +268,7 @@ export default function Dashboard() {
           {/* Welcome Section */}
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-bold">
-              Welcome back, {user?.firstName ?? ''} {user?.lastName ?? ''} 👋
+              Welcome back, {user?.firstName ?? ""} {user?.lastName ?? ""} 👋
             </h2>
             
           </div>
@@ -561,16 +566,16 @@ export default function Dashboard() {
           <div>
             <h1></h1>
             {projectsArray.length === 0 ? (
-                <p>No projects found</p>
+              <p>No projects found</p>
             ) : (
-                <ul>
-                    {projectsArray.map((project) => (
-                        <li key={project.id}>
-                            <h3>{project.name}</h3>
-                            {/* Add other project details as needed */}
-                        </li>
-                    ))}
-                </ul>
+              <ul>
+                {projectsArray.map((project) => (
+                  <li key={project.id}>
+                    <h3>{project.name}</h3>
+                    {/* Add other project details as needed */}
+                  </li>
+                ))}
+              </ul>
             )}
           </div>
         </div>
