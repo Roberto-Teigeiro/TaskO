@@ -7,7 +7,7 @@ import {
   ReactNode,
 } from "react";
 import { getUserProject } from "../components/hooks/getUserProject";
-import { useUser } from "@clerk/react-router";
+import { useUser } from "@clerk/clerk-react";
 
 interface ProjectDetails {
   projectId: string;
@@ -28,25 +28,27 @@ const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
 export function ProjectProvider({ children }: { children: ReactNode }) {
   const [userProjects, setUserProjects] = useState<any[]>([]);
   const [currentProject, setCurrentProject] = useState<ProjectDetails | null>(
-    null,
+    null
   );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { user } = useUser();
 
-    const fetchProjectDetails = async (projectId: string) => {
-        try {
-            const response = await fetch(`http://localhost:8080/project/${projectId}`);
-            if (!response.ok) {
-                throw new Error('Failed to fetch project details');
-            }
-            const projectData = await response.json();
-            setCurrentProject(projectData);
-        } catch (err) {
-            console.error('Error fetching project details:', err);
-            setCurrentProject(null);
-        }
-    };
+  const fetchProjectDetails = async (projectId: string) => {
+    try {
+      const response = await fetch(
+        `http://localhost:8080/project/${projectId}`
+      );
+      if (!response.ok) {
+        throw new Error("Failed to fetch project details");
+      }
+      const projectData = await response.json();
+      setCurrentProject(projectData);
+    } catch (err) {
+      console.error("Error fetching project details:", err);
+      setCurrentProject(null);
+    }
+  };
 
   const fetchProjects = async () => {
     if (!user?.id) return;

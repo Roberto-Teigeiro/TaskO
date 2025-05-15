@@ -23,8 +23,12 @@ public class TeamController {
     }
   @PostMapping("/team/add")
     public ResponseEntity<TeamItem> postMethodName(@RequestBody TeamItem teamItem) {
-        TeamItem savedTeam = teamItemService.addTeamItem(teamItem);
-        return ResponseEntity.ok(savedTeam);
+        try {
+            TeamItem savedTeam = teamItemService.addTeamItem(teamItem);
+            return ResponseEntity.ok(savedTeam);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
     
 

@@ -75,6 +75,10 @@ public class SprintItem {
         this.name = name;
     }
 
+    public void setSprintName(String sprintName) {
+        this.name = sprintName;
+    }
+
     public String getDescription() {
         return description;
     }

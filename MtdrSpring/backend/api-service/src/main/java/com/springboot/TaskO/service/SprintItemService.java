@@ -22,14 +22,18 @@ public class SprintItemService {
     }
 
     public ResponseEntity<List<SprintItem>> getItemsByProjectId(UUID projectId) {
-        List<SprintItem> items = sprintItemRepository.findByProjectId(projectId);
-        if (!items.isEmpty()) {
-            return new ResponseEntity<>(items, HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        try {
+            List<SprintItem> items = sprintItemRepository.findByProjectId(projectId);
+            if (!items.isEmpty()) {
+                return new ResponseEntity<>(items, HttpStatus.OK);
+            } else {
+                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            }
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
-    public SprintItem addSprintItem(SprintItem sprintItem) {
+    public SprintItem addSprintItem(SprintItem sprintItem) throws RuntimeException {
         return sprintItemRepository.save(sprintItem);
     }
 

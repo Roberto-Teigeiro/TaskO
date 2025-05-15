@@ -71,7 +71,7 @@ public class TaskItem {
         return projectId;
     }
 
-    public void setID(UUID projectId) {
+    public void setProjectId(UUID projectId) {
         this.projectId = projectId;
     }
 
@@ -89,6 +89,10 @@ public class TaskItem {
 
     public void setTaskId(UUID taskId) {
         this.taskId = taskId;
+    }
+
+    public void setId(UUID id) {
+        this.taskId = id;
     }
 
     public String getTitle() {

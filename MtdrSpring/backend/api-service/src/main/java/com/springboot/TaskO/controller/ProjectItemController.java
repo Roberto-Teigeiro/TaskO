@@ -24,16 +24,20 @@ public class ProjectItemController {
 
     @GetMapping(value = "/project/{id}")
     public ResponseEntity<ProjectItem> getSprintItemById(@PathVariable UUID id) {
-        try {
-            ResponseEntity<ProjectItem> responseEntity = projectItemService.getItemById(id);
-            return new ResponseEntity<ProjectItem>(responseEntity.getBody(), HttpStatus.OK);
-        } catch (Exception e) {
+        ResponseEntity<ProjectItem> responseEntity = projectItemService.getItemById(id);
+        if (responseEntity.getBody() == null) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
+        return new ResponseEntity<>(responseEntity.getBody(), HttpStatus.OK);
     }
 
     @PostMapping("/project/new")
-    public ProjectItem addProjectItem(@RequestBody ProjectItem  projectItem) {
-        return projectItemService.addProjectItem(projectItem);
+    public ResponseEntity<ProjectItem> addProjectItem(@RequestBody ProjectItem projectItem) {
+        try {
+            ProjectItem savedProject = projectItemService.addProjectItem(projectItem);
+            return ResponseEntity.ok(savedProject);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 }

@@ -54,11 +54,11 @@ public class TaskItemService {
         return todoItems;
     }
 
-    public TaskItem updateTaskItem(UUID id, TaskItem t) {
-        Optional<TaskItem> toDoItemData = toDoItemRepository.findById(id);
+    public TaskItem updateTaskItem(UUID taskId, TaskItem t) {
+        Optional<TaskItem> toDoItemData = toDoItemRepository.findById(taskId);
         if (toDoItemData.isPresent()) {
             TaskItem toDoItem = toDoItemData.get();
-            System.out.println("Updating task: " + id);
+            System.out.println("Updating task: " + taskId);
             System.out.println("Current task state: " + toDoItem);
             System.out.println("Update request: " + t);
             System.out.println("realHours in update request: " + t.getRealHours());
@@ -89,13 +89,19 @@ public class TaskItemService {
             if (t.getEstimatedHours() != null) {
                 toDoItem.setEstimatedHours(t.getEstimatedHours());
             }
+            if (t.getTitle() != null) {
+                toDoItem.setTitle(t.getTitle());
+            }
+            if (t.getDescription() != null) {
+                toDoItem.setDescription(t.getDescription());
+            }
             
             TaskItem savedTask = toDoItemRepository.save(toDoItem);
             System.out.println("Updated task state: " + savedTask);
             System.out.println("realHours in saved task: " + savedTask.getRealHours());
             return savedTask;
         } else {
-            System.out.println("Task not found: " + id);
+            System.out.println("Task not found: " + taskId);
             return null;
         }
     }

@@ -14,12 +14,16 @@ public class ProjectItem {
     @Column(name = "PROJECTNAME", length = 255)
     private String projectName;
 
+    @Column(name = "DESCRIPTION", length = 1000)
+    private String description;
+
     public ProjectItem() {
     }
 
-    public ProjectItem(UUID projectId, String projectName) {
+    public ProjectItem(UUID projectId, String projectName, String description) {
         this.projectId = projectId;
         this.projectName = projectName;
+        this.description = description;
     }
 
     public UUID getProjectId() {
@@ -38,11 +42,20 @@ public class ProjectItem {
         this.projectName = projectName;
     }
 
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
     @Override
     public String toString() {
         return "ProjectItem{" +
                 "projectId=" + projectId +
                 ", projectName='" + projectName + '\'' +
+                ", description='" + description + '\'' +
                 '}';
     }
 }

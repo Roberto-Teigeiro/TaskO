@@ -37,9 +37,15 @@ public class UserItem {
     public void setUserId(String userId) {
         this.userId = userId;
     }
+
+    public void setId(String id) {
+        this.userId = id;
+    }
+
     public void setTelegramUsername(String telegramUsername) {
         this.telegramUsername = telegramUsername;
     }
+
     public String getTelegramUsername() {
         return telegramUsername;
     }

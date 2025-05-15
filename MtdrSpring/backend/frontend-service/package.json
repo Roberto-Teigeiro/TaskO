@@ -1,0 +1,25 @@
+{
+  "name": "frontend-service",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test:frontend": "vitest",
+    "test:frontend:watch": "vitest watch",
+    "test:frontend:coverage": "vitest run --coverage"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@clerk/clerk-react": "^5.31.3",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.3.0",
+    "@types/jest": "^29.5.14",
+    "@types/react": "^19.1.4",
+    "@types/react-dom": "^19.1.5",
+    "jsdom": "^26.1.0",
+    "react-router-dom": "^7.6.0",
+    "vitest": "^3.1.3"
+  }
+}

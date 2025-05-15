@@ -1,8 +1,8 @@
 // @/components/ui/Task-item.tsx
-import { CircleDot } from "lucide-react"
-import { AssignUserDialog } from "@/components/pages/home/AssignUserDialog"
-import { ChangeStatusDialog } from "@/components/pages/home/ChangeStatusDialog"
-import { useState, useEffect } from "react"
+import { CircleDot } from "lucide-react";
+import { AssignUserDialog } from "../pages/home/AssignUserDialog";
+import { ChangeStatusDialog } from "../pages/home/ChangeStatusDialog";
+import { useState, useEffect } from "react";
 
 // Tipo de estado para el backend
 export type BackendStatus = "TODO" | "IN_PROGRESS" | "COMPLETED";
@@ -65,7 +65,7 @@ export function TaskItem({
   estimatedHours = 0,
   realHours = 0,
   currentUserId,
-  onTaskUpdated
+  onTaskUpdated,
 }: TaskItemProps) {
   const [localRealHours, setLocalRealHours] = useState<number>(realHours);
 
@@ -89,7 +89,7 @@ export function TaskItem({
 
   const handleAssignUser = async (
     taskId: string,
-    userId: string,
+    userId: string
   ): Promise<void> => {
     try {
       console.log(`Asignando usuario ${userId} a tarea ${taskId}`);
@@ -140,7 +140,7 @@ export function TaskItem({
 
   const handleChangeStatus = async (
     taskId: string,
-    newStatus: BackendStatus,
+    newStatus: BackendStatus
   ): Promise<void> => {
     try {
       console.log(`Cambiando estado de tarea ${taskId} a ${newStatus}`);
@@ -179,7 +179,7 @@ export function TaskItem({
       }
 
       console.log(
-        `Estado actualizado correctamente para tarea ${taskId} a ${newStatus}`,
+        `Estado actualizado correctamente para tarea ${taskId} a ${newStatus}`
       );
 
       // Actualizar UI
@@ -189,14 +189,17 @@ export function TaskItem({
         window.location.reload();
       }
     } catch (error) {
-      console.error('Error al actualizar estado:', error);
+      console.error("Error al actualizar estado:", error);
     }
   };
 
-  const handleRealHoursUpdate = async (taskId: string, hours: number): Promise<void> => {
+  const handleRealHoursUpdate = async (
+    taskId: string,
+    hours: number
+  ): Promise<void> => {
     try {
-      console.log('Starting real hours update:', { taskId, hours });
-      
+      console.log("Starting real hours update:", { taskId, hours });
+
       if (!taskId || taskId === "temp-id") {
         console.error("ID de tarea no válido");
         return;
@@ -204,44 +207,44 @@ export function TaskItem({
 
       // First, get the current task to preserve all fields
       const getResponse = await fetch(`http://localhost:8080/task/${taskId}`);
-      
+
       if (!getResponse.ok) {
         throw new Error(`Error al obtener la tarea: ${getResponse.status}`);
       }
-      
+
       const currentTask = await getResponse.json();
-      console.log('Current task before update:', currentTask);
-      
+      console.log("Current task before update:", currentTask);
+
       // Update only the realHours field
       currentTask.realHours = hours;
-      console.log('Task after realHours update:', currentTask);
+      console.log("Task after realHours update:", currentTask);
 
       // Call the generic update endpoint with the complete object
       const requestBody = JSON.stringify(currentTask);
-      console.log('Request payload:', requestBody);
+      console.log("Request payload:", requestBody);
 
       const response = await fetch(`http://localhost:8080/task/${taskId}`, {
-        method: 'PUT',
+        method: "PUT",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: requestBody,
       });
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('Error response:', errorText);
+        console.error("Error response:", errorText);
         throw new Error(`Error ${response.status}: ${errorText}`);
       }
 
       const updatedTask = await response.json();
-      console.log('Server response after update:', updatedTask);
+      console.log("Server response after update:", updatedTask);
 
       if (onTaskUpdated) {
         onTaskUpdated();
       }
     } catch (error) {
-      console.error('Error al actualizar horas reales:', error);
+      console.error("Error al actualizar horas reales:", error);
       // Revert to previous value on error
       setLocalRealHours(realHours);
     }
@@ -270,13 +273,13 @@ export function TaskItem({
                 <span className={getStatusColor(status)}>{status}</span>
               </div>
               <div className="text-gray-400">Created: {date}</div>
-              
+
               {/* Hours information */}
               <div className="flex items-center gap-2">
                 <span className="text-gray-500">Est. Hours: </span>
                 <span className="font-medium">{estimatedHours}</span>
               </div>
-              
+
               {/* Real hours display/input - only show input to assigned user */}
               <div className="flex items-center gap-2">
                 <span className="text-gray-500">Real Hours: </span>
@@ -298,7 +301,7 @@ export function TaskItem({
                   <span className="font-medium">{realHours}</span>
                 )}
               </div>
-              
+
               {/* Task ID debugging info */}
               <div className="text-gray-400 text-xs">
                 ID: {id?.substring(0, 8)}

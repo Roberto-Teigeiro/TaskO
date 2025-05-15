@@ -46,13 +46,13 @@ public class TaskController {
         return taskItemService.getItemById(id);
     }
 
-    @PutMapping("/task/{id}")
-    public ResponseEntity<TaskItem> updateTaskItem(@PathVariable("id") UUID id, @RequestBody TaskItem task) {
-        TaskItem updatedTask = taskItemService.updateTaskItem(id, task);
+    @PutMapping("/task/{taskId}")
+    public ResponseEntity<TaskItem> updateTaskItem(@PathVariable("taskId") UUID taskId, @RequestBody TaskItem task) {
+        TaskItem updatedTask = taskItemService.updateTaskItem(taskId, task);
         if (updatedTask != null) {
-            return new ResponseEntity<>(updatedTask, HttpStatus.OK);
+            return ResponseEntity.ok(updatedTask);
         } else {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            return ResponseEntity.notFound().build();
         }
     }
 
