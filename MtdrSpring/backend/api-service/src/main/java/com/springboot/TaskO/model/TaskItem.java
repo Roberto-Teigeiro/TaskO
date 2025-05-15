@@ -44,7 +44,7 @@ public class TaskItem {
     private String comments;
     @Column(name = "STORYPOINTS")
     private Integer storyPoints;
-    @Column(name = "ESTIMATED_HOURS")
+    @Column(name = "ESTIMATEDHOURS")
     private Double estimatedHours;
 
     public TaskItem(){
