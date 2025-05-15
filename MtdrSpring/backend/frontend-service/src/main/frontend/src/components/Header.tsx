@@ -19,7 +19,7 @@ export function Header({ title }: HeaderProps) {
   })
   
   return (
-    <div className="flex flex-col sticky top-0 z-15">
+    <div className="flex flex-col sticky top-0 z-15 w-screen">
       <header className="bg-[#312D2A] py-4 px-8 flex items-center justify-between">
         <div className="flex items-center gap-8">
           <div className="flex items-center gap-4 ">
