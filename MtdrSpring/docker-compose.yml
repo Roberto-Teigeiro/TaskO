@@ -1,19 +1,52 @@
 name: tasko
 services:
+  # Oracle Database for local testing
+  oracle-db:
+      image: gvenzl/oracle-free:latest
+      environment:
+        - ORACLE_PASSWORD=Taskopassword123
+        - ORACLE_DATABASE=MTDRDB
+        - ORACLE_ADMIN_PASSWORD=Taskopassword123
+        # These two settings are crucial for creating the ADMIN user
+        - APP_USER=ADMIN
+        - APP_USER_PASSWORD=Taskopassword123
+      ports:
+        - "1521:1521"
+      volumes:
+        # Mount the setup script to be executed first
+        - ./backend/setup-admin.sql:/container-entrypoint-initdb.d/00-setup-admin.sql
+        - ./backend/create_db.sql:/container-entrypoint-initdb.d/01-create_db.sql
+      networks:
+        - app-network
+      healthcheck:
+        test: ["CMD", "sqlplus", "-L", "system/Taskopassword123@//localhost:1521/MTDRDB", "AS", "SYSDBA", "SELECT 1 FROM DUAL"]
+        interval: 30s
+        timeout: 10s
+        retries: 5
+  
+  
   # Spring Boot API service
   tasko-api-service:
     build:
       context: ./backend/api-service
       dockerfile: Dockerfile
     environment:
-      - TODO_PDB_NAME=${TODO_PDB_NAME:-todo_database}
+      - TODO_PDB_NAME=${TODO_PDB_NAME:-MTDRDB}
       - OCI_REGION=${OCI_REGION:-us-phoenix-1}
       - UI_USERNAME=${UI_USERNAME:-admin}
-      - SPRING_DATASOURCE_URL=jdbc:oracle:thin:@mtdrdb291_medium?TNS_ADMIN=/app/db_wallet
+      # Update connection string to use MTDRDB
+      - SPRING_DATASOURCE_URL=jdbc:oracle:thin:@oracle-db:1521/MTDRDB
+      - SPRING_DATASOURCE_USERNAME=ADMIN
+      - SPRING_DATASOURCE_PASSWORD=Taskopassword123
+      - SPRING_DATASOURCE_DRIVER_CLASS_NAME=oracle.jdbc.OracleDriver
     volumes:
       - ./backend/db_wallet:/app/db_wallet
+    depends_on:
+      oracle-db:
+        condition: service_healthy
     networks:
       - app-network
+      
       
   # Bot service - Telegram bot interface
   tasko-bot-service:
@@ -24,9 +57,12 @@ services:
       - API_SERVICE_URL=http://tasko-api-service:8080
       - BOT_TOKEN=${BOT_TOKEN:-7732849112:AAGbtCOTuKAEud6QD_7_lC5My7LI6d6R5DQ}
       - BOT_USERNAME=${BOT_USERNAME:-manager_todoList}
-    #ports:
-      # Only needed if using webhook mode - remove if using polling
-    #  - "8443:8443"  
+      # Also update bot service if it needs DB access:
+      - SPRING_DATASOURCE_URL=jdbc:oracle:thin:@oracle-db:1521/FREE
+      - SPRING_DATASOURCE_USERNAME=ADMIN
+      - SPRING_DATASOURCE_PASSWORD=Taskopassword123
+    depends_on:
+      - tasko-api-service
     networks:
       - app-network
 

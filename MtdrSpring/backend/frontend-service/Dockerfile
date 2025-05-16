@@ -7,9 +7,6 @@ RUN mkdir -p /etc/nginx/ssl
 
 # Copy SSL certificates 
 # These can stay since they don't affect operation unless used
-COPY server.crt /etc/nginx/ssl/
-COPY www_tasko_works.key /etc/nginx/ssl/
-COPY ca.crt /etc/nginx/ssl/
 
 # Copy the already-built static files from Maven target directory
 COPY target/frontend-static/ /usr/share/nginx/html/
