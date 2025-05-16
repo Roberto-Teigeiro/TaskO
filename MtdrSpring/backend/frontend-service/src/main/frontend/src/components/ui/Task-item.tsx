@@ -99,9 +99,15 @@ export function TaskItem({
         console.error("ID de tarea no válido");
         return;
       }
+      const isLocalhost = window.location.hostname === 'localhost';
+
+        const url = isLocalhost 
+        ? `http://localhost:8080/task/${taskId}` 
+        : `/api/task/${taskId}`;
 
       // First, get the current task to preserve all fields
-      const getResponse = await fetch(`http://localhost:8080/task/${taskId}`);
+      const getResponse = await fetch(url);
+
 
       if (!getResponse.ok) {
         throw new Error(`Error al obtener la tarea: ${getResponse.status}`);
@@ -113,7 +119,7 @@ export function TaskItem({
       currentTask.assignee = userId;
 
       // Call the generic update endpoint with the complete object
-      const response = await fetch(`http://localhost:8080/task/${taskId}`, {
+      const response = await fetch(url, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -150,9 +156,14 @@ export function TaskItem({
         console.error("ID de tarea no válido");
         return;
       }
+      const isLocalhost = window.location.hostname === 'localhost';
+
+      const url = isLocalhost 
+      ? `http://localhost:8080/task/${taskId}` 
+      : `/api/task/${taskId}`;
 
       // Primero, obtener la tarea actual para no perder datos
-      const getResponse = await fetch(`http://localhost:8080/task/${taskId}`);
+      const getResponse = await fetch(url);;
 
       if (!getResponse.ok) {
         throw new Error(`Error al obtener la tarea: ${getResponse.status}`);
@@ -164,7 +175,7 @@ export function TaskItem({
       currentTask.status = newStatus;
 
       // Llamar al endpoint genérico de actualización con el objeto completo
-      const response = await fetch(`http://localhost:8080/task/${taskId}`, {
+      const response = await fetch(url, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -201,9 +212,14 @@ export function TaskItem({
         console.error("ID de tarea no válido");
         return;
       }
+      const isLocalhost = window.location.hostname === 'localhost';
+
+      const url = isLocalhost 
+      ? `http://localhost:8080/task/${taskId}` 
+      : `/api/task/${taskId}`;
 
       // First, get the current task to preserve all fields
-      const getResponse = await fetch(`http://localhost:8080/task/${taskId}`);
+      const getResponse = await fetch(url);;
       
       if (!getResponse.ok) {
         throw new Error(`Error al obtener la tarea: ${getResponse.status}`);
@@ -220,7 +236,7 @@ export function TaskItem({
       const requestBody = JSON.stringify(currentTask);
       console.log('Request payload:', requestBody);
 
-      const response = await fetch(`http://localhost:8080/task/${taskId}`, {
+      const response = await fetch(url, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

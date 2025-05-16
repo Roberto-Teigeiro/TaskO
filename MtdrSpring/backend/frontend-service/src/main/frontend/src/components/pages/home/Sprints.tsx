@@ -87,19 +87,20 @@ export default function Sprints() {
   const [tasksBySprint, setTasksBySprint] = useState<Record<string, Task[]>>({});
   const [loadedSprints, setLoadedSprints] = useState<Record<string, boolean>>({});
 
-  const isLocalhost = window.location.hostname === 'localhost';
-
+  // Coloca primero fetchTasks
   const fetchTasks = useCallback(async (sprintId: string) => {
     if (!sprintId || loadedSprints[sprintId]) return;
     
     try {
       setLoadedSprints((prev: Record<string, boolean>) => ({ ...prev, [sprintId]: true }));
-      
-      const API_URL_TASKS = isLocalhost
-        ? `http://localhost:8080/task/sprint/${sprintId}`
+      const isLocalhost = window.location.hostname === 'localhost';
+
+        const url = isLocalhost 
+        ? `http://localhost:8080/task/sprint/${sprintId}` 
         : `/api/task/sprint/${sprintId}`;
+      const response = await fetch(url)
+        
       
-      const response = await fetch(API_URL_TASKS);
       
       if (!response.ok) {
         if (response.status === 404) {
@@ -167,10 +168,12 @@ export default function Sprints() {
       try {
         const projectId = userProjects[0].projectId
         setUserProject(projectId)
-        const API_URL_SPRINTS = isLocalhost
-          ? `http://localhost:8080/sprintlist/${projectId}`
-          : `/api/sprintlist/${projectId}`;
-        const response = await fetch(API_URL_SPRINTS);
+        const isLocalhost = window.location.hostname === 'localhost';
+
+        const url = isLocalhost 
+        ? `http://localhost:8080/sprintlist/${projectId}` 
+        : `/api/sprintlist/${projectId}`;
+        const response = await fetch(url)
         
         if (!response.ok) {
           if (response.status === 404) {
@@ -207,16 +210,15 @@ export default function Sprints() {
           }
 
           return {
-            id: sprint.id,
+            id: sprint.sprintId,
             name: sprint.name,
-            startDate: sprint.startDate,
-            endDate: sprint.endDate,
-            progress: sprint.progress,
+            startDate: startDate.toISOString().split("T")[0],
+            endDate: endDate.toISOString().split("T")[0],
+            progress: 0,
             status,
             tasks: [],
           };
         });
-
         setSprints(transformedSprints);
         setError(null);
 
