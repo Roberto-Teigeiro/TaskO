@@ -67,8 +67,14 @@ export function AssignUserDialog({
         throw new Error("No se ha seleccionado un proyecto");
       }
 
+      const isLocalhost = window.location.hostname === 'localhost';
+
+      const API_URL = isLocalhost
+        ? `http://localhost:8080/projects/${projectId}/members`
+        : `/api/projects/${projectId}/members`;
+
       // Llamada a la API para obtener usuarios
-      const response = await fetch(`http://localhost:8080/projects/${projectId}/members`)
+      const response = await fetch(API_URL);
       
       if (!response.ok) {
         throw new Error(`Error ${response.status}: ${response.statusText}`);

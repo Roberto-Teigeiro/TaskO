@@ -83,7 +83,13 @@ export function TaskItem({
     try {
       console.log(`Asignando usuario ${userId} a tarea ${taskId}`);
       
-      const response = await fetch(`http://localhost:8080/task/assign`, {
+      const isLocalhost = window.location.hostname === 'localhost';
+
+      const API_URL_ASSIGN_TASK = isLocalhost
+        ? 'http://localhost:8080/task/assign'
+        : '/api/task/assign';
+
+      const response = await fetch(API_URL_ASSIGN_TASK, {
         method: 'PUT',
         headers: {
           "Content-Type": "application/json",
@@ -125,8 +131,13 @@ export function TaskItem({
         return;
       }
 
-      
-      const response = await fetch(`http://localhost:8080/task/status`, {
+      const isLocalhost = window.location.hostname === 'localhost';
+
+      const API_URL_TASK_STATUS = isLocalhost
+        ? 'http://localhost:8080/task/status'
+        : '/api/task/status';
+
+      const response = await fetch(API_URL_TASK_STATUS, {
         method: 'PUT',
         headers: {
           "Content-Type": "application/json",

@@ -84,8 +84,14 @@ export default function SchedulePage() {
         return;
       }
 
+      const isLocalhost = window.location.hostname === 'localhost';
+
+      const API_URL_SPRINT_LIST = isLocalhost
+        ? `http://localhost:8080/sprintlist/${currentProject.projectId}`
+        : `/api/sprintlist/${currentProject.projectId}`;
+
       try {
-        const response = await fetch(`http://localhost:8080/sprintlist/${currentProject.projectId}`)
+        const response = await fetch(API_URL_SPRINT_LIST)
         if (!response.ok) {
           throw new Error("Failed to fetch sprints");
         }

@@ -61,7 +61,11 @@ export function AddTaskDialog({ onAddTask, sprintId, projectId }: AddTaskDialogP
   const [estimatedHours, setEstimatedHours] = useState<string>("")
   const [realHours] = useState<string>("")
 
+  const isLocalhost = window.location.hostname === 'localhost';
 
+  const API_URL_ADD_TASK = isLocalhost
+    ? 'http://localhost:8080/task/add'
+    : '/api/task/add';
 
   const handleSubmit = async () => {
     if (!title || !date) {
@@ -99,7 +103,7 @@ export function AddTaskDialog({ onAddTask, sprintId, projectId }: AddTaskDialogP
     
     console.log('Task data:', taskData);
     
-    const response = await fetch('http://localhost:8080/task/add', {
+    const response = await fetch(API_URL_ADD_TASK, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

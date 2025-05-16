@@ -86,7 +86,13 @@ export default function Register() {
         // Send the JWT token to your backend
         if (token) {
           try {
-            const response = await fetch('http://localhost:8080/newuser', {
+            const isLocalhost = window.location.hostname === 'localhost';
+
+            const API_URL_NEW_USER = isLocalhost
+              ? 'http://localhost:8080/newuser'
+              : '/api/newuser';
+
+            const response = await fetch(API_URL_NEW_USER, {
               method: 'POST',
               headers: {
                 Authorization: `Bearer ${token}`,

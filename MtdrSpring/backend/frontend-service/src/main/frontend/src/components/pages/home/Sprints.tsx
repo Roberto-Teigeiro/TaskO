@@ -87,14 +87,19 @@ export default function Sprints() {
   const [tasksBySprint, setTasksBySprint] = useState<Record<string, Task[]>>({});
   const [loadedSprints, setLoadedSprints] = useState<Record<string, boolean>>({});
 
-  // Coloca primero fetchTasks
+  const isLocalhost = window.location.hostname === 'localhost';
+
   const fetchTasks = useCallback(async (sprintId: string) => {
     if (!sprintId || loadedSprints[sprintId]) return;
     
     try {
       setLoadedSprints((prev: Record<string, boolean>) => ({ ...prev, [sprintId]: true }));
       
-      const response = await fetch(`http://localhost:8080/task/sprint/${sprintId}`);
+      const API_URL_TASKS = isLocalhost
+        ? `http://localhost:8080/task/sprint/${sprintId}`
+        : `/api/task/sprint/${sprintId}`;
+      
+      const response = await fetch(API_URL_TASKS);
       
       if (!response.ok) {
         if (response.status === 404) {
@@ -162,7 +167,10 @@ export default function Sprints() {
       try {
         const projectId = userProjects[0].projectId
         setUserProject(projectId)
-        const response = await fetch(`http://localhost:8080/sprintlist/${projectId}`)
+        const API_URL_SPRINTS = isLocalhost
+          ? `http://localhost:8080/sprintlist/${projectId}`
+          : `/api/sprintlist/${projectId}`;
+        const response = await fetch(API_URL_SPRINTS);
         
         if (!response.ok) {
           if (response.status === 404) {
@@ -199,15 +207,16 @@ export default function Sprints() {
           }
 
           return {
-            id: sprint.sprintId,
+            id: sprint.id,
             name: sprint.name,
-            startDate: startDate.toISOString().split("T")[0],
-            endDate: endDate.toISOString().split("T")[0],
-            progress: 0,
+            startDate: sprint.startDate,
+            endDate: sprint.endDate,
+            progress: sprint.progress,
             status,
             tasks: [],
           };
         });
+
         setSprints(transformedSprints);
         setError(null);
 
