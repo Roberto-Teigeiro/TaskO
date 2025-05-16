@@ -41,9 +41,7 @@ export function Sidebar() {
     }
   };
 
-  const handleMyTask = () => {
-    navigate("/tasks");
-  };
+  
 
   const handleDashboard = () => {
     navigate("/dashboard");
@@ -62,9 +60,9 @@ export function Sidebar() {
   };
 
   return (
-    <div className="hidden md:flex w-64 bg-[#ff6b6b] text-white flex-col">
-      <div className="p-6 flex flex-col items-center text-center">
-        <Avatar className="w-20 h-20 border-2 border-white">
+    <div className="hidden md:flex w-64 bg-[#C74634] text-white h-screen sticky top-18 flex-col border-r border-gray-200 shadow-lg">
+      <div className="p-6 flex flex-col items-center text-center border-b border-white/20">
+        <Avatar className="w-20 h-20 border-2 border-white shadow-lg">
           <AvatarImage
             src={
               userData.profilePicture || "/placeholder.svg?height=80&width=80"
@@ -76,19 +74,17 @@ export function Sidebar() {
             {userData.lastName.charAt(0) || "?"}
           </AvatarFallback>
         </Avatar>
-        <h3 className="mt-2 font-semibold text-lg">
-          {userData.firstName} {userData.lastName}
-        </h3>
-        <p className="text-xs text-white/80">{userData.email}</p>
+        <h3 className="mt-2 font-semibold text-lg tracking-wide">{userData.firstName} {userData.lastName}</h3>
+        <p className="text-xs text-white/80 font-light">{userData.email}</p>
       </div>
 
-      <nav className="flex-1 px-4">
-        <div className="space-y-1">
+      <nav className="flex-1 px-4 py-6">
+        <div className="space-y-2">
           <Button
             onClick={handleDashboard}
             variant="ghost"
-            className={`w-full justify-start text-white hover:bg-white/20 rounded-xl ${
-              location.pathname === "/dashboard" ? "bg-white/30" : ""
+            className={`w-full justify-start text-white hover:bg-white/10 rounded-lg transition-all duration-200 ${
+              location.pathname === "/dashboard" ? "bg-white/20 font-medium" : ""
             }`}
           >
             <LayoutGrid className="mr-2 h-5 w-5" />
@@ -98,8 +94,8 @@ export function Sidebar() {
           <Button
             onClick={handleSprints}
             variant="ghost"
-            className={`w-full justify-start text-white hover:bg-white/20 rounded-xl ${
-              location.pathname === "/sprints" ? "bg-white/30" : ""
+            className={`w-full justify-start text-white hover:bg-white/10 rounded-lg transition-all duration-200 ${
+              location.pathname === "/sprints" ? "bg-white/20 font-medium" : ""
             }`}
           >
             <CircleDot className="mr-2 h-5 w-5" />
@@ -109,30 +105,21 @@ export function Sidebar() {
           <Button
             onClick={handleCalendar}
             variant="ghost"
-            className={`w-full justify-start text-white hover:bg-white/20 rounded-xl ${
-              location.pathname === "/calendar" ? "bg-white/30" : ""
+            className={`w-full justify-start text-white hover:bg-white/10 rounded-lg transition-all duration-200 ${
+              location.pathname === "/calendar" ? "bg-white/20 font-medium" : ""
             }`}
           >
             <CircleDot className="mr-2 h-5 w-5" />
             Calendar
           </Button>
 
-          <Button
-            onClick={handleMyTask}
-            variant="ghost"
-            className={`w-full justify-start text-white hover:bg-white/20 rounded-xl ${
-              location.pathname === "/tasks" ? "bg-white/30" : ""
-            }`}
-          >
-            <CircleDot className="mr-2 h-5 w-5" />
-            My Task
-          </Button>
+          
 
           <Button
             onClick={handleSettings}
             variant="ghost"
-            className={`w-full justify-start text-white hover:bg-white/20 rounded-xl ${
-              location.pathname === "/settings" ? "bg-white/30" : ""
+            className={`w-full justify-start text-white hover:bg-white/10 rounded-lg transition-all duration-200 ${
+              location.pathname === "/settings" ? "bg-white/20 font-medium" : ""
             }`}
           >
             <Settings className="mr-2 h-5 w-5" />
@@ -141,11 +128,11 @@ export function Sidebar() {
         </div>
       </nav>
 
-      <div className="p-4">
+      <div className="p-4 mb-18 justify-center items-center border-t border-white/20">
         <Button
           onClick={handleLogout}
           variant="ghost"
-          className="w-full justify-start text-white hover:bg-white/20 rounded-xl"
+          className="w-full justify-start text-white hover:bg-white/10 rounded-lg transition-all duration-200"
         >
           <LogOut className="mr-2 h-5 w-5" />
           Logout

@@ -1,7 +1,8 @@
 // @/components/ui/Task-item.tsx
-import { CircleDot } from "lucide-react";
-import { AssignUserDialog } from "@/components/pages/home/AssignUserDialog";
-import { ChangeStatusDialog } from "@/components/pages/home/ChangeStatusDialog";
+import { CircleDot } from "lucide-react"
+import { AssignUserDialog } from "@/components/pages/home/AssignUserDialog"
+import { ChangeStatusDialog } from "@/components/pages/home/ChangeStatusDialog"
+import { useState, useEffect } from "react"
 
 // Tipo de estado para el backend
 export type BackendStatus = "TODO" | "IN_PROGRESS" | "COMPLETED";
@@ -47,6 +48,9 @@ export interface TaskItemProps {
   readonly assignee?: string;
   readonly sprintId?: string;
   readonly onTaskUpdated?: () => void;
+  readonly estimatedHours?: number;
+  readonly realHours?: number;
+  readonly currentUserId?: string;
 }
 
 export function TaskItem({
@@ -58,9 +62,18 @@ export function TaskItem({
   date,
   image,
   assignee,
-  //sprintId,
-  onTaskUpdated,
+  estimatedHours = 0,
+  realHours = 0,
+  currentUserId,
+  onTaskUpdated
 }: TaskItemProps) {
+  const [localRealHours, setLocalRealHours] = useState<number>(realHours);
+
+  // Update local state when prop changes
+  useEffect(() => {
+    setLocalRealHours(realHours);
+  }, [realHours]);
+
   const getStatusColor = (status: string): string => {
     switch (status) {
       case "Completed":
@@ -176,7 +189,61 @@ export function TaskItem({
         window.location.reload();
       }
     } catch (error) {
-      console.error("Error al actualizar estado:", error);
+      console.error('Error al actualizar estado:', error);
+    }
+  };
+
+  const handleRealHoursUpdate = async (taskId: string, hours: number): Promise<void> => {
+    try {
+      console.log('Starting real hours update:', { taskId, hours });
+      
+      if (!taskId || taskId === "temp-id") {
+        console.error("ID de tarea no válido");
+        return;
+      }
+
+      // First, get the current task to preserve all fields
+      const getResponse = await fetch(`http://localhost:8080/task/${taskId}`);
+      
+      if (!getResponse.ok) {
+        throw new Error(`Error al obtener la tarea: ${getResponse.status}`);
+      }
+      
+      const currentTask = await getResponse.json();
+      console.log('Current task before update:', currentTask);
+      
+      // Update only the realHours field
+      currentTask.realHours = hours;
+      console.log('Task after realHours update:', currentTask);
+
+      // Call the generic update endpoint with the complete object
+      const requestBody = JSON.stringify(currentTask);
+      console.log('Request payload:', requestBody);
+
+      const response = await fetch(`http://localhost:8080/task/${taskId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: requestBody,
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Error response:', errorText);
+        throw new Error(`Error ${response.status}: ${errorText}`);
+      }
+
+      const updatedTask = await response.json();
+      console.log('Server response after update:', updatedTask);
+
+      if (onTaskUpdated) {
+        onTaskUpdated();
+      }
+    } catch (error) {
+      console.error('Error al actualizar horas reales:', error);
+      // Revert to previous value on error
+      setLocalRealHours(realHours);
     }
   };
 
@@ -203,7 +270,35 @@ export function TaskItem({
                 <span className={getStatusColor(status)}>{status}</span>
               </div>
               <div className="text-gray-400">Created: {date}</div>
-
+              
+              {/* Hours information */}
+              <div className="flex items-center gap-2">
+                <span className="text-gray-500">Est. Hours: </span>
+                <span className="font-medium">{estimatedHours}</span>
+              </div>
+              
+              {/* Real hours display/input - only show input to assigned user */}
+              <div className="flex items-center gap-2">
+                <span className="text-gray-500">Real Hours: </span>
+                {assignee && currentUserId === assignee ? (
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.5"
+                    value={localRealHours}
+                    onChange={(e) => {
+                      const value = parseFloat(e.target.value);
+                      setLocalRealHours(value);
+                      handleRealHoursUpdate(id, value);
+                    }}
+                    className="w-16 px-2 py-1 text-sm border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="0"
+                  />
+                ) : (
+                  <span className="font-medium">{realHours}</span>
+                )}
+              </div>
+              
               {/* Task ID debugging info */}
               <div className="text-gray-400 text-xs">
                 ID: {id?.substring(0, 8)}

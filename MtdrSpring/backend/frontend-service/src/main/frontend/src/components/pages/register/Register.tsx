@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 ///Users/santosa/Documents/GitHub/oraclefront/src/components/pages/register/Register.tsx
 "use client";
 import { useNavigate } from "react-router-dom";
@@ -21,7 +22,7 @@ export default function Register() {
   useEffect(() => {
     // Redirect to dashboard if already signed in
     if (isSignedIn) {
-      navigate("/Dashboard");
+      navigate("/dashboard");
     }
   }, [isSignedIn, navigate]);
 
@@ -85,8 +86,14 @@ export default function Register() {
         // Send the JWT token to your backend
         if (token) {
           try {
-            const response = await fetch("/api/newuser", {
-              method: "POST",
+            const isLocalhost = window.location.hostname === 'localhost';
+
+            const API_URL_NEW_USER = isLocalhost
+              ? 'http://localhost:8080/newuser'
+              : '/api/newuser';
+
+            const response = await fetch(API_URL_NEW_USER, {
+              method: 'POST',
               headers: {
                 Authorization: `Bearer ${token}`,
                 "Content-Type": "application/json",
@@ -105,8 +112,8 @@ export default function Register() {
             console.error("Error registering user in backend:", error);
           }
         }
-
-        navigate("/Dashboard");
+        
+        navigate("/dashboard");
       } else if (result.status === "missing_requirements") {
         const missingFields = result.missingFields || [];
         if (missingFields.includes("email_address")) {

@@ -47,6 +47,7 @@ export interface TaskItemProps {
   readonly assignee?: string;
   readonly sprintId?: string;
   readonly className?: string;
+  
   readonly onTaskUpdated?: () => void;
 }
 
@@ -81,9 +82,15 @@ export function TaskItem({
   ): Promise<void> => {
     try {
       console.log(`Asignando usuario ${userId} a tarea ${taskId}`);
+      
+      const isLocalhost = window.location.hostname === 'localhost';
 
-      const response = await fetch(`/api/task/assign`, {
-        method: "PUT",
+      const API_URL_ASSIGN_TASK = isLocalhost
+        ? 'http://localhost:8080/task/assign'
+        : '/api/task/assign';
+
+      const response = await fetch(API_URL_ASSIGN_TASK, {
+        method: 'PUT',
         headers: {
           "Content-Type": "application/json",
         },
@@ -124,8 +131,14 @@ export function TaskItem({
         return;
       }
 
-      const response = await fetch(`/api/task/status`, {
-        method: "PUT",
+      const isLocalhost = window.location.hostname === 'localhost';
+
+      const API_URL_TASK_STATUS = isLocalhost
+        ? 'http://localhost:8080/task/status'
+        : '/api/task/status';
+
+      const response = await fetch(API_URL_TASK_STATUS, {
+        method: 'PUT',
         headers: {
           "Content-Type": "application/json",
         },

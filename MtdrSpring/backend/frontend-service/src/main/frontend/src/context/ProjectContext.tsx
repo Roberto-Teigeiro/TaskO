@@ -34,16 +34,22 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string | null>(null);
   const { user } = useUser();
 
+  const isLocalhost = window.location.hostname === 'localhost';
+
   const fetchProjectDetails = async (projectId: string) => {
     try {
-      const response = await fetch(`/api/project/${projectId}`);
+      const API_URL_PROJECT_DETAILS = isLocalhost
+        ? `http://localhost:8080/project/${projectId}`
+        : `/api/project/${projectId}`;
+
+      const response = await fetch(API_URL_PROJECT_DETAILS);
       if (!response.ok) {
-        throw new Error("Failed to fetch project details");
+        throw new Error('Failed to fetch project details');
       }
       const projectData = await response.json();
       setCurrentProject(projectData);
     } catch (err) {
-      console.error("Error fetching project details:", err);
+      console.error('Error fetching project details:', err);
       setCurrentProject(null);
     }
   };

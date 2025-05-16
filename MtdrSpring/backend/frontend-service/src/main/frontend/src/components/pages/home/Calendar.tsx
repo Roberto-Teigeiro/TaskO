@@ -84,10 +84,14 @@ export default function SchedulePage() {
         return;
       }
 
+      const isLocalhost = window.location.hostname === 'localhost';
+
+      const API_URL_SPRINT_LIST = isLocalhost
+        ? `http://localhost:8080/sprintlist/${currentProject.projectId}`
+        : `/api/sprintlist/${currentProject.projectId}`;
+
       try {
-        const response = await fetch(
-          `/api/sprintlist/${currentProject.projectId}`,
-        );
+        const response = await fetch(API_URL_SPRINT_LIST)
         if (!response.ok) {
           throw new Error("Failed to fetch sprints");
         }
@@ -197,7 +201,7 @@ export default function SchedulePage() {
   return (
     <div className="min-h-screen bg-[#f8f8fb] flex flex-col">
       {/* Top Navigation */}
-      <Header title="To" titleSpan="Do" />
+      <Header title="Calendar"/>
 
       {/* Main Content */}
       <div className="flex flex-1">

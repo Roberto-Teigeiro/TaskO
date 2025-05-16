@@ -44,12 +44,14 @@ public class TaskItem {
     private String comments;
     @Column(name = "STORYPOINTS")
     private Integer storyPoints;
-    @Column(name = "ESTIMATED_HOURS")
+    @Column(name = "ESTIMATEDHOURS")
     private Double estimatedHours;
+    @Column(name = "REALHOURS")
+    private Double realHours;
 
     public TaskItem(){
     }
-    public TaskItem(UUID projectId, UUID sprintId, UUID taskId, String title, String description, String assignee, Status status, OffsetDateTime startDate, OffsetDateTime endDate, String comments, Integer storyPoints, Double estimatedHours) {
+    public TaskItem(UUID projectId, UUID sprintId, UUID taskId, String title, String description, String assignee, Status status, OffsetDateTime startDate, OffsetDateTime endDate, String comments, Integer storyPoints, Double estimatedHours, Double realHours) {
         this.projectId = projectId;
         this.sprintId = sprintId;
         this.taskId = taskId;
@@ -62,6 +64,7 @@ public class TaskItem {
         this.comments = comments;
         this.storyPoints = storyPoints;
         this.estimatedHours = estimatedHours;
+        this.realHours = realHours;
     }
 
     public UUID getProjectId() {
@@ -163,6 +166,14 @@ public class TaskItem {
     public void setEstimatedHours(Double estimatedHours) {
         this.estimatedHours = estimatedHours;
     }
+
+    public Double getRealHours() {
+        return realHours;
+    }
+
+    public void setRealHours(Double realHours) {
+        this.realHours = realHours;
+    }
    
     @Override
     public String toString() {
@@ -179,6 +190,7 @@ public class TaskItem {
                 ", comments='" + comments + '\'' +
                 ", storyPoints=" + storyPoints +
                 ", estimatedHours=" + estimatedHours +
+                ", realHours=" + realHours +
                 '}';
     }
 }

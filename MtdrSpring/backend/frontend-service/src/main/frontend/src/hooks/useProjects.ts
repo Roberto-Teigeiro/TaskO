@@ -17,10 +17,16 @@ export function useProjects() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const isLocalhost = window.location.hostname === 'localhost';
+
   useEffect(() => {
     const fetchProjects = async () => {
       try {
-        const response = await fetch("/api/project/all");
+        const API_URL = isLocalhost
+          ? 'http://localhost:8080/project/all'
+          : '/api/project/all';
+
+        const response = await fetch(API_URL);
         if (!response.ok) {
           throw new Error("Failed to fetch projects");
         }

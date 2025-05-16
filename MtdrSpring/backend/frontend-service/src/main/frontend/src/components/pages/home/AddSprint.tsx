@@ -60,6 +60,12 @@ export function AddSprintDialog({ onAddSprint }: AddSprintDialogProps) {
     setError(null);
 
     try {
+      const isLocalhost = window.location.hostname === 'localhost';
+
+      const API_URL_ADD_SPRINT = isLocalhost
+        ? 'http://localhost:8080/sprint/add'
+        : '/api/sprint/add';
+
       // Formatea las fechas correctamente con manejo explícito de timezone
       const sprintData = {
         name,
@@ -71,8 +77,8 @@ export function AddSprintDialog({ onAddSprint }: AddSprintDialogProps) {
 
       console.log("Sprint data being sent:", JSON.stringify(sprintData));
 
-      const response = await fetch("/api/sprint/add", {
-        method: "POST",
+      const response = await fetch(API_URL_ADD_SPRINT, {
+        method: 'POST',
         headers: {
           "Content-Type": "application/json",
         },

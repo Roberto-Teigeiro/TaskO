@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 ///Users/santosa/Documents/GitHub/oraclefront/src/components/pages/home/Settings.tsx
 import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
@@ -328,7 +329,7 @@ export default function Settings() {
   return (
     <div className="min-h-screen bg-[#f8f8fb] flex flex-col">
       {/* Top Navigation */}
-      <Header title="To" titleSpan="Do" />
+      <Header title="Settings"/>
 
       {/* Main Content */}
       <div className="flex flex-1">

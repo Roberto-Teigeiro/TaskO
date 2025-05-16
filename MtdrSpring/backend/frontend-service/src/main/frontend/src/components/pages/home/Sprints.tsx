@@ -1,33 +1,36 @@
 ///Users/santosa/Documents/GitHub/TaskO/MtdrSpring/backend/frontend-service/src/main/frontend/src/components/pages/home/Sprints.tsx
-import { useState, useEffect, useCallback } from "react";
-import { Header } from "@/components/Header";
-import { Sidebar } from "@/components/Sidebar";
-import { Button } from "@/components/ui/button";
-import { Calendar, ChevronRight } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AddTaskDialog } from "@/components/pages/home/AddTask";
-import { AddSprintDialog } from "@/components/pages/home/AddSprint";
-import { useProjects } from "../../../context/ProjectContext";
-import { TaskItem } from "@/components/ui/Task-item";
+import { useState, useEffect, useCallback } from "react"
+import { Header } from "@/components/Header"
+import { Sidebar } from "@/components/Sidebar"
+import { Button } from "@/components/ui/button"
+import { Calendar, ChevronRight } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { AddTaskDialog } from "@/components/pages/home/AddTask"
+import { AddSprintDialog } from "@/components/pages/home/AddSprint"
+import { useProjects } from "../../../context/ProjectContext"
+import { TaskItem } from "@/components/ui/Task-item"
+import { useUser } from "@clerk/clerk-react"
 
 interface Task {
-  id: string;
-  title: string;
-  sprintName: string;
-  date: string;
-  description: string;
-  priority: "Extreme" | "High" | "Moderate" | "Low";
-  status: "Not Started" | "In Progress" | "Completed";
-  createdOn: string;
-  image: string;
-  assignee: string;
-  storyPoints: number;
-  objective?: string;
-  fullDescription?: string;
-  additionalNotes?: string[];
-  deadline?: string;
-  sprintId: string;
+  id: string
+  title: string
+  sprintName: string
+  date: string
+  description: string
+  priority: "Extreme" | "High" | "Moderate" | "Low"
+  status: "Not Started" | "In Progress" | "Completed"
+  createdOn: string
+  image: string
+  assignee: string
+  storyPoints: number
+  objective?: string
+  fullDescription?: string
+  additionalNotes?: string[]
+  deadline?: string
+  sprintId: string
+  estimatedHours?: number;
+  realHours?: number;
 }
 
 interface SprintType {
@@ -54,6 +57,8 @@ interface ServerTask {
   priority?: string;
   image?: string;
   createdAt?: string; // Para compatibilidad con la UI actual
+  estimatedHours?: number;
+  realHours?: number;
 }
 
 // Función para convertir status del backend al frontend
@@ -71,86 +76,70 @@ const getFrontendStatus = (backendStatus: string) => {
 };
 
 export default function Sprints() {
-  const { userProjects } = useProjects();
-  const [expandedSprint, setExpandedSprint] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState("all");
-  const [sprints, setSprints] = useState<SprintType[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [userProject, setUserProject] = useState<string | null>(null);
-  const [tasksBySprint, setTasksBySprint] = useState<Record<string, Task[]>>(
-    {},
-  );
-  const [loadedSprints, setLoadedSprints] = useState<Record<string, boolean>>(
-    {},
-  );
+  const { userProjects } = useProjects()
+  const { user } = useUser()
+  const [expandedSprint, setExpandedSprint] = useState<string | null>(null)
+  const [activeTab, setActiveTab] = useState("all")
+  const [sprints, setSprints] = useState<SprintType[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [userProject, setUserProject] = useState<string | null>(null)
+  const [tasksBySprint, setTasksBySprint] = useState<Record<string, Task[]>>({});
+  const [loadedSprints, setLoadedSprints] = useState<Record<string, boolean>>({});
 
-  // Coloca primero fetchTasks
-  const fetchTasks = useCallback(
-    async (sprintId: string) => {
-      if (!sprintId || loadedSprints[sprintId]) return;
+  const isLocalhost = window.location.hostname === 'localhost';
 
-      try {
-        setLoadedSprints((prev: Record<string, boolean>) => ({
-          ...prev,
-          [sprintId]: true,
-        }));
-
-        const response = await fetch(`/api/task/sprint/${sprintId}`);
-
-        if (!response.ok) {
-          if (response.status === 404) {
-            console.log(`No tasks found for sprint ${sprintId}`);
-            setTasksBySprint((prev: Record<string, Task[]>) => ({
-              ...prev,
-              [sprintId]: [],
-            }));
-            return;
-          }
-          const errorText = await response.text();
-          console.error(
-            `Error fetching tasks (${response.status}):`,
-            errorText,
-          );
-          throw new Error(
-            `Error fetching tasks: ${response.status} - ${errorText}`,
-          );
+  const fetchTasks = useCallback(async (sprintId: string) => {
+    if (!sprintId || loadedSprints[sprintId]) return;
+    
+    try {
+      setLoadedSprints((prev: Record<string, boolean>) => ({ ...prev, [sprintId]: true }));
+      
+      const API_URL_TASKS = isLocalhost
+        ? `http://localhost:8080/task/sprint/${sprintId}`
+        : `/api/task/sprint/${sprintId}`;
+      
+      const response = await fetch(API_URL_TASKS);
+      
+      if (!response.ok) {
+        if (response.status === 404) {
+          console.log(`No tasks found for sprint ${sprintId}`);
+          setTasksBySprint((prev: Record<string, Task[]>) => ({ ...prev, [sprintId]: [] }));
+          return;
         }
-
-        const data = await response.json();
-        const transformedTasks = data.map((task: ServerTask) => ({
-          id: task.taskId,
-          title: task.title,
-          description: task.description,
-          sprintId: task.sprintId,
-          sprintName: "",
-          date: task.createdAt
-            ? new Date(task.createdAt).toISOString().split("T")[0]
-            : new Date().toISOString().split("T")[0],
-          priority: task.priority ?? "Low",
-          status: getFrontendStatus(task.status ?? "TODO"),
-          createdOn: task.createdAt
-            ? new Date(task.createdAt).toISOString().split("T")[0]
-            : new Date().toISOString().split("T")[0],
-          image: task.image ?? "/placeholder.svg",
-          assignee: task.assignee ?? "",
-          storyPoints: task.storyPoints ?? 0,
-        }));
-
-        setTasksBySprint((prev: Record<string, Task[]>) => ({
-          ...prev,
-          [sprintId]: transformedTasks,
-        }));
-      } catch (error) {
-        console.error(`Error fetching tasks for sprint ${sprintId}:`, error);
-        setTasksBySprint((prev: Record<string, Task[]>) => ({
-          ...prev,
-          [sprintId]: [],
-        }));
+        const errorText = await response.text();
+        console.error(`Error fetching tasks (${response.status}):`, errorText);
+        throw new Error(`Error fetching tasks: ${response.status} - ${errorText}`);
       }
-    },
-    [loadedSprints],
-  );
+      
+      const data = await response.json();
+      const transformedTasks = data.map((task: ServerTask) => ({
+        id: task.taskId,
+        title: task.title,
+        description: task.description,
+        sprintId: task.sprintId,
+        sprintName: "", 
+        date: task.createdAt ? new Date(task.createdAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+        priority: task.priority ?? "Low",
+        status: getFrontendStatus(task.status ?? "TODO"),
+        createdOn: task.createdAt ? new Date(task.createdAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+        image: task.image ?? "/placeholder.svg",
+        assignee: task.assignee ?? "",
+        storyPoints: task.storyPoints ?? 0,
+        estimatedHours: task.estimatedHours ?? 0,
+        realHours: task.realHours ?? 0,
+
+      }));
+      
+      setTasksBySprint((prev: Record<string, Task[]>) => ({
+        ...prev,
+        [sprintId]: transformedTasks
+      }));
+    } catch (error) {
+      console.error(`Error fetching tasks for sprint ${sprintId}:`, error);
+      setTasksBySprint((prev: Record<string, Task[]>) => ({ ...prev, [sprintId]: [] }));
+    }
+  }, [loadedSprints]);
 
   // Ahora sí puedes definir handleTaskUpdate que depende de fetchTasks
   const handleTaskUpdate = useCallback(
@@ -176,10 +165,13 @@ export default function Sprints() {
       }
 
       try {
-        const projectId = userProjects[0].projectId;
-        setUserProject(projectId);
-        const response = await fetch(`/api/sprintlist/${projectId}`);
-
+        const projectId = userProjects[0].projectId
+        setUserProject(projectId)
+        const API_URL_SPRINTS = isLocalhost
+          ? `http://localhost:8080/sprintlist/${projectId}`
+          : `/api/sprintlist/${projectId}`;
+        const response = await fetch(API_URL_SPRINTS);
+        
         if (!response.ok) {
           if (response.status === 404) {
             setSprints([]);
@@ -215,15 +207,16 @@ export default function Sprints() {
           }
 
           return {
-            id: sprint.sprintId,
+            id: sprint.id,
             name: sprint.name,
-            startDate: startDate.toISOString().split("T")[0],
-            endDate: endDate.toISOString().split("T")[0],
-            progress: 0,
+            startDate: sprint.startDate,
+            endDate: sprint.endDate,
+            progress: sprint.progress,
             status,
             tasks: [],
           };
         });
+
         setSprints(transformedSprints);
         setError(null);
 
@@ -346,7 +339,7 @@ export default function Sprints() {
 
   return (
     <div className="min-h-screen bg-[#f8f8fb] flex flex-col">
-      <Header title="Sprints" titleSpan="" />
+      <Header title="Sprints" />
       <div className="flex flex-1">
         <Sidebar />
         <div className="p-6 flex-1">
@@ -434,44 +427,44 @@ export default function Sprints() {
                       </div>
                     </div>
 
-                    {expandedSprint === sprint.id && (
-                      <div className="border-t p-4">
-                        <div className="flex justify-between items-center mb-4">
-                          <h4 className="font-medium">Tasks</h4>
-                          <AddTaskDialog
-                            onAddTask={handleAddTask}
-                            sprintId={sprint.id}
-                            projectId={userProject || ""}
-                          />
-                        </div>
-                        <div className="space-y-4">
-                          {tasksBySprint[sprint.id]?.map((task) => (
-                            <TaskItem
-                              key={task.id}
-                              id={task.id}
-                              title={task.title}
-                              description={task.description}
-                              priority={task.priority}
-                              status={task.status}
-                              date={task.date}
-                              image={task.image}
-                              assignee={task.assignee}
-                              sprintId={sprint.id}
-                              onTaskUpdated={() => handleTaskUpdate(sprint.id)}
-                            />
-                          ))}
-                          {(!tasksBySprint[sprint.id] ||
-                            tasksBySprint[sprint.id].length === 0) && (
-                            <p className="text-gray-500 text-center py-4">
-                              No tasks in this sprint
-                            </p>
-                          )}
-                        </div>
+                  {expandedSprint === sprint.id && (
+                    <div className="border-t p-4">
+                      <div className="flex justify-between items-center mb-4">
+                        <h4 className="font-medium">Tasks</h4>
+                        <AddTaskDialog
+                          onAddTask={handleAddTask}
+                          sprintId={sprint.id}
+                          projectId={userProject || ""}
+                        />
                       </div>
-                    )}
-                  </div>
-                );
-              })}
+                      <div className="space-y-4">
+                        {tasksBySprint[sprint.id]?.map((task) => (
+                          <TaskItem
+                            key={task.id}
+                            id={task.id}
+                            title={task.title}
+                            description={task.description}
+                            priority={task.priority}
+                            status={task.status}
+                            date={task.date}
+                            image={task.image}
+                            assignee={task.assignee}
+                            sprintId={sprint.id}
+                            estimatedHours={task.estimatedHours}
+                            realHours={task.realHours}
+                            currentUserId={user?.id}
+                            onTaskUpdated={() => handleTaskUpdate(sprint.id)}
+                          />
+                        ))}
+                        {(!tasksBySprint[sprint.id] || tasksBySprint[sprint.id].length === 0) && (
+                          <p className="text-gray-500 text-center py-4">No tasks in this sprint</p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>

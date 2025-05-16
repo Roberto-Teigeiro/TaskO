@@ -4,26 +4,16 @@
 
 import type React from "react";
 
-import { useState } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { format } from "date-fns";
-import { CalendarIcon, Plus, Upload } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { useState } from "react"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import { Calendar } from "@/components/ui/calendar"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { format } from "date-fns"
+import { CalendarIcon, Plus } from "lucide-react"
+import { cn } from "@/lib/utils"
 
 interface AddTaskDialogProps {
   readonly onAddTask?: (task: any) => void;
@@ -58,47 +48,24 @@ const getFrontendStatus = (backendStatus: string) => {
       return "Not Started";
   }
 };
-export function AddTaskDialog({
-  onAddTask,
-  sprintId,
-  projectId,
-}: AddTaskDialogProps) {
-  const [open, setOpen] = useState(false);
-  const [date, setDate] = useState<Date>();
-  const [priority, setPriority] = useState<string>("Moderate");
-  const [storyPoints, setStoryPoints] = useState<string>("5");
-  const [title, setTitle] = useState<string>("");
-  const [description, setDescription] = useState<string>("");
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+export function AddTaskDialog({ onAddTask, sprintId, projectId }: AddTaskDialogProps) {
+  const [open, setOpen] = useState(false)
+  const [date, setDate] = useState<Date>()
+  const [priority, setPriority] = useState<string>("Moderate")
+  const [storyPoints, setStoryPoints] = useState<string>("5")
+  const [title, setTitle] = useState<string>("")
+  const [description, setDescription] = useState<string>("")
+  const [imagePreview, setImagePreview] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [estimatedHours, setEstimatedHours] = useState<string>("")
+  const [realHours] = useState<string>("")
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0] || null;
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
+  const isLocalhost = window.location.hostname === 'localhost';
 
-  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    const file = e.dataTransfer.files?.[0] || null;
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-  };
+  const API_URL_ADD_TASK = isLocalhost
+    ? 'http://localhost:8080/task/add'
+    : '/api/task/add';
 
   const handleSubmit = async () => {
     if (!title || !date) {
@@ -115,32 +82,34 @@ export function AddTaskDialog({
     setIsLoading(true);
     setError(null);
 
-    try {
-      console.log("Creating task with sprintId:", sprintId);
-
-      // Objeto ajustado a la estructura del backend
-      const taskData = {
-        projectId: projectId, // UUID
-        sprintId: sprintId, // UUID
-        title: title,
-        description: description,
-        assignee: null, // Correcto según el modelo TaskItem.java
-        status: getBackendStatus("Not Started"), // Valor del enum en backend
-        startDate: date.toISOString(), // Formato ISO completo
-        endDate: date.toISOString(),
-        comments: description, // Si no tienes campo comments específico
-        storyPoints: parseInt(storyPoints),
-      };
-
-      console.log("Task data:", taskData);
-
-      const response = await fetch("/api/task/add", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(taskData),
-      });
+  try {
+    console.log('Creating task with sprintId:', sprintId);
+    
+    // Objeto ajustado a la estructura del backend
+    const taskData = {
+      projectId: projectId, // UUID
+      sprintId: sprintId,   // UUID
+      title: title,
+      description: description,
+      assignee: null,       // Correcto según el modelo TaskItem.java
+      status: getBackendStatus("Not Started"), // Valor del enum en backend
+      startDate: date.toISOString(), // Formato ISO completo
+      endDate: date.toISOString(),
+      comments: description, // Si no tienes campo comments específico
+      storyPoints: parseInt(storyPoints),
+      estimatedHours: estimatedHours,
+      realHours: realHours,
+    };
+    
+    console.log('Task data:', taskData);
+    
+    const response = await fetch(API_URL_ADD_TASK, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(taskData)
+    });
 
       // Mejor manejo de errores
       if (!response.ok) {
@@ -166,21 +135,22 @@ export function AddTaskDialog({
         });
       }
 
-      // Resetear formulario
-      setTitle("");
-      setDate(undefined);
-      setPriority("Moderate");
-      setStoryPoints("5");
-      setDescription("");
-      setImagePreview(null);
-      setOpen(false);
-    } catch (err) {
-      console.error("Error in task creation:", err);
-      setError(err instanceof Error ? err.message : "An error occurred");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    // Resetear formulario
+    setTitle("");
+    setDate(undefined);
+    setPriority("Moderate");
+    setStoryPoints("");
+    setDescription("");
+    setImagePreview(null);
+    setOpen(false);
+    setEstimatedHours("");
+  } catch (err) {
+    console.error("Error in task creation:", err);
+    setError(err instanceof Error ? err.message : 'An error occurred');
+  } finally {
+    setIsLoading(false);
+  }
+}
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -268,14 +238,14 @@ export function AddTaskDialog({
                   </div>
                   <div className="flex items-center space-x-2">
                     <div
-                      className={`w-4 h-4 rounded-full ${priority === "Moderate" ? "bg-[#3abeff]" : "border border-gray-300"}`}
+                      className={`w-4 h-4 rounded-full ${priority === "Moderate" ? "bg-[#ffef3a]" : "border border-gray-300"}`}
                       onClick={() => setPriority("Moderate")}
                     />
                     <span className="text-sm">Moderate</span>
                   </div>
                   <div className="flex items-center space-x-2">
                     <div
-                      className={`w-4 h-4 rounded-full ${priority === "Low" ? "bg-[#05a301]" : "border border-gray-300"}`}
+                      className={`w-4 h-4 rounded-full ${priority === "Low" ? "bg-[#4ed64c]" : "border border-gray-300"}`}
                       onClick={() => setPriority("Low")}
                     />
                     <span className="text-sm">Low</span>
@@ -320,54 +290,20 @@ export function AddTaskDialog({
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1">
-                  Upload Image
+                 <label htmlFor="estimatedHours" className="block text-sm font-medium mb-1">
+                  Estimated hours
                 </label>
-                <div
-                  className="border-2 border-dashed border-gray-200 rounded-md p-4 h-[180px] flex flex-col items-center justify-center text-center"
-                  onDrop={handleDrop}
-                  onDragOver={handleDragOver}
-                >
-                  {imagePreview ? (
-                    <div className="relative w-full h-full">
-                      <img
-                        src={imagePreview || "/placeholder.svg"}
-                        alt="Preview"
-                        className="w-full h-full object-contain"
-                      />
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        className="absolute top-0 right-0"
-                        onClick={() => {
-                          setImagePreview(null);
-                        }}
-                      >
-                        ✕
-                      </Button>
-                    </div>
-                  ) : (
-                    <>
-                      <Upload className="h-10 w-10 text-gray-300 mb-2" />
-                      <p className="text-sm text-gray-500 mb-1">
-                        Drag&Drop files here
-                      </p>
-                      <p className="text-sm text-gray-400 mb-2">or</p>
-                      <label htmlFor="file-upload" className="cursor-pointer">
-                        <span className="bg-gray-100 hover:bg-gray-200 text-gray-600 px-3 py-1.5 rounded text-sm">
-                          Browse
-                        </span>
-                        <input
-                          id="file-upload"
-                          type="file"
-                          className="hidden"
-                          accept="image/*"
-                          onChange={handleFileChange}
-                        />
-                      </label>
-                    </>
-                  )}
-                </div>
+                <Input
+                  id="estimatedHours"
+                  type="number"
+                  value={estimatedHours}
+                  onChange={(e) => setEstimatedHours(e.target.value)}
+                  className="w-full"
+                  min="1"
+                />
+
+                
+
               </div>
             </div>
           </div>
