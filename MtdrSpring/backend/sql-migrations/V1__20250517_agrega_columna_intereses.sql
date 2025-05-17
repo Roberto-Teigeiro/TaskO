@@ -1,0 +1,1 @@
+ALTER TABLE USERS ADD (intereses VARCHAR2(100));
