@@ -1,4 +1,15 @@
 
+if [ -z "$DOCKER_REGISTRY" ]; then
+    export DOCKER_REGISTRY=$(state_get DOCKER_REGISTRY)
+    echo "DOCKER_REGISTRY set from state."
+fi
+if [ -z "$DOCKER_REGISTRY" ]; then
+    echo "Error: DOCKER_REGISTRY env variable needs to be set!"
+    exit 1
+fi
+
+export IMAGE_VERSION=0.1
+
 echo "Building all modules..."
 mvn clean package
 
@@ -32,7 +43,7 @@ cd ..
 
 echo "Building and pushing frontend-service image..."
 cd frontend-service
-export FRONTEND_IMAGE=${DOCKER_REGISTRY}/frontend-service:latest
+export FRONTEND_IMAGE=${DOCKER_REGISTRY}/frontend-service:latest}
 docker build -t $FRONTEND_IMAGE .
 docker push $FRONTEND_IMAGE
 if [ $? -eq 0 ]; then
