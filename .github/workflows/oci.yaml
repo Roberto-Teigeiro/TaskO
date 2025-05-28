@@ -1,0 +1,76 @@
+version: 0.1
+component: build
+timeoutInSeconds: 6000
+runAs: root
+shell: bash
+
+env:
+  variables:
+    DOCKER_REGISTRY: "mx-queretaro-1.ocir.io"
+    DOCKER_REPO: "mx-queretaro-1.ocir.io/axuo1dsetmvp"
+    
+  vaultVariables:
+    # Add any sensitive variables here if needed
+
+  exportedVariables:
+    - DOCKER_IMAGE_TAG
+
+steps:
+  - type: Command
+    name: "Install Java 11"
+    command: |
+      # Java 11 is required based on your pom.xml
+      apt-get update
+      apt-get install -y openjdk-11-jdk
+      export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
+      java -version
+
+  - type: Command
+    name: "Build Application with Maven"
+    command: |
+      echo "Building the application with Maven..."
+      cd MtdrSpring/backend
+      ./mvnw clean package -DskipTests
+      echo "Build completed. JAR file:"
+      ls -la target/
+
+
+  - type: Command
+    name: "Build and Push API Service"
+    command: |
+      export DOCKER_IMAGE_TAG=$(date +%Y%m%d%H%M%S)
+      cd MtdrSpring/backend/api-service
+      docker build -t $DOCKER_REPO/api-service:$DOCKER_IMAGE_TAG .
+      docker build -t $DOCKER_REPO/api-service:latest .
+      docker push $DOCKER_REPO/api-service:$DOCKER_IMAGE_TAG
+      docker push $DOCKER_REPO/api-service:latest
+
+  - type: Command
+    name: "Build and Push Bot Service"
+    command: |
+      cd MtdrSpring/backend/bot-service
+      docker build -t $DOCKER_REPO/bot-service:$DOCKER_IMAGE_TAG .
+      docker build -t $DOCKER_REPO/bot-service:latest .
+      docker push $DOCKER_REPO/bot-service:$DOCKER_IMAGE_TAG
+      docker push $DOCKER_REPO/bot-service:latest
+  - type: Command
+      name: "Build and Push Frontend Service"
+      command: |
+        cd MtdrSpring/backend/frontend-service
+        docker build -t $DOCKER_REPO/frontend-service:$DOCKER_IMAGE_TAG .
+        docker build -t $DOCKER_REPO/frontend-service:latest .
+        docker push $DOCKER_REPO/frontend-service:$DOCKER_IMAGE_TAG
+        docker push $DOCKER_REPO/frontend-service:latest
+
+
+  - type: Command
+    name: "Push to Container Registry"
+    command: |
+      echo "Pushing to: $DOCKER_REPO:$DOCKER_IMAGE_TAG"
+      docker push $DOCKER_REPO:$DOCKER_IMAGE_TAG
+      docker push $DOCKER_REPO:latest
+
+outputArtifacts:
+  - name: docker_image_info
+    type: DOCKER_IMAGE
+    location: ${DOCKER_REPO}:${DOCKER_IMAGE_TAG}
