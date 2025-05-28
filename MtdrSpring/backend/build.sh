@@ -15,7 +15,7 @@ mvn clean package
 
 echo "Building and pushing api-service image..."
 cd api-service
-export API_IMAGE=${DOCKER_REGISTRY}/api-service:${IMAGE_VERSION}
+export API_IMAGE=${DOCKER_REGISTRY}/api-service:latest
 docker build -t $API_IMAGE .
 docker push $API_IMAGE
 if [ $? -eq 0 ]; then
@@ -29,7 +29,7 @@ cd ..
 
 echo "Building and pushing bot-service image..."
 cd bot-service
-export BOT_IMAGE=${DOCKER_REGISTRY}/bot-service:${IMAGE_VERSION}
+export BOT_IMAGE=${DOCKER_REGISTRY}/bot-service:latest
 docker build -t $BOT_IMAGE .
 docker push $BOT_IMAGE
 if [ $? -eq 0 ]; then
@@ -43,7 +43,7 @@ cd ..
 
 echo "Building and pushing frontend-service image..."
 cd frontend-service
-export FRONTEND_IMAGE=${DOCKER_REGISTRY}/frontend-service:${IMAGE_VERSION}
+export FRONTEND_IMAGE=${DOCKER_REGISTRY}/frontend-service:latest
 docker build -t $FRONTEND_IMAGE .
 docker push $FRONTEND_IMAGE
 if [ $? -eq 0 ]; then

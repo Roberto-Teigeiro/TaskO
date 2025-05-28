@@ -6,6 +6,7 @@ shell: bash
 env:
   variables:
     JAVA_HOME: /usr/lib64/graalvm/graalvm22-ee-java17
+    DOCKER_REGISTRY: mx-queretaro-1.ocir.io/axuo1dsetmvp
 
   exportedVariables:
     - BuildServiceDemoVersion
@@ -22,11 +23,10 @@ steps:
   - type: Command
     name: "Docker Login"
     command:  cd MtdrSpring;
-              oci os object get --bucket-name reacttodo-rolax --name deployment_config.tgz --file deployment_config.tgz;
+              oci os object get --bucket-name todoapp-mu2bm --name deployment_config.tgz --file deployment_config.tgz;
               tar -xzvf deployment_config.tgz;
               source env.sh;
-              cat at.cfg | docker login -u "axzmghqes1gn/adan.ruiz@tec.mx" --password-stdin mx-queretaro-1.ocir.io
-
+              cat at.cfg | docker login -u "axuo1dsetmvp/a01643651@tec.mx" --password-stdin mx-queretaro-1.ocir.io
   - type: Command
     name: "Build"
     command:  cd MtdrSpring;
