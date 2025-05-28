@@ -26,19 +26,24 @@ steps:
       java -version
 
   - type: Command
+    name: "Set Docker Image Tag"
+    command: |
+      export DOCKER_IMAGE_TAG=$(date +%Y%m%d%H%M%S)
+      echo "DOCKER_IMAGE_TAG=$DOCKER_IMAGE_TAG" >> $OCI_PRIMARY_SOURCE_DIR/build_env
+
+  - type: Command
     name: "Build Application with Maven"
     command: |
       echo "Building the application with Maven..."
       cd MtdrSpring/backend
       ./mvnw clean package -DskipTests
-      echo "Build completed. JAR file:"
-      ls -la target/
-
+      echo "Build completed. Listing target directories:"
+      find . -name target -type d -exec ls -la {} \;
 
   - type: Command
     name: "Build and Push API Service"
     command: |
-      export DOCKER_IMAGE_TAG=$(date +%Y%m%d%H%M%S)
+      source $OCI_PRIMARY_SOURCE_DIR/build_env
       cd MtdrSpring/backend/api-service
       docker build -t $DOCKER_REPO/api-service:$DOCKER_IMAGE_TAG .
       docker build -t $DOCKER_REPO/api-service:latest .
@@ -48,29 +53,24 @@ steps:
   - type: Command
     name: "Build and Push Bot Service"
     command: |
+      source $OCI_PRIMARY_SOURCE_DIR/build_env
       cd MtdrSpring/backend/bot-service
       docker build -t $DOCKER_REPO/bot-service:$DOCKER_IMAGE_TAG .
       docker build -t $DOCKER_REPO/bot-service:latest .
       docker push $DOCKER_REPO/bot-service:$DOCKER_IMAGE_TAG
       docker push $DOCKER_REPO/bot-service:latest
-  - type: Command
-      name: "Build and Push Frontend Service"
-      command: |
-        cd MtdrSpring/backend/frontend-service
-        docker build -t $DOCKER_REPO/frontend-service:$DOCKER_IMAGE_TAG .
-        docker build -t $DOCKER_REPO/frontend-service:latest .
-        docker push $DOCKER_REPO/frontend-service:$DOCKER_IMAGE_TAG
-        docker push $DOCKER_REPO/frontend-service:latest
-
 
   - type: Command
-    name: "Push to Container Registry"
+    name: "Build and Push Frontend Service"
     command: |
-      echo "Pushing to: $DOCKER_REPO:$DOCKER_IMAGE_TAG"
-      docker push $DOCKER_REPO:$DOCKER_IMAGE_TAG
-      docker push $DOCKER_REPO:latest
+      source $OCI_PRIMARY_SOURCE_DIR/build_env
+      cd MtdrSpring/backend/frontend-service
+      docker build -t $DOCKER_REPO/frontend-service:$DOCKER_IMAGE_TAG .
+      docker build -t $DOCKER_REPO/frontend-service:latest .
+      docker push $DOCKER_REPO/frontend-service:$DOCKER_IMAGE_TAG
+      docker push $DOCKER_REPO/frontend-service:latest
 
 outputArtifacts:
-  - name: docker_image_info
+  - name: docker_images_info
     type: DOCKER_IMAGE
-    location: ${DOCKER_REPO}:${DOCKER_IMAGE_TAG}
+    location: ${DOCKER_REPO}/api-service:${DOCKER_IMAGE_TAG},${DOCKER_REPO}/bot-service:${DOCKER_IMAGE_TAG},${DOCKER_REPO}/frontend-service:${DOCKER_IMAGE_TAG}
