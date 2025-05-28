@@ -43,7 +43,7 @@ cd ..
 
 echo "Building and pushing frontend-service image..."
 cd frontend-service
-export FRONTEND_IMAGE=${DOCKER_REGISTRY}/frontend-service:latest}
+export FRONTEND_IMAGE=${DOCKER_REGISTRY}/frontend-service:latest
 docker build -t $FRONTEND_IMAGE .
 docker push $FRONTEND_IMAGE
 if [ $? -eq 0 ]; then
