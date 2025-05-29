@@ -13,6 +13,19 @@ env:
 
 steps:
 
+
+  - type: Command
+    name: "Docker Login"
+    command: |
+      cd MtdrSpring
+      oci os object get --bucket-name todoapp-mu2bm --name deployment_config.tgz --file deployment_config.tgz
+      tar -xzvf deployment_config.tgz
+      source env.sh
+      echo "Contents of at.cfg:"
+      cat at.cfg
+      echo "End of at.cfg contents"
+      cat at.cfg | docker login -u "axuo1dsetmvp/a01643651@tec.mx" --password-stdin mx-queretaro-1.ocir.io
+      
   - type: Command
     name: "Install GraalVM Enterprise 22.x Native Image for Java17"
     command: yum -y install graalvm22-ee-17-native-image
@@ -29,18 +42,6 @@ steps:
       tar -xzf ssl-certificates.tar.gz
       ls -la *.crt *.key  # Verify files are extracted
 
-  - type: Command
-    name: "Docker Login"
-    command: |
-      cd MtdrSpring
-      oci os object get --bucket-name todoapp-mu2bm --name deployment_config.tgz --file deployment_config.tgz
-      tar -xzvf deployment_config.tgz
-      source env.sh
-      echo "Contents of at.cfg:"
-      cat at.cfg
-      echo "End of at.cfg contents"
-      cat at.cfg | docker login -u "axuo1dsetmvp/a01643651@tec.mx" --password-stdin mx-queretaro-1.ocir.io
-      
   - type: Command
     name: "Build"
     command: |
