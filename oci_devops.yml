@@ -58,5 +58,14 @@ steps:
       source env.sh
       (cd backend && source build.sh)
 
+outputArtifacts:
+  - name: kubernetes-manifests
+    type: GENERIC_ARTIFACT
+    location: MtdrSpring/backend/tasko.yaml
+  
+  - name: deployment-scripts
+    type: GENERIC_ARTIFACT  
+    location: MtdrSpring/deployment-artifacts/
+
 
 

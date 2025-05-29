@@ -63,7 +63,7 @@ spec:
     spec:
       containers:
         - name: tasko-frontend
-          image: %DOCKER_REGISTRY%/frontend-service:0.1
+          image: %DOCKER_REGISTRY%/frontend-service:latest
           imagePullPolicy: Always
           env:
             - name: OCI_REGION
@@ -104,7 +104,7 @@ spec:
     spec:
       containers:
         - name: tasko-api
-          image: %DOCKER_REGISTRY%/api-service:0.1
+          image: %DOCKER_REGISTRY%/api-service:latest
           imagePullPolicy: Always
           env:
             - name: db_user
@@ -159,7 +159,7 @@ spec:
     spec:
       containers:
         - name: tasko-bot
-          image: %DOCKER_REGISTRY%/bot-service:0.1
+          image: %DOCKER_REGISTRY%/bot-service:latest
           imagePullPolicy: Always
           env:
             - name: OCI_REGION
