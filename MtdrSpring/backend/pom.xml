@@ -18,7 +18,7 @@
     <description>TaskO Application</description>
     
     <modules>
-        <module>frontend-service</module>
+        <!-- <module>frontend-service</module> --> <!-- Removed this line -->
         <module>api-service</module>
         <module>bot-service</module>
     </modules>
