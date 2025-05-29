@@ -17,6 +17,12 @@ steps:
     command: |
       yum update -y
       yum install -y gcc-c++ make
+      # Install newer glibc and libstdc++ for Node.js 20+ compatibility
+      yum install -y centos-release-scl devtoolset-11-gcc-c++
+      echo 'source /opt/rh/devtoolset-11/enable' >> ~/.bashrc
+      source /opt/rh/devtoolset-11/enable
+      # Also update glibc if possible
+      yum update -y glibc libstdc++
 
   - type: Command
     name: "Install GraalVM Enterprise 22.x Native Image for Java17"
