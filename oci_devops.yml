@@ -58,14 +58,34 @@ steps:
       source env.sh
       (cd backend && source build.sh)
 
+  - type: Command
+    name: "Create Deployment Artifacts"
+    command: |
+      cd MtdrSpring
+      # Create deployment artifacts directory if it doesn't exist
+      mkdir -p deployment-artifacts
+      
+      # Copy Kubernetes manifests to deployment artifacts
+      cp backend/tasko.yaml deployment-artifacts/
+      
+      # Create deployment script
+      cat > deployment-artifacts/deploy.sh << 'EOF'
+      #!/bin/bash
+      kubectl apply -f tasko.yaml
+      EOF
+      chmod +x deployment-artifacts/deploy.sh
+      
+      # Create artifact archive
+      tar -czf deployment-package.tar.gz deployment-artifacts/
+
 outputArtifacts:
   - name: kubernetes-manifests
-    type: GENERIC_ARTIFACT
+    type: BINARY
     location: MtdrSpring/backend/tasko.yaml
   
-  - name: deployment-scripts
-    type: GENERIC_ARTIFACT  
-    location: MtdrSpring/deployment-artifacts/
+  - name: deployment-package
+    type: BINARY
+    location: MtdrSpring/deployment-package.tar.gz
 
 
 
