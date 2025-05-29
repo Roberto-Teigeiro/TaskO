@@ -30,9 +30,22 @@
                 <configuration>
                     <workingDirectory>${frontend-src-dir}</workingDirectory>
                     <installDirectory>${project.build.directory}</installDirectory>
-                    <!-- Skip Node.js and npm installation, use system versions -->
+                    <!-- Use system Node.js and npm -->
+                    <nodeVersion>${node.version}</nodeVersion>
+                    <npmVersion>${npm.version}</npmVersion>
                 </configuration>
                 <executions>
+                    <!-- Skip Node.js installation since it's installed system-wide -->
+                    <execution>
+                        <id>install node and npm</id>
+                        <goals>
+                            <goal>install-node-and-npm</goal>
+                        </goals>
+                        <configuration>
+                            <skip>true</skip>
+                        </configuration>
+                    </execution>
+                    
                     <!-- Use system npm for install -->
                     <execution>
                         <id>npm install</id>
@@ -41,8 +54,12 @@
                         </goals>
                         <configuration>
                             <arguments>install</arguments>
+                            <npmInheritsProxyConfigFromMaven>false</npmInheritsProxyConfigFromMaven>
+                            <!-- Tell plugin to use system npm -->
+                            <executable>npm</executable>
                         </configuration>
                     </execution>
+                    
                     <execution>
                         <id>npm run build</id>
                         <goals>
@@ -50,6 +67,9 @@
                         </goals>
                         <configuration>
                             <arguments>run build</arguments>
+                            <npmInheritsProxyConfigFromMaven>false</npmInheritsProxyConfigFromMaven>
+                            <!-- Tell plugin to use system npm -->
+                            <executable>npm</executable>
                         </configuration>
                     </execution>
                 </executions>
@@ -85,7 +105,6 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
-                    <skip>true</skip>
                 </configuration>
             </plugin>
         </plugins>
