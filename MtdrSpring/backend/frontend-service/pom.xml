@@ -30,14 +30,19 @@
                 <configuration>
                     <workingDirectory>${frontend-src-dir}</workingDirectory>
                     <installDirectory>${project.build.directory}</installDirectory>
+                    <!-- Skip Node.js and npm installation, use system versions -->
+                    <skip>true</skip>
                 </configuration>
                 <executions>
-                    <!-- Skip Node.js installation, use system version -->
+                    <!-- Use system npm for install -->
                     <execution>
                         <id>npm install</id>
                         <goals>
                             <goal>npm</goal>
                         </goals>
+                        <configuration>
+                            <arguments>install</arguments>
+                        </configuration>
                     </execution>
                     <execution>
                         <id>npm run build</id>
