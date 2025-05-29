@@ -6,7 +6,7 @@ shell: bash
 env:
   variables:
     JAVA_HOME: /usr/lib64/graalvm/graalvm22-ee-java17
-    DOCKER_REGISTRY: mx-queretaro-1.ocir.io/axuo1dsetmvp
+    DOCKER_REGISTRY: mx-queretaro-1.ocir.io/axuo1dsetmvp/todoapp/mu2bm
 
   exportedVariables:
     - BuildServiceDemoVersion
@@ -23,7 +23,7 @@ steps:
       source /opt/rh/devtoolset-11/enable
       # Also update glibc if possible
       yum update -y glibc libstdc++
-      
+
   - type: Command
     name: "Install GraalVM Enterprise 22.x Native Image for Java17"
     command: yum -y install graalvm22-ee-17-native-image
