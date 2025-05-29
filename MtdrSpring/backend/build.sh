@@ -13,6 +13,11 @@ export IMAGE_VERSION=0.1
 echo "Building all modules..."
 mvn clean package
 
+# Add debugging for frontend-service
+echo "Checking frontend-service build results..."
+ls -la frontend-service/target/ || echo "No target directory in frontend-service"
+ls -la frontend-service/target/frontend-static/ || echo "No frontend-static directory"
+
 echo "Building and pushing api-service image..."
 cd api-service
 export API_IMAGE=${DOCKER_REGISTRY}/api-service:latest
