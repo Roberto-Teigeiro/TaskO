@@ -22,41 +22,13 @@ steps:
     command: export PATH=$JAVA_HOME/bin:$PATH
 
   - type: Command
-    name: "Install Compatible Node.js 20"
-    command: |
-      # Install Node.js 20 LTS directly from NodeSource with compatibility fixes
-      curl -fsSL https://rpm.nodesource.com/setup_20.x | bash -
-      yum install -y nodejs
-      # Verify Node.js installation
-      node --version
-      npm --version
-
-  - type: Command
     name: "Download SSL Certificates"
     command: |
-      # Ensure we are in the correct directory for relative paths if needed later,
-      # though for kubectl create secret, we'll use paths from workspace root.
       cd MtdrSpring/backend/frontend-service
       oci os object get --bucket-name todoapp-mu2bm --name ssl-certificates.tar.gz --file ssl-certificates.tar.gz
       tar -xzf ssl-certificates.tar.gz
-      echo "Extracted certificate files:"
-      ls -la *.crt *.key
-      cd ../../.. # Go back to workspace root
+      ls -la *.crt *.key  # Verify files are extracted
 
-  - type: Command
-    name: "Create/Update Kubernetes TLS Secret"
-    command: |
-      # Replace 'your-certificate-file.crt' and 'your-private-key.key' with the actual filenames
-      # that were extracted in the previous step.
-      # The paths are relative to the workspace root.
-      # This command attempts to delete the secret first (ignoring if not found) and then creates it.
-      # This makes the step idempotent.
-      kubectl delete secret tls tasko-tls-secret -n default --ignore-not-found
-      kubectl create secret tls tasko-tls-secret \
-        --cert=MtdrSpring/backend/frontend-service/your-certificate-file.crt \
-        --key=MtdrSpring/backend/frontend-service/your-private-key.key \
-        -n default
-      
   - type: Command
     name: "Docker Login"
     command: |
@@ -68,7 +40,6 @@ steps:
       cat at.cfg
       echo "End of at.cfg contents"
       cat at.cfg | docker login -u "axuo1dsetmvp/a01643651@tec.mx" --password-stdin mx-queretaro-1.ocir.io
-      cd .. # Go back to workspace root
       
   - type: Command
     name: "Build"
@@ -76,7 +47,6 @@ steps:
       cd MtdrSpring
       source env.sh
       (cd backend && source build.sh)
-      cd .. # Go back to workspace root
 
 
 

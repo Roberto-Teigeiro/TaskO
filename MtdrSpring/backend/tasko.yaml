@@ -63,7 +63,7 @@ spec:
     spec:
       containers:
         - name: tasko-frontend
-          image: %DOCKER_REGISTRY%/frontend-service:latest
+          image: ${DOCKER_REGISTRY}/frontend-service:latest
           imagePullPolicy: Always
           env:
             - name: OCI_REGION
@@ -104,19 +104,19 @@ spec:
     spec:
       containers:
         - name: tasko-api
-          image: %DOCKER_REGISTRY%/api-service:latest
+          image: ${DOCKER_REGISTRY}/api-service:latest
           imagePullPolicy: Always
           env:
             - name: db_user
               value: "ADMIN"
             - name: db_url
-              value: "jdbc:oracle:thin:@%TODO_PDB_NAME%_tp?TNS_ADMIN=/mtdrworkshop/creds"
+              value: "jdbc:oracle:thin:@${TODO_PDB_NAME}_tp?TNS_ADMIN=/mtdrworkshop/creds"
             - name: todo.table.name
               value: "todoitem"
             - name: driver_class_name
               value: "oracle.jdbc.OracleDriver"
             - name: OCI_REGION
-              value: "%OCI_REGION%"
+              value: "${OCI_REGION}"
             - name: dbpassword
               valueFrom:
                 secretKeyRef:
@@ -159,15 +159,15 @@ spec:
     spec:
       containers:
         - name: tasko-bot
-          image: %DOCKER_REGISTRY%/bot-service:latest
+          image: ${DOCKER_REGISTRY}/bot-service:latest
           imagePullPolicy: Always
           env:
             - name: OCI_REGION
-              value: "%OCI_REGION%"
+              value: "${OCI_REGION}"
             - name: BOT_TOKEN
-              value: "%BOT_TOKEN%"
+              value: "${BOT_TOKEN}"
             - name: BOT_USERNAME
-              value: "%BOT_USERNAME%"
+              value: "${BOT_USERNAME}"
           ports:
             - containerPort: 8080
       restartPolicy: Always
