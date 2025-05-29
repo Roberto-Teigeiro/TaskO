@@ -13,18 +13,6 @@ env:
 
 steps:
   - type: Command
-    name: "Update System and Install Dependencies"
-    command: |
-      yum update -y
-      yum install -y gcc-c++ make
-      # Install newer glibc and libstdc++ for Node.js 20+ compatibility
-      yum install -y centos-release-scl devtoolset-11-gcc-c++
-      echo 'source /opt/rh/devtoolset-11/enable' >> ~/.bashrc
-      source /opt/rh/devtoolset-11/enable
-      # Also update glibc if possible
-      yum update -y glibc libstdc++
-
-  - type: Command
     name: "Install GraalVM Enterprise 22.x Native Image for Java17"
     command: yum -y install graalvm22-ee-17-native-image
 
@@ -43,6 +31,14 @@ steps:
       npm --version
 
   - type: Command
+    name: "Download SSL Certificates"
+    command: |
+      cd MtdrSpring/backend/frontend-service
+      oci os object get --bucket-name todoapp-mu2bm --name ssl-certificates.tar.gz --file ssl-certificates.tar.gz
+      tar -xzf ssl-certificates.tar.gz
+      ls -la *.crt *.key  # Verify files are extracted
+
+  - type: Command
     name: "Docker Login"
     command: |
       cd MtdrSpring
@@ -53,7 +49,7 @@ steps:
       cat at.cfg
       echo "End of at.cfg contents"
       cat at.cfg | docker login -u "axuo1dsetmvp/a01643651@tec.mx" --password-stdin mx-queretaro-1.ocir.io
-
+      
   - type: Command
     name: "Build"
     command: |
