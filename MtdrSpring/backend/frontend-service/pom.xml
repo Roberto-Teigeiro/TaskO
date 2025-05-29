@@ -31,7 +31,6 @@
                     <workingDirectory>${frontend-src-dir}</workingDirectory>
                     <installDirectory>${project.build.directory}</installDirectory>
                     <!-- Skip Node.js and npm installation, use system versions -->
-                    <skip>true</skip>
                 </configuration>
                 <executions>
                     <!-- Use system npm for install -->
