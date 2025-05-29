@@ -33,10 +33,14 @@ steps:
     command: export PATH=$JAVA_HOME/bin:$PATH
 
   - type: Command
-    name: "Install Compatible Node.js"
+    name: "Install Compatible Node.js 20"
     command: |
-      curl -sL https://rpm.nodesource.com/setup_16.x | bash -
+      # Install Node.js 20 LTS directly from NodeSource with compatibility fixes
+      curl -fsSL https://rpm.nodesource.com/setup_20.x | bash -
       yum install -y nodejs
+      # Verify Node.js installation
+      node --version
+      npm --version
 
   - type: Command
     name: "Docker Login"
