@@ -27,7 +27,7 @@ steps:
       cat at.cfg | docker login -u "axuo1dsetmvp/a01643651@tec.mx" --password-stdin mx-queretaro-1.ocir.io
       
   - type: Command
-    name: "Install GraalVM Enterprise 22.x Native Image for Java17"
+    name: "Install GraalVM Enterprise 22.x Native Image for Java17" 
     command: yum -y install graalvm22-ee-17-native-image
 
   - type: Command
