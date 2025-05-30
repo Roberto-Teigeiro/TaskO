@@ -1,5 +1,5 @@
 # Stage 1: Build the frontend application
-FROM container-registry.oracle.com/os/oraclelinux:8-slim AS builder
+FROM container-registry.oracle.com/os/oraclelinux:8 AS builder
 # Install Node.js from Oracle repositories
 RUN dnf -y install oracle-nodejs-release-el8 && \
     dnf -y install nodejs && \
