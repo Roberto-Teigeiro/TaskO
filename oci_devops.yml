@@ -74,3 +74,6 @@ outputArtifacts:
   - name: bot-image
     type: DOCKER_IMAGE
     location: mx-queretaro-1.ocir.io/axuo1dsetmvp/todoapp/mu2bm/bot-service:${BUILDRUN_HASH}
+  - name: tasko-manifest
+    type: KUBERNETES_MANIFEST
+    location: MtdrSpring/backend/tasko.yaml
