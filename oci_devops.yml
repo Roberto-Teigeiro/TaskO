@@ -11,9 +11,20 @@ env:
   exportedVariables:
     - BuildServiceDemoVersion
     - IMAGE_VERSION
+    - BUILDRUN_HASH  # Add this exported variable
 
 steps:
-
+  - type: Command
+    name: "Define Build ID"
+    command: |
+      # Create a shorter hash from the build ID
+      export BUILDRUN_HASH=$(echo ${OCI_BUILD_RUN_ID} | rev | cut -c 1-7)
+      # Set the IMAGE_VERSION to use the same hash
+      export IMAGE_VERSION=${BUILDRUN_HASH}
+      # Export these variables for later steps and stages
+      echo "BUILDRUN_HASH=${BUILDRUN_HASH}" >> $OCI_ENV_VARS
+      echo "IMAGE_VERSION=${BUILDRUN_HASH}" >> $OCI_ENV_VARS
+      echo "Build variables: BUILDRUN_HASH=${BUILDRUN_HASH}, IMAGE_VERSION=${IMAGE_VERSION}"
 
   - type: Command
     name: "Docker Login"
@@ -48,17 +59,18 @@ steps:
     command: |
       cd MtdrSpring
       source env.sh
+      # Pass IMAGE_VERSION to the build script
+      export IMAGE_VERSION=${BUILDRUN_HASH}
+      echo "Building with IMAGE_VERSION=${IMAGE_VERSION}"
       (cd backend && source build.sh)
-
-
 
 outputArtifacts:
   - name: frontend-image
     type: DOCKER_IMAGE
-    location: ${DOCKER_REGISTRY}/frontend-service:${OCI_BUILD_RUN_ID}
+    location: ${DOCKER_REGISTRY}/frontend-service:${BUILDRUN_HASH}
   - name: api-image
     type: DOCKER_IMAGE
-    location: ${DOCKER_REGISTRY}/api-service:${OCI_BUILD_RUN_ID}
+    location: ${DOCKER_REGISTRY}/api-service:${BUILDRUN_HASH}
   - name: bot-image
     type: DOCKER_IMAGE
-    location: ${DOCKER_REGISTRY}/bot-service:${OCI_BUILD_RUN_ID}
+    location: ${DOCKER_REGISTRY}/bot-service:${BUILDRUN_HASH}
