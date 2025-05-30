@@ -30,7 +30,7 @@ docker build -t $API_IMAGE .
 docker push $API_IMAGE
 if [ $? -eq 0 ]; then
     echo "api-service image pushed successfully"
-    docker rmi "$API_IMAGE" #remove local image
+    #docker rmi "$API_IMAGE" #remove local image
 else
     echo "Failed to push api-service image"
     exit 1
@@ -44,7 +44,7 @@ docker build -t $BOT_IMAGE .
 docker push $BOT_IMAGE
 if [ $? -eq 0 ]; then
     echo "bot-service image pushed successfully"
-    docker rmi "$BOT_IMAGE" #remove local image
+    #docker rmi "$BOT_IMAGE" #remove local image
 else
     echo "Failed to push bot-service image"
     exit 1
@@ -58,7 +58,7 @@ docker build -t $FRONTEND_IMAGE .
 docker push $FRONTEND_IMAGE
 if [ $? -eq 0 ]; then
     echo "frontend-service image pushed successfully"
-    docker rmi "$FRONTEND_IMAGE" #remove local image
+    #docker rmi "$FRONTEND_IMAGE" #remove local image
 else
     echo "Failed to push frontend-service image"
     exit 1
