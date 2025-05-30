@@ -3,7 +3,12 @@ FROM public.ecr.aws/docker/library/node:24.1.0-slim AS builder
 
 # Set the working directory for the build
 WORKDIR /app
-
+ENV VITE_CLERK_PUBLISHABLE_KEY=pk_test_YXNzdXJpbmctbHlueC05NS5jbGVyay5hY2NvdW50cy5kZXYk
+ENV CLERK_SECRET_KEY=sk_test_6Ib6VO3fmCDHpSNC2eJUXgkO9DrE70NusLvT7NmWFI
+ENV VITE_CLERK_SIGN_IN_URL=/login
+ENV VITE_CLERK_SIGN_UP_URL=/register
+ENV VITE_CLERK_AFTER_SIGN_IN_URL=/dashboard
+ENV VITE_CLERK_AFTER_SIGN_UP_URL=/dashboard
 # Copy package.json and package-lock.json (or yarn.lock)
 # Assuming your frontend source code is in 'src/main/frontend' relative to this Dockerfile
 COPY src/main/frontend/package.json src/main/frontend/package-lock.json* ./
