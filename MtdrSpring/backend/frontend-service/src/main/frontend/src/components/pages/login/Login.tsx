@@ -267,7 +267,7 @@ export default function Login() {
               className="max-w-full h-auto mb-6"
             />
             <h2 className="text-2xl font-bold text-red-600 mb-2">
-              Oracle Project Management - DEVOPS
+              Oracle Project Management
             </h2>
             <p className="text-gray-600">
               Boost your team's productivity with our cloud-native task
