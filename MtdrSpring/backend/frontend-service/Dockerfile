@@ -1,9 +1,6 @@
 # Stage 1: Build the frontend application
-FROM container-registry.oracle.com/os/oraclelinux:8 AS builder
-# Install Node.js from Oracle repositories
-RUN dnf -y install oracle-nodejs-release-el8 && \
-    dnf -y install nodejs && \
-    dnf clean all
+FROM public.ecr.aws/docker/library/node:24.1.0-slim AS builder
+
 # Set the working directory for the build
 WORKDIR /app
 
@@ -21,7 +18,7 @@ COPY src/main/frontend/ ./
 RUN npm run build
 
 # Stage 2: Serve the built frontend with Nginx
-FROM container-registry.oracle.com/olcne_developer/nginx:1.17.7-1
+FROM nginx:1.27-alpine-slim
 
 # Create SSL directory
 RUN mkdir -p /etc/nginx/ssl
