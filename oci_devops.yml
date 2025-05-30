@@ -67,10 +67,10 @@ steps:
 outputArtifacts:
   - name: frontend-image
     type: DOCKER_IMAGE
-    location: ${DOCKER_REGISTRY}/frontend-service:${BUILDRUN_HASH}
+    location: mx-queretaro-1.ocir.io/axuo1dsetmvp/tasko-devops/frontend-service:${BUILDRUN_HASH}
   - name: api-image
     type: DOCKER_IMAGE
-    location: ${DOCKER_REGISTRY}/api-service:${BUILDRUN_HASH}
+    location: mx-queretaro-1.ocir.io/axuo1dsetmvp/tasko-devops/api-service:${BUILDRUN_HASH}
   - name: bot-image
     type: DOCKER_IMAGE
-    location: ${DOCKER_REGISTRY}/bot-service:${BUILDRUN_HASH}
+    location: mx-queretaro-1.ocir.io/axuo1dsetmvp/tasko-devops/bot-service:${BUILDRUN_HASH}
