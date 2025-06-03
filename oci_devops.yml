@@ -11,7 +11,7 @@ env:
   exportedVariables:
     - BuildServiceDemoVersion
     - IMAGE_VERSION
-    - BUILDRUN_HASH  # Add this exported variable
+    - BUILDRUN_HASH  
 
 steps:
   - type: Command
