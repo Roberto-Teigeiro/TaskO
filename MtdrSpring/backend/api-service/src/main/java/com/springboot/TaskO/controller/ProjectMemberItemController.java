@@ -46,7 +46,7 @@ public class ProjectMemberItemController {
     }
 
 
-    @GetMapping("/")
+    
 
     @PostMapping(value = "/project/{projectId}/adduser/{teamId}")
     public ResponseEntity<ProjectMemberItem> addUserToProject(@RequestBody Map<String, String> payload, @PathVariable UUID projectId, @PathVariable UUID teamId) {

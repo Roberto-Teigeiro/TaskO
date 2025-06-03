@@ -1,5 +1,5 @@
 ///Users/santosa/Documents/GitHub/TaskO/MtdrSpring/backend/frontend-service/src/main/frontend/src/components/pages/home/Sprints.tsx
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useMemo } from "react"
 import { Header } from "@/components/Header"
 import { Sidebar } from "@/components/Sidebar"
 import { Button } from "@/components/ui/button"
@@ -103,7 +103,6 @@ export default function Sprints() {
       
       if (!response.ok) {
         if (response.status === 404) {
-          console.log(`No tasks found for sprint ${sprintId}`);
           setTasksBySprint((prev: Record<string, Task[]>) => ({ ...prev, [sprintId]: [] }));
           return;
         }
@@ -185,15 +184,13 @@ export default function Sprints() {
         }
 
         const data = await response.json();
-        console.log("Received sprints data:", data);
 
         if (!Array.isArray(data)) {
           throw new Error("Invalid response format from server");
         }
 
         const currentDate = new Date();
-        const transformedSprints = data.map((sprint) => {
-          console.log("Processing sprint:", sprint);
+        const transformedSprints = data.map((sprint) => {          
           const startDate = new Date(sprint.startDate);
           const endDate = new Date(sprint.endDate);
 
@@ -207,7 +204,7 @@ export default function Sprints() {
           }
 
           return {
-            id: sprint.id,
+            id: sprint.sprintId || sprint.id, // Try both property names
             name: sprint.name,
             startDate: sprint.startDate,
             endDate: sprint.endDate,
@@ -242,7 +239,6 @@ export default function Sprints() {
   const handleAddTask = async (newTask: Task) => {
     try {
       if (!newTask.sprintId) {
-        console.error("Error: sprintId is undefined");
         return;
       }
 
@@ -266,10 +262,11 @@ export default function Sprints() {
     setExpandedSprint(newSprint.id);
   };
 
-  const filteredSprints =
-    activeTab === "all"
+  const filteredSprints = useMemo(() => {
+    return activeTab === "all"
       ? sprints
       : sprints.filter((sprint) => sprint.status.toLowerCase() === activeTab);
+  }, [activeTab, sprints]);
 
   const toggleSprint = (sprintId: string) => {
     if (expandedSprint === sprintId) {
@@ -301,14 +298,14 @@ export default function Sprints() {
     }
   };
 
-  const getCompletionRate = (sprintId: string) => {
+  const getCompletionRate = useCallback((sprintId: string) => {
     const tasks = tasksBySprint[sprintId] || [];
     const totalTasks = tasks.length;
     const completedTasks = tasks.filter(
       (task) => task.status === "Completed",
     ).length;
     return totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
-  };
+  }, [tasksBySprint]);
 
   if (isLoading) {
     return (

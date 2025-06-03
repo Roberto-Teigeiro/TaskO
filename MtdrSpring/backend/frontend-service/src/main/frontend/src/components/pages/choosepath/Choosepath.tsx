@@ -1,14 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useEffect, useState } from "react";
-import { useAuth, useUser } from "@clerk/react-router";
+import { useState } from "react";
+import { useAuth } from "@clerk/react-router";
 import NewProjectModal from "./NewProjectModal";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { LogOut, Users, FolderPlus } from "lucide-react";
 import { Header } from "../../Header";
 const Choosepath = () => {
-  const { user } = useUser();
-  const [userMetadata, setUserMetadata] = useState<any>(null);
   const [showProjectModal, setProjectModal] = useState(false);
   const [showJoinProjectModal, setJoinProjectModal] = useState(false);
   const { signOut } = useAuth();
@@ -24,18 +22,6 @@ const Choosepath = () => {
       alert("An error occurred while logging out. Please try again.");
     }
   };
-
-  useEffect(() => {
-    const fetchAuth = async () => {
-      if (user) {
-        const publicMetadata = user.publicMetadata;
-        setUserMetadata(publicMetadata);
-        console.log(userMetadata);
-      }
-    };
-
-    fetchAuth();
-  }, [user]);
 
   const toggleCreateModal = () => setProjectModal(!showProjectModal);
   const toggleJoinModal = () => setJoinProjectModal(!showJoinProjectModal);

@@ -121,7 +121,6 @@ export default function Dashboard() {
         }
         
         const data = (await response.json()) as BackendSprint[];
-        console.log("Fetched sprints:", data);
         
         const currentDate = new Date();
         
@@ -144,7 +143,6 @@ export default function Dashboard() {
           };
         });
 
-        console.log("Sprints with status:", sprintsWithStatus);
         setSprints(sprintsWithStatus);
 
         // Fetch tasks for each sprint
@@ -171,7 +169,6 @@ export default function Dashboard() {
             tasksBySprint[sprint.sprintId] = [];
           }
         }
-        console.log("Tasks by sprint:", tasksBySprint);
         setSprintTasks(tasksBySprint);
       } catch (err) {
         console.error("Error fetching sprints:", err);
@@ -375,7 +372,7 @@ export default function Dashboard() {
                         },
                         title: {
                           display: true,
-                          text: 'Real Hours per Role by Sprint',
+                          text: 'Real Hours Developer per Sprint',
                         },
                       },
                       scales: {
@@ -396,7 +393,7 @@ export default function Dashboard() {
 
               {/* Task Completion per Developer Chart */}
               <div className="break-inside-avoid bg-white rounded-xl p-4 shadow-sm">
-                <h3 className="font-medium text-xl mb-4">Task Completion per Role</h3>
+                <h3 className="font-medium text-xl mb-4">Task Completion per Developer</h3>
                 <div className="h-[300px]">
                   {(() => {
                     // Group tasks by sprint and role

@@ -195,8 +195,6 @@ export function TaskItem({
 
   const handleRealHoursUpdate = async (taskId: string, hours: number): Promise<void> => {
     try {
-      console.log('Starting real hours update:', { taskId, hours });
-      
       if (!taskId || taskId === "temp-id") {
         console.error("ID de tarea no válido");
         return;
@@ -210,22 +208,16 @@ export function TaskItem({
       }
       
       const currentTask = await getResponse.json();
-      console.log('Current task before update:', currentTask);
       
       // Update only the realHours field
       currentTask.realHours = hours;
-      console.log('Task after realHours update:', currentTask);
-
-      // Call the generic update endpoint with the complete object
-      const requestBody = JSON.stringify(currentTask);
-      console.log('Request payload:', requestBody);
 
       const response = await fetch(`http://localhost:8080/task/${taskId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: requestBody,
+        body: JSON.stringify(currentTask),
       });
 
       if (!response.ok) {
@@ -234,8 +226,7 @@ export function TaskItem({
         throw new Error(`Error ${response.status}: ${errorText}`);
       }
 
-      const updatedTask = await response.json();
-      console.log('Server response after update:', updatedTask);
+      await response.json(); // Consume the response
 
       if (onTaskUpdated) {
         onTaskUpdated();
