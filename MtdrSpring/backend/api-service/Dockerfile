@@ -1,4 +1,4 @@
-FROM openjdk:17-slim
+FROM container-registry.oracle.com/java/openjdk:17
 
 WORKDIR /app
 

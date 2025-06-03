@@ -8,10 +8,20 @@ if [ -z "$DOCKER_REGISTRY" ]; then
     exit 1
 fi
 
-export IMAGE_VERSION=0.1
+if [ -z "$IMAGE_VERSION" ]; then
+    export IMAGE_VERSION="latest"
+    echo "IMAGE_VERSION not set, defaulting to 'latest'"
+else
+    echo "Using IMAGE_VERSION: $IMAGE_VERSION"
+fi
 
 echo "Building all modules..."
 mvn clean package
+
+# Add debugging for frontend-service
+echo "Checking frontend-service build results..."
+ls -la frontend-service/target/ || echo "No target directory in frontend-service"
+ls -la frontend-service/target/frontend-static/ || echo "No frontend-static directory"
 
 echo "Building and pushing api-service image..."
 cd api-service
@@ -20,7 +30,7 @@ docker build -t $API_IMAGE .
 docker push $API_IMAGE
 if [ $? -eq 0 ]; then
     echo "api-service image pushed successfully"
-    docker rmi "$API_IMAGE" #remove local image
+    #docker rmi "$API_IMAGE" #remove local image
 else
     echo "Failed to push api-service image"
     exit 1
@@ -34,7 +44,7 @@ docker build -t $BOT_IMAGE .
 docker push $BOT_IMAGE
 if [ $? -eq 0 ]; then
     echo "bot-service image pushed successfully"
-    docker rmi "$BOT_IMAGE" #remove local image
+    #docker rmi "$BOT_IMAGE" #remove local image
 else
     echo "Failed to push bot-service image"
     exit 1
@@ -48,7 +58,7 @@ docker build -t $FRONTEND_IMAGE .
 docker push $FRONTEND_IMAGE
 if [ $? -eq 0 ]; then
     echo "frontend-service image pushed successfully"
-    docker rmi "$FRONTEND_IMAGE" #remove local image
+    #docker rmi "$FRONTEND_IMAGE" #remove local image
 else
     echo "Failed to push frontend-service image"
     exit 1
