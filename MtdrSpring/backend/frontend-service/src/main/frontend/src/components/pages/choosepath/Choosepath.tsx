@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useAuth } from "@clerk/react-router";
 import NewProjectModal from "./NewProjectModal";
+import JoinProjectModal from "./JoinProjectModal";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { LogOut, Users, FolderPlus } from "lucide-react";
@@ -136,10 +137,7 @@ const Choosepath = () => {
                 />
               </svg>
             </button>
-            <div className="p-8">
-              <h2 className="text-2xl font-medium text-white mb-4">Join a Project</h2>
-              <p className="text-gray-300 mb-6">This feature is coming soon. Check back later!</p>
-            </div>
+            <JoinProjectModal />
           </div>
         </div>
       )}

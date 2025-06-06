@@ -2,11 +2,13 @@
 
 import { useProjects } from "@/context/ProjectContext"
 import oracleLogo from "../assets/oracleLogo.svg"
+
 interface HeaderProps {
   title: string
+  currentTeamName?: string
 }
 
-export function Header({ title }: HeaderProps) {
+export function Header({ title, currentTeamName }: HeaderProps) {
   const { currentProject, loading } = useProjects()
   
   // Get current date and format it
@@ -28,10 +30,19 @@ export function Header({ title }: HeaderProps) {
               <span>{title}</span>
             </h1>
           </div>
-          <div className="text-sm text-gray-400 border-l border-gray-200 pl-6">
-            Current Project: <span className="font-medium text-white">
-              {loading ? "Loading..." : currentProject?.projectName || "No Project Selected"}
-            </span>
+          <div className="flex items-center gap-6">
+            <div className="text-sm text-gray-400 border-l border-gray-200 pl-6">
+              Current Project: <span className="font-medium text-white">
+                {loading ? "Loading..." : currentProject?.projectName || "No Project Selected"}
+              </span>
+            </div>
+            {currentTeamName && (
+              <div className="text-sm text-gray-400 border-l border-gray-200 pl-6">
+                Current Team: <span className="font-medium text-white">
+                  {currentTeamName}
+                </span>
+              </div>
+            )}
           </div>
         </div>
 

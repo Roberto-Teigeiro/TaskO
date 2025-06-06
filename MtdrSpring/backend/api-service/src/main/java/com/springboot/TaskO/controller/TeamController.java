@@ -21,9 +21,9 @@ public class TeamController {
     public List<TeamItem> getAllToDoItems(){
         return teamItemService.findAll();
     }
-    @GetMapping(value = "/team/{ProjectId}")
-    public ResponseEntity<List<TeamItem>> getTeamByProjectId(@PathVariable UUID ProjectId) {
-        List<TeamItem> teamItems = teamItemService.getTeamByProjectId(ProjectId);
+    @GetMapping(value = "/team/{projectId}")
+    public ResponseEntity<List<TeamItem>> getTeamByProjectId(@PathVariable UUID projectId) {
+        List<TeamItem> teamItems = teamItemService.getTeamByProjectId(projectId);
         if (teamItems.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }

@@ -17,7 +17,9 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
+import { Users } from 'lucide-react';
 import oracleLogo from '@/assets/oracleLogo.svg';
+import TeamManagementModal from './TeamManagementModal';
 
 // Register ChartJS components
 ChartJS.register(
@@ -37,6 +39,12 @@ interface BackendSprint {
   startDate: string;
   endDate: string;
   status: string;
+}
+
+interface Team {
+  teamId: string;
+  name: string;
+  projectId: string;
 }
 
 interface Task {
@@ -66,6 +74,10 @@ export default function Dashboard() {
   const [dashboardLoading, setDashboardLoading] = useState(true);
   const [selectedProject, setSelectedProject] = useState<string>("");
   const [memberRoles, setMemberRoles] = useState<Record<string, string>>({});
+  const [showTeamModal, setShowTeamModal] = useState(false);
+  const [currentTeamId, setCurrentTeamId] = useState<string>("");
+  const [currentTeamName, setCurrentTeamName] = useState<string>("");
+  const [availableTeams, setAvailableTeams] = useState<Team[]>([]);
 
   const isLocalhost = window.location.hostname === 'localhost';
 
@@ -211,6 +223,59 @@ export default function Dashboard() {
     fetchMemberRoles();
   }, [selectedProject]);
 
+  useEffect(() => {
+    const fetchTeams = async () => {
+      if (!selectedProject) return;
+      
+      try {
+        const API_URL = isLocalhost
+          ? `http://localhost:8080/team/${selectedProject}`
+          : `/api/team/${selectedProject}`;
+
+        const response = await fetch(API_URL);
+        if (!response.ok) {
+          throw new Error("Failed to fetch teams");
+        }
+        
+        const teams = await response.json();
+        setAvailableTeams(teams);
+        
+        // If no current team is selected and teams exist, select the first one
+        if (!currentTeamId && teams.length > 0) {
+          setCurrentTeamId(teams[0].teamId);
+          setCurrentTeamName(teams[0].name);
+        }
+      } catch (error) {
+        console.error("Error fetching teams:", error);
+      }
+    };
+
+    fetchTeams();
+  }, [selectedProject]);
+
+  // Update team name when team ID changes
+  useEffect(() => {
+    if (currentTeamId && availableTeams.length > 0) {
+      const team = availableTeams.find(t => t.teamId === currentTeamId);
+      if (team) {
+        setCurrentTeamName(team.name);
+      }
+    }
+  }, [currentTeamId, availableTeams]);
+
+  const handleTeamSwitch = (teamId: string) => {
+    setCurrentTeamId(teamId);
+    const team = availableTeams.find(t => t.teamId === teamId);
+    if (team) {
+      setCurrentTeamName(team.name);
+    }
+    console.log("Switched to team:", teamId);
+    // You can add additional logic here if needed, such as:
+    // - Refreshing data based on the selected team
+    // - Storing team preference in localStorage
+    // - Updating application state
+  };
+
   // Show a loading state while Clerk is initializing
   if (!isLoaded) {
     return (
@@ -243,7 +308,7 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-[#f8f8fb] flex flex-col">
       {/* Header */}
-      <Header title="Dashboard" />
+      <Header title="Dashboard" currentTeamName={currentTeamName} />
 
       {/* Main Content */}
       <div className="flex flex-1">
@@ -286,7 +351,24 @@ export default function Dashboard() {
               Welcome back, {user?.firstName ?? ""} {user?.lastName ?? ""} 👋
             </h2>
             
+            {/* Team Management Button */}
+            <button
+              onClick={() => setShowTeamModal(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-[#312D2A] text-white rounded-lg hover:bg-[#e55555] transition-colors shadow-sm"
+            >
+              <Users className="w-5 h-5" />
+              <span>Manage Teams</span>
+            </button>
           </div>
+
+          {/* Team Management Modal */}
+          <TeamManagementModal
+            isOpen={showTeamModal}
+            onClose={() => setShowTeamModal(false)}
+            currentProjectId={selectedProject}
+            currentTeamId={currentTeamId}
+            onTeamSwitch={handleTeamSwitch}
+          />
 
           {/* Task Section */}
           <div className="bg-gray-50 rounded-xl p-6">
