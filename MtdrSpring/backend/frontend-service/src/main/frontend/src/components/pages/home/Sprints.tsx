@@ -93,8 +93,14 @@ export default function Sprints() {
     
     try {
       setLoadedSprints((prev: Record<string, boolean>) => ({ ...prev, [sprintId]: true }));
+      const isLocalhost = window.location.hostname === 'localhost';
+
+        const url = isLocalhost 
+        ? `http://localhost:8080/task/sprint/${sprintId}` 
+        : `/api/task/sprint/${sprintId}`;
+      const response = await fetch(url)
+        
       
-      const response = await fetch(`http://localhost:8080/task/sprint/${sprintId}`);
       
       if (!response.ok) {
         if (response.status === 404) {
@@ -162,7 +168,12 @@ export default function Sprints() {
       try {
         const projectId = userProjects[0].projectId
         setUserProject(projectId)
-        const response = await fetch(`http://localhost:8080/sprintlist/${projectId}`)
+        const isLocalhost = window.location.hostname === 'localhost';
+
+        const url = isLocalhost 
+        ? `http://localhost:8080/sprintlist/${projectId}` 
+        : `/api/sprintlist/${projectId}`;
+        const response = await fetch(url)
         
         if (!response.ok) {
           if (response.status === 404) {

@@ -67,6 +67,8 @@ export default function Dashboard() {
   const [selectedProject, setSelectedProject] = useState<string>("");
   const [memberRoles, setMemberRoles] = useState<Record<string, string>>({});
 
+  const isLocalhost = window.location.hostname === 'localhost';
+
   // Set selected project when currentProject or userProjects changes
   useEffect(() => {
     if (currentProject?.projectId) {
@@ -79,13 +81,17 @@ export default function Dashboard() {
   useEffect(() => {
     const checkUserProjects = async () => {
       if (!user?.id) return;
-
+      
       try {
-        const response = await fetch(`http://localhost:8080/projects/${user.id}/any`);
+        const API_URL = isLocalhost
+          ? `http://localhost:8080/projects/${user.id}/any`
+          : `/api/projects/${user.id}/any`;
+
+        const response = await fetch(API_URL);
         if (!response.ok) {
           throw new Error("Failed to check user projects");
         }
-
+        
         const hasProjects = await response.json();
         if (!hasProjects) {
           navigate("/choosepath");
@@ -105,20 +111,24 @@ export default function Dashboard() {
       if (!selectedProject) return;
       setDashboardLoading(true);
       try {
-        const response = await fetch(`http://localhost:8080/sprintlist/${selectedProject}`);
+        const API_URL = isLocalhost
+          ? `http://localhost:8080/sprintlist/${selectedProject}`
+          : `/api/sprintlist/${selectedProject}`;
+
+        const response = await fetch(API_URL);
         if (!response.ok) {
           throw new Error("Failed to fetch sprints");
         }
-
+        
         const data = (await response.json()) as BackendSprint[];
         console.log("Fetched sprints:", data);
-
+        
         const currentDate = new Date();
-
+        
         const sprintsWithStatus = data.map((sprint) => {
           const startDate = new Date(sprint.startDate);
           const endDate = new Date(sprint.endDate);
-
+          
           let status: "Completed" | "In Progress" | "Not Started";
           if (currentDate > endDate) {
             status = "Completed";
@@ -127,7 +137,7 @@ export default function Dashboard() {
           } else {
             status = "Not Started";
           }
-
+          
           return {
             ...sprint,
             status,
@@ -141,7 +151,11 @@ export default function Dashboard() {
         const tasksBySprint: Record<string, Task[]> = {};
         for (const sprint of sprintsWithStatus) {
           try {
-            const tasksResponse = await fetch(`http://localhost:8080/task/sprint/${sprint.sprintId}`);
+            const API_URL = isLocalhost
+              ? `http://localhost:8080/task/sprint/${sprint.sprintId}`
+              : `/api/task/sprint/${sprint.sprintId}`;
+
+            const tasksResponse = await fetch(API_URL);
             if (!tasksResponse.ok) {
               throw new Error(
                 `Failed to fetch tasks for sprint ${sprint.sprintId}`,
@@ -160,7 +174,7 @@ export default function Dashboard() {
         console.log("Tasks by sprint:", tasksBySprint);
         setSprintTasks(tasksBySprint);
       } catch (err) {
-        console.error('Error fetching sprints:', err);
+        console.error("Error fetching sprints:", err);
       } finally {
         setDashboardLoading(false);
       }
@@ -176,9 +190,13 @@ export default function Dashboard() {
       if (!selectedProject) return;
       
       try {
-        const response = await fetch(`http://localhost:8080/projects/${selectedProject}/members`);
+        const API_URL = isLocalhost
+          ? `http://localhost:8080/projects/${selectedProject}/members`
+          : `/api/projects/${selectedProject}/members`;
+
+        const response = await fetch(API_URL);
         if (!response.ok) {
-          throw new Error('Failed to fetch project members');
+          throw new Error("Failed to fetch project members");
         }
         
         const members = await response.json();
@@ -189,7 +207,7 @@ export default function Dashboard() {
         
         setMemberRoles(rolesMap);
       } catch (error) {
-        console.error('Error fetching member roles:', error);
+        console.error("Error fetching member roles:", error);
       }
     };
 

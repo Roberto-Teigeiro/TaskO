@@ -6,11 +6,38 @@ shell: bash
 env:
   variables:
     JAVA_HOME: /usr/lib64/graalvm/graalvm22-ee-java17
+    DOCKER_REGISTRY: mx-queretaro-1.ocir.io/axuo1dsetmvp/todoapp/mu2bm
 
   exportedVariables:
     - BuildServiceDemoVersion
+    - IMAGE_VERSION
+    - BUILDRUN_HASH  # Add this exported variable
 
 steps:
+  - type: Command
+    name: "Define Build ID"
+    command: |
+      # Create a shorter hash from the build ID
+      export BUILDRUN_HASH=$(echo ${OCI_BUILD_RUN_ID} | rev | cut -c 1-7)
+      # Set the IMAGE_VERSION to use the same hash
+      export IMAGE_VERSION=${BUILDRUN_HASH}
+      # Export these variables for later steps and stages
+      echo "BUILDRUN_HASH=${BUILDRUN_HASH}" >> $OCI_ENV_VARS
+      echo "IMAGE_VERSION=${BUILDRUN_HASH}" >> $OCI_ENV_VARS
+      echo "Build variables: BUILDRUN_HASH=${BUILDRUN_HASH}, IMAGE_VERSION=${IMAGE_VERSION}"
+
+  - type: Command
+    name: "Docker Login"
+    command: |
+      cd MtdrSpring
+      oci os object get --bucket-name todoapp-mu2bm --name deployment_config.tgz --file deployment_config.tgz
+      tar -xzvf deployment_config.tgz
+      source env.sh
+      echo "Contents of at.cfg:"
+      cat at.cfg
+      echo "End of at.cfg contents"
+      cat at.cfg | docker login -u "axuo1dsetmvp/a01643651@tec.mx" --password-stdin mx-queretaro-1.ocir.io
+      
   - type: Command
     name: "Install GraalVM Enterprise 22.x Native Image for Java17"
     command: yum -y install graalvm22-ee-17-native-image
@@ -20,18 +47,33 @@ steps:
     command: export PATH=$JAVA_HOME/bin:$PATH
 
   - type: Command
-    name: "Docker Login"
-    command:  cd MtdrSpring;
-              oci os object get --bucket-name reacttodo-rolax --name deployment_config.tgz --file deployment_config.tgz;
-              tar -xzvf deployment_config.tgz;
-              source env.sh;
-              cat at.cfg | docker login -u "axzmghqes1gn/adan.ruiz@tec.mx" --password-stdin mx-queretaro-1.ocir.io
+    name: "Download SSL Certificates"
+    command: |
+      cd MtdrSpring/backend/frontend-service
+      oci os object get --bucket-name todoapp-mu2bm --name ssl-certificates.tar.gz --file ssl-certificates.tar.gz
+      tar -xzf ssl-certificates.tar.gz
+      ls -la *.crt *.key  # Verify files are extracted
 
   - type: Command
     name: "Build"
-    command:  cd MtdrSpring;
-              source env.sh;
-              (cd backend;source build.sh)
+    command: |
+      cd MtdrSpring
+      source env.sh
+      # Pass IMAGE_VERSION to the build script
+      export IMAGE_VERSION=${BUILDRUN_HASH}
+      echo "Building with IMAGE_VERSION=${IMAGE_VERSION}"
+      (cd backend && source build.sh)
 
-
-
+outputArtifacts:
+  - name: frontend-image
+    type: DOCKER_IMAGE
+    location: mx-queretaro-1.ocir.io/axuo1dsetmvp/todoapp/mu2bm/frontend-service:${BUILDRUN_HASH}
+  - name: api-image
+    type: DOCKER_IMAGE
+    location: mx-queretaro-1.ocir.io/axuo1dsetmvp/todoapp/mu2bm/api-service:${BUILDRUN_HASH}
+  - name: bot-image
+    type: DOCKER_IMAGE
+    location: mx-queretaro-1.ocir.io/axuo1dsetmvp/todoapp/mu2bm/bot-service:${BUILDRUN_HASH}
+  - name: tasko-manifest
+    type: BINARY
+    location: MtdrSpring/backend/tasko.yaml

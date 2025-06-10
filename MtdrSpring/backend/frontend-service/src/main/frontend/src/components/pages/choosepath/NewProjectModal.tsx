@@ -33,8 +33,18 @@ export default function NewProjectModal() {
     // Create a variable to store projectData outside the promise chain
     let savedProjectData: any;
 
+    const isLocalhost = window.location.hostname === 'localhost';
+
+    const API_URL_PROJECT_NEW = isLocalhost
+      ? 'http://localhost:8080/project/new'
+      : '/api/project/new';
+
+    const API_URL_TEAM_ADD = isLocalhost
+      ? 'http://localhost:8080/team/add'
+      : '/api/team/add';
+
     // First create the project
-    fetch("http://localhost:8080/project/new", {
+    fetch(API_URL_PROJECT_NEW, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -60,7 +70,7 @@ export default function NewProjectModal() {
       }
       
       // Then create the team with the returned project ID
-      return fetch("http://localhost:8080/team/add", {
+      return fetch(API_URL_TEAM_ADD, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -116,9 +126,13 @@ export default function NewProjectModal() {
       if (!teamId) {
         throw new Error("Team ID is missing or invalid");
       }
+
+      const API_URL_ADD_USER = isLocalhost
+        ? `http://localhost:8080/project/${savedProjectData.projectId}/adduser/${teamId}`
+        : `/api/project/${savedProjectData.projectId}/adduser/${teamId}`;
       
       // Now use savedProjectData instead of projectData
-      return fetch(`http://localhost:8080/project/${savedProjectData.projectId}/adduser/${teamId}`, {
+      return fetch(API_URL_ADD_USER, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"

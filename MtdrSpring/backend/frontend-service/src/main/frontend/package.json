@@ -10,9 +10,7 @@
     "preview": "vite preview",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "prepare": "test -d .git && husky install || echo 'Skipping husky install'"
   },
   "dependencies": {
     "@clerk/clerk-react": "^5.25.6",
