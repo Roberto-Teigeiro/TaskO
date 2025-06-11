@@ -5,21 +5,32 @@ import com.springboot.TaskO.service.TaskItemService;
 import com.springboot.TaskO.service.UserItemService;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.net.URI;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 
 @RestController
 public class UserItemController {
     @Autowired
     private UserItemService userItemService;
     //@CrossOrigin
+    private final RestTemplate restTemplate = new RestTemplate();
+    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final String clerkSecretKey = "sk_test_6Ib6VO3fmCDHpSNC2eJUXgkO9DrE70NusLvT7NmWFI";
+    
     @GetMapping(value = "/users/all")
     public List<UserItem> getAllToDoItems(){
         return userItemService.findAll();
@@ -80,31 +91,67 @@ public class UserItemController {
                 .body("Error registrando usuario de telegram: " + e.getMessage());
         }
     }
-    // @PostMapping("/users/register")
-    // public ResponseEntity<?> registerTelegramUser(@RequestBody Map<String, String> registration) {
-    //     try {
-    //         String userId = registration.get("username");
-    //         String telegramId = registration.get("telegramId");
+      @PostMapping("/resolveusername")
+    public ResponseEntity<Map<String, String>> resolveUsers(@RequestBody List<String> userIds) {
+        try {
+            Map<String, String> userNames = new HashMap<>();
             
-    //         if (userId == null || telegramId == null) {
-    //             return ResponseEntity.badRequest().body("Username and telegramId are required");
-    //         }
+            for (String userId : userIds) {
+                try {
+                    // Hacer llamada HTTP directa a la API de Clerk
+                    String url = "https://api.clerk.com/v1/users/" + userId;
+                    
+                    HttpHeaders headers = new HttpHeaders();
+                    headers.set("Authorization", "Bearer " + clerkSecretKey);
+                    headers.set("Content-Type", "application/json");
+                    
+                    HttpEntity<String> entity = new HttpEntity<>(headers);
+                    
+                    ResponseEntity<String> response = restTemplate.exchange(
+                        url, HttpMethod.GET, entity, String.class);
+                    
+                    if (response.getStatusCode() == HttpStatus.OK) {
+                        JsonNode userJson = objectMapper.readTree(response.getBody());
+                        
+                        String displayName = "";
+                        String firstName = userJson.path("first_name").asText(null);
+                        String lastName = userJson.path("last_name").asText(null);
+                        String username = userJson.path("username").asText(null);
+                        
+                        if (firstName != null && !firstName.isEmpty() && lastName != null && !lastName.isEmpty()) {
+                            displayName = firstName + " " + lastName;
+                        } else if (username != null && !username.isEmpty()) {
+                            displayName = username;
+                        } else {
+                            JsonNode emailAddresses = userJson.path("email_addresses");
+                            if (emailAddresses.isArray() && emailAddresses.size() > 0) {
+                                String email = emailAddresses.get(0).path("email_address").asText();
+                                if (email != null && !email.isEmpty()) {
+                                    displayName = email;
+                                } else {
+                                    displayName = "User " + userId.replace("user_", "").substring(0, 8);
+                                }
+                            } else {
+                                displayName = "User " + userId.replace("user_", "").substring(0, 8);
+                            }
+                        }
+                        
+                        userNames.put(userId, displayName);
+                    } else {
+                        userNames.put(userId, "User " + userId.replace("user_", "").substring(0, 8));
+                    }
+                } catch (Exception e) {
+                    System.err.println("Error fetching user " + userId + ": " + e.getMessage());
+                    userNames.put(userId, "User " + userId.replace("user_", "").substring(0, 8));
+                }
+            }
             
-    //         // Add telegram to user and get the updated user
-    //         UserItem updatedUser = userItemService.addTelegramToUserItem(userId, telegramId);
-            
-    //         if (updatedUser == null) {
-    //             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-    //                 .body("User not found with username: " + userId);
-    //         }
-            
-    //         // Return the updated user
-    //         return ResponseEntity.ok(updatedUser);
-    //     } catch (Exception e) {
-    //         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-    //             .body("Error registering telegram user: " + e.getMessage());
-    //     }
-    // }
+            return ResponseEntity.ok(userNames);
+        } catch (Exception e) {
+            System.err.println("Error in resolveUsers: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
 }
 
 
