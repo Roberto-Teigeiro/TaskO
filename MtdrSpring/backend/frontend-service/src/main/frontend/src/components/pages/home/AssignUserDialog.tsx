@@ -14,6 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { UserPlus, User, Check } from "lucide-react";
 import { useProjects } from "../../../context/ProjectContext";
+import { useUserResolver } from "../../hooks/useUserResolver"; // Agregar import
 
 // Definir las interfaces basadas en los datos reales del API
 interface UserType {
@@ -40,6 +41,9 @@ export function AssignUserDialog({
   const { userProjects } = useProjects();
   const projectId =
     userProjects && userProjects.length > 0 ? userProjects[0].projectId : null;
+
+  // Agregar el hook de resolución de usuarios
+  const { resolveUserNames } = useUserResolver();
 
   const [open, setOpen] = useState(false);
   const [users, setUsers] = useState<UserType[]>([]);
@@ -82,12 +86,22 @@ export function AssignUserDialog({
 
       const data = await response.json();
 
+      // Extraer los IDs de usuario únicos
+      const userIds = [...new Set(data.map((user: any) => user.userId).filter(Boolean))];
+      
+      // Resolver nombres de usuario si hay IDs
+      let userNames: Record<string, string> = {};
+      if (userIds.length > 0) {
+        userNames = await resolveUserNames(userIds);
+      }
+
       // Transformar los datos recibidos al formato esperado
       const formattedUsers: UserType[] = data.map((user: any) => {
-        // Extraer el ID de usuario desde el objeto recibido
+        const resolvedName = userNames[user.userId];
+        
         return {
           id: user.userId, // Usar userId como id
-          name: user.name || `Usuario ${user.userId.slice(-4)}`, // Usar nombre o fallback
+          name: resolvedName || user.name || `Usuario ${user.userId.slice(-8)}`, // Usar nombre resuelto, nombre original o fallback
           email: user.email || "",
           avatar: user.avatar || null,
           role: user.role,
@@ -108,13 +122,13 @@ export function AssignUserDialog({
           avatar: "/placeholder.svg",
         },
         {
-          id: "2",
-          name: "Carlos López",
+          id: "user_2xntzGDoyeqL9MK0W0FLiJtvHyK",
+          name: "Carlos López", 
           email: "carlos@example.com",
           avatar: "/placeholder.svg",
         },
         {
-          id: "3",
+          id: "user_3",
           name: "Elena Martínez",
           email: "elena@example.com",
           avatar: "/placeholder.svg",
