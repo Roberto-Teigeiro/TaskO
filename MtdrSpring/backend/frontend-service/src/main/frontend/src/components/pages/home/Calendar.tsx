@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
-
+import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { Header } from "@/components/Header";
 import { Sidebar } from "@/components/Sidebar";
@@ -27,6 +27,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useProjects } from "../../../context/ProjectContext";
+import oracleLogo from "../../../assets/oracleLogo.svg";
 import {
   format,
   addMonths,
@@ -64,6 +65,7 @@ const getStatusColor = (status: string) => {
 
 export default function SchedulePage() {
   const { currentProject } = useProjects();
+  const navigate = useNavigate();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [view, setView] = useState<"month" | "week" | "day">("month");
@@ -173,10 +175,10 @@ export default function SchedulePage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#f8f8fb] flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#ff6767] mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading sprints...</p>
+      <div className="min-h-screen flex items-center justify-center bg-[#f8f8fb]">
+        <div className="flex flex-col items-center gap-4">
+          <img src={oracleLogo} alt="Oracle Logo" className="w-32 h-32 animate-pulse" />
+          <div className="animate-spin rounded-full h-8 w-8 border-4 border-[#ff6767] border-t-transparent"></div>
         </div>
       </div>
     );
@@ -185,13 +187,16 @@ export default function SchedulePage() {
   if (error) {
     return (
       <div className="min-h-screen bg-[#f8f8fb] flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-red-500">{error}</p>
+        <div className="text-center flex text-2xl flex-col gap-4">
+          <p className="text-[#C74634]">{error}</p>
           <Button
-            className="mt-4 bg-[#ff6767] hover:bg-[#ff5252] text-white"
+            className="mt-4 bg-[#C74634] hover:scale-105 transition-transform duration-300 text-white"
             onClick={() => window.location.reload()}
           >
             Try Again
+          </Button>
+          <Button className="bg-[#312D2A] hover:scale-105 transition-transform duration-300 text-white" onClick={() => navigate("/dashboard")}>
+            Go to Dashboard
           </Button>
         </div>
       </div>
