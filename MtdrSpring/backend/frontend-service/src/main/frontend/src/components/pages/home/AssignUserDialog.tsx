@@ -18,12 +18,11 @@ import { useUserResolver } from "../../hooks/useUserResolver"; // Agregar import
 
 // Definir las interfaces basadas en los datos reales del API
 interface UserType {
-  readonly id?: string;
-  readonly userId?: string;
-  readonly name?: string;
-  readonly email?: string;
-  readonly avatar?: string;
-  readonly role?: string | null;
+  id: string;
+  name: string;
+  email: string;
+  avatar: string | null;
+  role?: string | null;
 }
 
 interface AssignUserDialogProps {
@@ -86,8 +85,12 @@ export function AssignUserDialog({
 
       const data = await response.json();
 
-      // Extraer los IDs de usuario únicos
-      const userIds = [...new Set(data.map((user: any) => user.userId).filter(Boolean))];
+      // Extraer los IDs de usuario únicos - CORREGIR AQUÍ
+      const userIds = [...new Set(
+        data
+          .filter((user: any) => user.userId && typeof user.userId === 'string')
+          .map((user: any) => user.userId)
+      )] as string[];
       
       // Resolver nombres de usuario si hay IDs
       let userNames: Record<string, string> = {};
@@ -100,11 +103,11 @@ export function AssignUserDialog({
         const resolvedName = userNames[user.userId];
         
         return {
-          id: user.userId, // Usar userId como id
-          name: resolvedName || user.name || `Usuario ${user.userId.slice(-8)}`, // Usar nombre resuelto, nombre original o fallback
-          email: user.email || "",
+          id: user.userId || '', // Asegurar que nunca sea undefined
+          name: resolvedName || user.name || `Usuario ${user.userId?.slice(-8) || ''}`, // Usar nombre resuelto, nombre original o fallback
+          email: user.email || '',
           avatar: user.avatar || null,
-          role: user.role,
+          role: user.role || null,
         };
       });
 
