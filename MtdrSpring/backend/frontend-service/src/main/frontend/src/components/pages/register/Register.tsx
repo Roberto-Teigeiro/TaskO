@@ -164,12 +164,14 @@ export default function Register() {
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-30 border-r-2 border-white/40"></div>
           
           <div className="text-center relative z-10">
-            <img
-              src={oracleLogo}
-              alt="Oracle Logo"
-              className="max-w-full h-auto mb-6 mx-auto filter brightness-0 invert"
-              style={{ maxHeight: '200px' }}
-            />
+            <div className="neon-logo-container mb-6 mx-auto">
+              <img
+                src={oracleLogo}
+                alt="Oracle Logo"
+                className="neon-logo max-w-full h-auto mx-auto filter brightness-0 invert"
+                style={{ maxHeight: '200px' }}
+              />
+            </div>
             <h2 className="text-5xl font-bold text-white mb-2">
               TaskO
             </h2>
@@ -381,6 +383,50 @@ export default function Register() {
           </p>
         </div>
       </div>
+      <style>{`
+        .neon-logo-container {
+          position: relative;
+          display: inline-block;
+        }
+        
+        .neon-logo {
+          filter: brightness(0) invert(1);
+          animation: neon-pulse 2s ease-in-out infinite alternate;
+        }
+        
+        .neon-logo-container::before {
+          content: '';
+          position: absolute;
+          top: -10px;
+          left: -10px;
+          right: -10px;
+          bottom: -10px;
+          background: radial-gradient(circle, rgba(231, 76, 60, 0.4) 0%, transparent 70%);
+          border-radius: 50%;
+          animation: neon-glow 2s ease-in-out infinite alternate;
+          z-index: -1;
+        }
+        
+        @keyframes neon-pulse {
+          0% {
+            filter: brightness(0) invert(1) drop-shadow(0 0 5px #e74c3c) drop-shadow(0 0 10px #e74c3c) drop-shadow(0 0 15px #e74c3c);
+          }
+          100% {
+            filter: brightness(0) invert(1) drop-shadow(0 0 10px #e74c3c) drop-shadow(0 0 20px #e74c3c) drop-shadow(0 0 30px #e74c3c) drop-shadow(0 0 40px #e74c3c);
+          }
+        }
+        
+        @keyframes neon-glow {
+          0% {
+            opacity: 0.5;
+            transform: scale(1);
+          }
+          100% {
+            opacity: 0.8;
+            transform: scale(1.1);
+          }
+        }
+      `}</style>
     </div>
   );
 }

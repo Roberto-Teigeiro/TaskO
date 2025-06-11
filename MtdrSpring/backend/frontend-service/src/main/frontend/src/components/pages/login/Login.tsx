@@ -11,6 +11,7 @@ import { Lock, User, AlertCircle, Loader2 } from "lucide-react";
 import { useSignIn, useUser } from "@clerk/react-router";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import oracleLogo from "../../../assets/oracleLogo.svg";
+import styles from './Login.module.css';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -265,12 +266,14 @@ export default function Login() {
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-30 border-l-2 border-white/40"></div>
           
           <div className="text-center relative z-10">
-            <img
-              src={oracleLogo}
-              alt="Oracle Logo"
-              className="max-w-full h-auto mb-6 mx-auto filter brightness-0 invert"
-              style={{ maxHeight: '200px' }}
-            />
+            <div className={styles.neonLogoContainer + " mb-6 mx-auto"}>
+              <img
+                src={oracleLogo}
+                alt="Oracle Logo"
+                className={styles.neonLogo + " max-w-full h-auto mx-auto filter brightness-0 invert"}
+                style={{ maxHeight: '200px' }}
+              />
+            </div>
             <h2 className="text-5xl font-bold text-white mb-2">
               TaskO
             </h2>
