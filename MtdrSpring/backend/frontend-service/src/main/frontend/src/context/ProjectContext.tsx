@@ -18,6 +18,7 @@ interface ProjectDetails {
 interface ProjectContextType {
   userProjects: any[];
   currentProject: ProjectDetails | null;
+  userMetadata: any | null;
   loading: boolean;
   error: string | null;
   refreshProjects: () => Promise<void>;
@@ -33,6 +34,9 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { user } = useUser();
+
+  // Get user metadata directly from Clerk
+  const userMetadata = user?.unsafeMetadata || null;
 
   const isLocalhost = window.location.hostname === 'localhost';
 
@@ -87,7 +91,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
 
   return (
     <ProjectContext.Provider
-      value={{ userProjects, currentProject, loading, error, refreshProjects }}
+      value={{ userProjects, currentProject, userMetadata, loading, error, refreshProjects }}
     >
       {children}
     </ProjectContext.Provider>

@@ -1,10 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from "react";
 import React from "react";
-import { useAuth } from "@clerk/clerk-react";
+import { useAuth, useUser } from "@clerk/clerk-react";
 
 export default function NewProjectModal() {
   const { userId } = useAuth();
+  const { user } = useUser();
   const [projectName, setProjectName] = useState("");
   const [teamName, setTeamName] = useState("");
   const [error, setError] = useState("");
@@ -151,6 +152,20 @@ export default function NewProjectModal() {
         });
       }
       console.log("User added to team successfully");
+      
+      // Update user unsafeMetadata to set manager status (frontend accessible)
+      return user?.update({
+        unsafeMetadata: {
+          ...user.unsafeMetadata,
+          manager: true,
+          projectCreator: true,
+          projectId: savedProjectData.projectId,
+          teamName: teamName
+        }
+      });
+    })
+    .then(() => {
+      console.log("User metadata updated with manager status");
       // Redirect to dashboard or show success message
       window.location.href = "/dashboard";
     })

@@ -68,7 +68,13 @@ interface Task {
 export default function Dashboard() {
   const navigate = useNavigate();
   const { user, isLoaded, isSignedIn } = useUser();
-  const { userProjects, loading, error, currentProject } = useProjects();
+
+  const { userProjects, loading, error, currentProject, userMetadata } = useProjects();
+  console.log("User Metadata from Context:", userMetadata);
+  
+  // Check if user is a manager
+  const isManager = userMetadata?.manager === true;
+  
   const [sprints, setSprints] = useState<BackendSprint[]>([]);
   const [sprintTasks, setSprintTasks] = useState<Record<string, Task[]>>({});
   const [dashboardLoading, setDashboardLoading] = useState(true);
@@ -347,329 +353,448 @@ export default function Dashboard() {
 
           {/* Welcome Section */}
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold">
-              Welcome back, {user?.firstName ?? ""} {user?.lastName ?? ""} 👋
-            </h2>
+            <div>
+              <h2 className="text-2xl font-bold">
+                Welcome back, {user?.firstName ?? ""} {user?.lastName ?? ""} 👋
+              </h2>
+              
+              {/* Display user role */}
+              <div className="mt-2">
+                <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                  isManager 
+                    ? 'bg-purple-100 text-purple-800' 
+                    : 'bg-blue-100 text-blue-800'
+                }`}>
+                  {isManager ? '👨‍💼 Manager' : '👨‍💻 Developer'}
+                </span>
+              </div>
+            </div>
             
-            {/* Team Management Button */}
-            <button
-              onClick={() => setShowTeamModal(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-[#312D2A] text-white rounded-lg hover:bg-[#e55555] transition-colors shadow-sm"
-            >
-              <Users className="w-5 h-5" />
-              <span>Manage Teams</span>
-            </button>
-          </div>
+            {/* Team Management Button - Only show to managers */}
+            {isManager && (
+              <button
+                onClick={() => setShowTeamModal(true)}
+                className="flex items-center gap-2 px-4 py-2 bg-[#312D2A] text-white rounded-lg hover:bg-[#e55555] transition-colors shadow-sm"
+              >
+                <Users className="w-5 h-5" />
+                <span>Manage Teams</span>
+              </button>
+            )}
+          </div>  
 
-          {/* Team Management Modal */}
-          <TeamManagementModal
-            isOpen={showTeamModal}
-            onClose={() => setShowTeamModal(false)}
-            currentProjectId={selectedProject}
-            currentTeamId={currentTeamId}
-            onTeamSwitch={handleTeamSwitch}
-          />
+          {/* Team Management Modal - Only render for managers */}
+          {isManager && (
+            <TeamManagementModal
+              isOpen={showTeamModal}
+              onClose={() => setShowTeamModal(false)}
+              currentProjectId={selectedProject}
+              currentTeamId={currentTeamId}
+              onTeamSwitch={handleTeamSwitch}
+            />
+          )}
 
-          {/* Task Section */}
-          <div className="bg-gray-50 rounded-xl p-6">
-            <div className="columns-1 md:columns-2 gap-6 space-y-6">
-              {/* Task Status */}
-              
-              {/* Sprint KPIs Section */}
-              
-              {/* Sprint Completion Summary */}
-              
-
-              {/* Real Hours per Developer per Sprint Chart */}
-              <div className="break-inside-avoid bg-white rounded-xl p-4 shadow-sm">
-                <h3 className="font-medium text-xl mb-4">Real Hours Worked per Developer per Sprint</h3>
-                <div className="h-[300px]">
-                  {(() => {
-                    // Group real hours by sprint and developer, sorted by role
-                    const hoursBySprintAndRole = sprints.reduce((acc: Record<string, Record<string, number>>, sprint) => {
-                      const currentSprintTasks = sprintTasks[sprint.sprintId] || [];
-                      
-                      // Initialize sprint entry if it doesn't exist
-                      if (!acc[sprint.name]) {
-                        acc[sprint.name] = {};
-                      }
-                      
-                      // Sum real hours per developer in this sprint
-                      currentSprintTasks.forEach((task: Task) => {
-                        if (task.assignee && task.realHours) {
-                          const role = memberRoles[task.assignee] || 'Unassigned';
-                          if (!acc[sprint.name][role]) {
-                            acc[sprint.name][role] = 0;
-                          }
-                          acc[sprint.name][role] += task.realHours;
+          {/* Task Section - Conditional rendering based on manager status */}
+          {isManager ? (
+            // Manager Dashboard - Show all analytics and charts
+            <div className="bg-gray-50 rounded-xl p-6">
+              <h3 className="text-xl font-semibold mb-4 text-purple-800">Manager Analytics Dashboard</h3>
+              <div className="columns-1 md:columns-2 gap-6 space-y-6">
+                {/* Real Hours per Developer per Sprint Chart */}
+                <div className="break-inside-avoid bg-white rounded-xl p-4 shadow-sm">
+                  <h3 className="font-medium text-xl mb-4">Real Hours Worked per Developer per Sprint</h3>
+                  <div className="h-[300px]">
+                    {(() => {
+                      // Group real hours by sprint and developer, sorted by role
+                      const hoursBySprintAndRole = sprints.reduce((acc: Record<string, Record<string, number>>, sprint) => {
+                        const currentSprintTasks = sprintTasks[sprint.sprintId] || [];
+                        
+                        // Initialize sprint entry if it doesn't exist
+                        if (!acc[sprint.name]) {
+                          acc[sprint.name] = {};
                         }
-                      });
+                        
+                        // Sum real hours per developer in this sprint
+                        currentSprintTasks.forEach((task: Task) => {
+                          if (task.assignee && task.realHours) {
+                            const role = memberRoles[task.assignee] || 'Unassigned';
+                            if (!acc[sprint.name][role]) {
+                              acc[sprint.name][role] = 0;
+                            }
+                            acc[sprint.name][role] += task.realHours;
+                          }
+                        });
+                        
+                        return acc;
+                      }, {});
+
+                      // If no data, show message
+                      if (Object.keys(hoursBySprintAndRole).length === 0) {
+                        return (
+                          <div className="text-center py-4">
+                            <p className="text-gray-500">No real hours data available for any sprint</p>
+                          </div>
+                        );
+                      }
+
+                      // Prepare data for the chart
+                      const sprintNames = Object.keys(hoursBySprintAndRole);
+                      const roles = new Set<string>();
                       
-                      return acc;
-                    }, {});
-
-                    // If no data, show message
-                    if (Object.keys(hoursBySprintAndRole).length === 0) {
-                      return (
-                        <div className="text-center py-4">
-                          <p className="text-gray-500">No real hours data available for any sprint</p>
-                        </div>
-                      );
-                    }
-
-                    // Prepare data for the chart
-                    const sprintNames = Object.keys(hoursBySprintAndRole);
-                    const roles = new Set<string>();
-                    
-                    // Collect all unique roles
-                    Object.values(hoursBySprintAndRole).forEach(sprintData => {
-                      Object.keys(sprintData).forEach(role => roles.add(role));
-                    });
-
-                    const datasets = Array.from(roles).map(role => {
-                      const data = sprintNames.map(sprintName => {
-                        const sprintData = hoursBySprintAndRole[sprintName][role];
-                        return sprintData || 0;
+                      // Collect all unique roles
+                      Object.values(hoursBySprintAndRole).forEach(sprintData => {
+                        Object.keys(sprintData).forEach(role => roles.add(role));
                       });
 
-                      return {
-                        label: role,
-                        data: data,
-                        backgroundColor: `rgba(${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, 0.6)`,
-                        borderColor: `rgb(${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)})`,
-                        borderWidth: 1,
-                      };
-                    });
+                      const datasets = Array.from(roles).map(role => {
+                        const data = sprintNames.map(sprintName => {
+                          const sprintData = hoursBySprintAndRole[sprintName][role];
+                          return sprintData || 0;
+                        });
 
-                    const chartData = {
-                      labels: sprintNames,
-                      datasets: datasets,
-                    };
-
-                    const chartOptions = {
-                      responsive: true,
-                      plugins: {
-                        legend: {
-                          position: 'top' as const,
-                        },
-                        title: {
-                          display: true,
-                          text: 'Real Hours Developer per Sprint',
-                        },
-                      },
-                      scales: {
-                        y: {
-                          beginAtZero: true,
-                          title: {
-                            display: true,
-                            text: 'Real Hours'
-                          }
-                        }
-                      }
-                    };
-
-                    return <Bar data={chartData} options={chartOptions} />;
-                  })()}
-                </div>
-              </div>
-
-              {/* Task Completion per Developer Chart */}
-              <div className="break-inside-avoid bg-white rounded-xl p-4 shadow-sm">
-                <h3 className="font-medium text-xl mb-4">Task Completion per Developer</h3>
-                <div className="h-[300px]">
-                  {(() => {
-                    // Group tasks by sprint and role
-                    const tasksBySprintAndRole = sprints.reduce((acc: Record<string, Record<string, { total: number; completed: number }>>, sprint) => {
-                      const currentSprintTasks = sprintTasks[sprint.sprintId] || [];
-                      
-                      // Initialize sprint entry if it doesn't exist
-                      if (!acc[sprint.name]) {
-                        acc[sprint.name] = {};
-                      }
-                      
-                      // Count tasks per role in this sprint
-                      currentSprintTasks.forEach((task: Task) => {
-                        if (task.assignee) {
-                          const role = memberRoles[task.assignee] || 'Unassigned';
-                          if (!acc[sprint.name][role]) {
-                            acc[sprint.name][role] = { total: 0, completed: 0 };
-                          }
-                          acc[sprint.name][role].total++;
-                          if (task.status === "COMPLETED") {
-                            acc[sprint.name][role].completed++;
-                          }
-                        }
-                      });
-                      
-                      return acc;
-                    }, {});
-
-                    // If no data, show message
-                    if (Object.keys(tasksBySprintAndRole).length === 0) {
-                      return (
-                        <div className="text-center py-4">
-                          <p className="text-gray-500">No task data available for any sprint</p>
-                        </div>
-                      );
-                    }
-
-                    // Prepare data for the chart
-                    const sprintNames = Object.keys(tasksBySprintAndRole);
-                    const roles = new Set<string>();
-                    
-                    // Collect all unique roles
-                    Object.values(tasksBySprintAndRole).forEach(sprintData => {
-                      Object.keys(sprintData).forEach(role => roles.add(role));
-                    });
-
-                    const datasets = Array.from(roles).map(role => {
-                      const data = sprintNames.map(sprintName => {
-                        const sprintData = tasksBySprintAndRole[sprintName][role];
-                        return sprintData ? sprintData.completed : 0;
-                      });
-
-                      return {
-                        label: role,
-                        data: data,
-                        backgroundColor: `rgba(${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, 0.6)`,
-                        borderColor: `rgb(${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)})`,
-                        borderWidth: 1,
-                      };
-                    });
-
-                    const chartData = {
-                      labels: sprintNames,
-                      datasets: datasets,
-                    };
-
-                    const chartOptions = {
-                      responsive: true,
-                      plugins: {
-                        legend: {
-                          position: 'top' as const,
-                        },
-                        title: {
-                          display: true,
-                          text: 'Completed Tasks per Role by Sprint',
-                        },
-                      },
-                      scales: {
-                        y: {
-                          beginAtZero: true,
-                          title: {
-                            display: true,
-                            text: 'Number of Completed Tasks'
-                          }
-                        }
-                      }
-                    };
-
-                    return <Bar data={chartData} options={chartOptions} />;
-                  })()}
-                </div>
-              </div>
-
-              {/* Total Real Hours Invested per Sprint Chart */}
-              <div className="break-inside-avoid bg-white rounded-xl p-4 shadow-sm">
-                <h3 className="font-medium text-xl mb-4">Total Real Hours Invested per Sprint</h3>
-                <div className="h-[300px]">
-                  {(() => {
-                    // Calculate total real hours for each sprint
-                    const totalRealHoursBySprint = sprints.map(sprint => {
-                      const tasks = sprintTasks[sprint.sprintId] || [];
-                      return tasks.reduce((total, task) => total + (task.realHours || 0), 0);
-                    });
-
-                    // If no data, show message
-                    if (totalRealHoursBySprint.every(hours => hours === 0)) {
-                      return (
-                        <div className="text-center py-4">
-                          <p className="text-gray-500">No real hours data available for any sprint</p>
-                        </div>
-                      );
-                    }
-
-                    const chartData = {
-                      labels: sprints.map(sprint => sprint.name),
-                      datasets: [
-                        {
-                          label: 'Total Real Hours',
-                          data: totalRealHoursBySprint,
-                          backgroundColor: 'rgba(255, 107, 107, 0.6)',
-                          borderColor: 'rgb(255, 107, 107)',
+                        return {
+                          label: role,
+                          data: data,
+                          backgroundColor: `rgba(${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, 0.6)`,
+                          borderColor: `rgb(${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)})`,
                           borderWidth: 1,
-                        },
-                      ],
-                    };
+                        };
+                      });
 
-                    const chartOptions = {
-                      responsive: true,
-                      plugins: {
-                        legend: {
-                          position: 'top' as const,
-                        },
-                        title: {
-                          display: true,
-                          text: 'Total Real Hours per Sprint',
-                        },
-                      },
-                      scales: {
-                        y: {
-                          beginAtZero: true,
+                      const chartData = {
+                        labels: sprintNames,
+                        datasets: datasets,
+                      };
+
+                      const chartOptions = {
+                        responsive: true,
+                        plugins: {
+                          legend: {
+                            position: 'top' as const,
+                          },
                           title: {
                             display: true,
-                            text: 'Total Hours'
+                            text: 'Real Hours Developer per Sprint',
+                          },
+                        },
+                        scales: {
+                          y: {
+                            beginAtZero: true,
+                            title: {
+                              display: true,
+                              text: 'Real Hours'
+                            }
                           }
                         }
-                      }
-                    };
+                      };
 
-                    return <Bar data={chartData} options={chartOptions} />;
-                  })()}
+                      return <Bar data={chartData} options={chartOptions} />;
+                    })()}
+                  </div>
+                </div>
+
+                {/* Task Completion per Developer Chart */}
+                <div className="break-inside-avoid bg-white rounded-xl p-4 shadow-sm">
+                  <h3 className="font-medium text-xl mb-4">Task Completion per Developer</h3>
+                  <div className="h-[300px]">
+                    {(() => {
+                      // Group tasks by sprint and role
+                      const tasksBySprintAndRole = sprints.reduce((acc: Record<string, Record<string, { total: number; completed: number }>>, sprint) => {
+                        const currentSprintTasks = sprintTasks[sprint.sprintId] || [];
+                        
+                        // Initialize sprint entry if it doesn't exist
+                        if (!acc[sprint.name]) {
+                          acc[sprint.name] = {};
+                        }
+                        
+                        // Count tasks per role in this sprint
+                        currentSprintTasks.forEach((task: Task) => {
+                          if (task.assignee) {
+                            const role = memberRoles[task.assignee] || 'Unassigned';
+                            if (!acc[sprint.name][role]) {
+                              acc[sprint.name][role] = { total: 0, completed: 0 };
+                            }
+                            acc[sprint.name][role].total++;
+                            if (task.status === "COMPLETED") {
+                              acc[sprint.name][role].completed++;
+                            }
+                          }
+                        });
+                        
+                        return acc;
+                      }, {});
+
+                      // If no data, show message
+                      if (Object.keys(tasksBySprintAndRole).length === 0) {
+                        return (
+                          <div className="text-center py-4">
+                            <p className="text-gray-500">No task data available for any sprint</p>
+                          </div>
+                        );
+                      }
+
+                      // Prepare data for the chart
+                      const sprintNames = Object.keys(tasksBySprintAndRole);
+                      const roles = new Set<string>();
+                      
+                      // Collect all unique roles
+                      Object.values(tasksBySprintAndRole).forEach(sprintData => {
+                        Object.keys(sprintData).forEach(role => roles.add(role));
+                      });
+
+                      const datasets = Array.from(roles).map(role => {
+                        const data = sprintNames.map(sprintName => {
+                          const sprintData = tasksBySprintAndRole[sprintName][role];
+                          return sprintData ? sprintData.completed : 0;
+                        });
+
+                        return {
+                          label: role,
+                          data: data,
+                          backgroundColor: `rgba(${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, 0.6)`,
+                          borderColor: `rgb(${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)})`,
+                          borderWidth: 1,
+                        };
+                      });
+
+                      const chartData = {
+                        labels: sprintNames,
+                        datasets: datasets,
+                      };
+
+                      const chartOptions = {
+                        responsive: true,
+                        plugins: {
+                          legend: {
+                            position: 'top' as const,
+                          },
+                          title: {
+                            display: true,
+                            text: 'Completed Tasks per Role by Sprint',
+                          },
+                        },
+                        scales: {
+                          y: {
+                            beginAtZero: true,
+                            title: {
+                              display: true,
+                              text: 'Number of Completed Tasks'
+                            }
+                          }
+                        }
+                      };
+
+                      return <Bar data={chartData} options={chartOptions} />;
+                    })()}
+                  </div>
+                </div>
+
+                {/* Total Real Hours Invested per Sprint Chart */}
+                <div className="break-inside-avoid bg-white rounded-xl p-4 shadow-sm">
+                  <h3 className="font-medium text-xl mb-4">Total Real Hours Invested per Sprint</h3>
+                  <div className="h-[300px]">
+                    {(() => {
+                      // Calculate total real hours for each sprint
+                      const totalRealHoursBySprint = sprints.map(sprint => {
+                        const tasks = sprintTasks[sprint.sprintId] || [];
+                        return tasks.reduce((total, task) => total + (task.realHours || 0), 0);
+                      });
+
+                      // If no data, show message
+                      if (totalRealHoursBySprint.every(hours => hours === 0)) {
+                        return (
+                          <div className="text-center py-4">
+                            <p className="text-gray-500">No real hours data available for any sprint</p>
+                          </div>
+                        );
+                      }
+
+                      const chartData = {
+                        labels: sprints.map(sprint => sprint.name),
+                        datasets: [
+                          {
+                            label: 'Total Real Hours',
+                            data: totalRealHoursBySprint,
+                            backgroundColor: 'rgba(255, 107, 107, 0.6)',
+                            borderColor: 'rgb(255, 107, 107)',
+                            borderWidth: 1,
+                          },
+                        ],
+                      };
+
+                      const chartOptions = {
+                        responsive: true,
+                        plugins: {
+                          legend: {
+                            position: 'top' as const,
+                          },
+                          title: {
+                            display: true,
+                            text: 'Total Real Hours per Sprint',
+                          },
+                        },
+                        scales: {
+                          y: {
+                            beginAtZero: true,
+                            title: {
+                              display: true,
+                              text: 'Total Hours'
+                            }
+                          }
+                        }
+                      };
+
+                      return <Bar data={chartData} options={chartOptions} />;
+                    })()}
+                  </div>
+                </div>
+              </div>
+
+              {/* Task Details Table - Manager view with all details */}
+              <div className="mt-6 break-inside-avoid bg-white rounded-xl p-4 shadow-sm">
+                <h3 className="font-medium text-xl mb-4">Task Details (Manager View)</h3>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full bg-white">
+                    <thead>
+                      <tr>
+                        <th className="py-2 px-4 border-b">Task Name</th>
+                        <th className="py-2 px-4 border-b">Role</th>
+                        <th className="py-2 px-4 border-b">Estimated Hours</th>
+                        <th className="py-2 px-4 border-b">Real Hours</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {sprints.map(sprint => (
+                        (sprintTasks[sprint.sprintId] || []).map(task => (
+                          <tr key={task.taskId}>
+                            <td className="py-2 px-4 border-b">{task.title}</td>
+                            <td className="py-2 px-4 border-b">{task.assignee ? memberRoles[task.assignee] || 'Unassigned' : 'Unassigned'}</td>
+                            <td className="py-2 px-4 border-b">{task.estimatedHours || 'N/A'}</td>
+                            <td className="py-2 px-4 border-b">{task.realHours || 'N/A'}</td>
+                          </tr>
+                        ))
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               </div>
             </div>
-          </div>
+          ) : (
+            // Developer Dashboard - Show simplified view
+            <div className="bg-gray-50 rounded-xl p-6">
+              <h3 className="text-xl font-semibold mb-4 text-blue-800">My Dashboard</h3>
+              
+              {/* Developer-specific content */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* My Tasks Summary */}
+                <div className="bg-white rounded-xl p-4 shadow-sm">
+                  <h3 className="font-medium text-lg mb-4">My Tasks</h3>
+                  {(() => {
+                    // Filter tasks assigned to current user
+                    const myTasks = sprints.flatMap(sprint => 
+                      (sprintTasks[sprint.sprintId] || []).filter(task => 
+                        task.assignee === user?.id
+                      )
+                    );
 
-          {/* Task Details Table */}
-          <div className="break-inside-avoid bg-white rounded-xl p-4 shadow-sm">
-            <h3 className="font-medium text-xl mb-4">Task Details</h3>
-            <div className="overflow-x-auto">
-              <table className="min-w-full bg-white">
-                <thead>
-                  <tr>
-                    <th className="py-2 px-4 border-b">Task Name</th>
-                    <th className="py-2 px-4 border-b">Role</th>
-                    <th className="py-2 px-4 border-b">Estimated Hours</th>
-                    <th className="py-2 px-4 border-b">Real Hours</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {sprints.map(sprint => (
-                    (sprintTasks[sprint.sprintId] || []).map(task => (
-                      <tr key={task.taskId}>
-                        <td className="py-2 px-4 border-b">{task.title}</td>
-                        <td className="py-2 px-4 border-b">{task.assignee ? memberRoles[task.assignee] || 'Unassigned' : 'Unassigned'}</td>
-                        <td className="py-2 px-4 border-b">{task.estimatedHours || 'N/A'}</td>
-                        <td className="py-2 px-4 border-b">{task.realHours || 'N/A'}</td>
+                    const completedTasks = myTasks.filter(task => task.status === "COMPLETED").length;
+                    const totalTasks = myTasks.length;
+
+                    return (
+                      <div className="space-y-2">
+                        <p>Total Tasks: {totalTasks}</p>
+                        <p>Completed: {completedTasks}</p>
+                        <p>In Progress: {totalTasks - completedTasks}</p>
+                        <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div 
+                            className="bg-blue-600 h-2 rounded-full" 
+                            style={{ width: `${totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0}%` }}
+                          ></div>
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
+
+                {/* My Hours Summary */}
+                <div className="bg-white rounded-xl p-4 shadow-sm">
+                  <h3 className="font-medium text-lg mb-4">My Hours</h3>
+                  {(() => {
+                    const myTasks = sprints.flatMap(sprint => 
+                      (sprintTasks[sprint.sprintId] || []).filter(task => 
+                        task.assignee === user?.id
+                      )
+                    );
+
+                    const totalEstimated = myTasks.reduce((sum, task) => sum + (task.estimatedHours || 0), 0);
+                    const totalReal = myTasks.reduce((sum, task) => sum + (task.realHours || 0), 0);
+
+                    return (
+                      <div className="space-y-2">
+                        <p>Estimated Hours: {totalEstimated}</p>
+                        <p>Real Hours: {totalReal}</p>
+                        <p>Variance: {totalReal - totalEstimated} hours</p>
+                      </div>
+                    );
+                  })()}
+                </div>
+              </div>
+
+              {/* My Task List - Developer view with only their tasks */}
+              <div className="mt-6 bg-white rounded-xl p-4 shadow-sm">
+                <h3 className="font-medium text-lg mb-4">My Task Details</h3>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full bg-white">
+                    <thead>
+                      <tr>
+                        <th className="py-2 px-4 border-b">Task Name</th>
+                        <th className="py-2 px-4 border-b">Sprint</th>
+                        <th className="py-2 px-4 border-b">Status</th>
+                        <th className="py-2 px-4 border-b">Estimated Hours</th>
+                        <th className="py-2 px-4 border-b">Real Hours</th>
                       </tr>
-                    ))
-                  ))}
-                </tbody>
-              </table>
+                    </thead>
+                    <tbody>
+                      {sprints.map(sprint => (
+                        (sprintTasks[sprint.sprintId] || [])
+                          .filter(task => task.assignee === user?.id)
+                          .map(task => (
+                            <tr key={task.taskId}>
+                              <td className="py-2 px-4 border-b">{task.title}</td>
+                              <td className="py-2 px-4 border-b">{sprint.name}</td>
+                              <td className="py-2 px-4 border-b">
+                                <span className={`px-2 py-1 rounded-full text-xs ${
+                                  task.status === 'COMPLETED' 
+                                    ? 'bg-green-100 text-green-800'
+                                    : 'bg-yellow-100 text-yellow-800'
+                                }`}>
+                                  {task.status || 'Not Started'}
+                                </span>
+                              </td>
+                              <td className="py-2 px-4 border-b">{task.estimatedHours || 'N/A'}</td>
+                              <td className="py-2 px-4 border-b">{task.realHours || 'N/A'}</td>
+                            </tr>
+                          ))
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </div>
-          </div>
+          )}
 
-          <div>
-            <h1></h1>
+          {/* Project List - Show projects assigned to the user */}
+          <div className="mt-8">
+            <h3 className="text-lg font-semibold mb-4">My Projects</h3>
             {projectsArray.length === 0 ? (
               <p>No projects found</p>
             ) : (
               <ul>
                 {projectsArray.map((project) => (
-                  <li key={project.id}>
-                    <h3>{project.name}</h3>
-                    {/* Add other project details as needed */}
+                  <li key={project.id} className="mb-2">
+                    <div className="p-4 bg-white rounded-lg shadow-sm">
+                      <h4 className="font-medium text-md">{project.name}</h4>
+                      {/* Add other project details as needed */}
+                    </div>
                   </li>
                 ))}
               </ul>
