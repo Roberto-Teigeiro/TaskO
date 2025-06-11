@@ -29,7 +29,7 @@ const Choosepath = () => {
 
   return (
     <div>
-    <Header title="Choose Path!" />
+    <Header title="Choose your path!" />
     <div className="min-h-screen w-full bg-[#312D2A] flex flex-col">
       {/* Main content */}
       <div className="flex-1 flex flex-col md:flex-row p-8 gap-8">

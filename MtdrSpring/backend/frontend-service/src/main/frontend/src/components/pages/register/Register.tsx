@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Mail, Lock, User, AlertCircle, Loader2 } from "lucide-react";
 import { useSignUp, useUser, useAuth } from "@clerk/react-router";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import oracleLogo from "../../../assets/oracleLogo.svg";
 
 export default function Register() {
   const navigate = useNavigate();
@@ -155,20 +156,25 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-r from-red-500 to-red-600 flex items-center justify-center p-4">
-      <div className="w-full max-w-5xl bg-white rounded-3xl shadow-xl overflow-hidden flex">
+    <div className="min-h-screen bg-gradient-to-r from-[#312D2A] to-[#C74634] flex items-center justify-center p-4">
+      <div className="w-full max-w-5xl bg-white rounded-3xl shadow-xl overflow-hidden flex relative">
         {/* Left side - Illustration */}
-        <div className="hidden md:flex md:w-1/2 bg-gradient-to-br from-red-100 to-red-200 items-center justify-center p-8">
-          <div className="text-center">
+        <div className="hidden md:flex md:w-1/2 bg-gradient-to-br from-[#312D2A] to-[#C74634] items-center justify-center p-8 relative">
+          {/* Gradient border overlay */}
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-30 border-r-2 border-white/40"></div>
+          
+          <div className="text-center relative z-10">
             <img
-              src="/placeholder.svg?height=300&width=300"
-              alt="Oracle Project Management"
-              className="max-w-full h-auto mb-6"
+              src={oracleLogo}
+              alt="Oracle Logo"
+              className="max-w-full h-auto mb-6 mx-auto filter brightness-0 invert"
+              style={{ maxHeight: '200px' }}
             />
-            <h2 className="text-2xl font-bold text-red-600 mb-2">
-              Oracle Project Management
+            <h2 className="text-5xl font-bold text-white mb-2">
+              TaskO
             </h2>
-            <p className="text-gray-600">
+            <h3 className="text-2xl font-bold text-gray-100 mb-2">Oracle Project Management</h3>
+            <p className="text-gray-200">
               Manage your development team efficiently with our Cloud Native
               solution.
             </p>
@@ -176,7 +182,7 @@ export default function Register() {
         </div>
 
         {/* Right side - Form */}
-        <div className="w-full md:w-1/2 p-8 md:p-12">
+        <div className="w-full md:w-1/2 p-8 md:p-12 border-l-2 border-white relative">
           <h1 className="text-3xl font-bold text-center mb-8">
             Create Account
           </h1>
@@ -280,11 +286,11 @@ export default function Register() {
               />
               <Label htmlFor="terms" className="text-sm">
                 I agree to the{" "}
-                <span className="text-red-600 hover:underline cursor-pointer">
+                <span className="text-[#C74634] hover:underline cursor-pointer">
                   Terms of Service
                 </span>{" "}
                 and{" "}
-                <span className="text-red-600 hover:underline cursor-pointer">
+                <span className="text-[#C74634] hover:underline cursor-pointer">
                   Privacy Policy
                 </span>
               </Label>
@@ -292,7 +298,7 @@ export default function Register() {
 
             <Button
               type="submit"
-              className="w-full py-6 bg-red-600 hover:bg-red-700 text-white"
+              className="w-full py-6 bg-[#C74634] hover:bg-[#312D2A] text-white"
               disabled={loading}
             >
               {loading ? (
@@ -367,7 +373,7 @@ export default function Register() {
             <Button
               onClick={toLogin}
               variant="link"
-              className="text-red-600 hover:text-red-800 p-0"
+              className="text-[#C74634] hover:text-[#312D2A] p-0"
               disabled={loading}
             >
               Sign In

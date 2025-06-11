@@ -2,9 +2,10 @@
 import { useEffect, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { CircleDot, LayoutGrid, LogOut, Settings } from "lucide-react";
+import { Calendar, LayoutGrid, LogOut, Settings, Zap } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth, useUser } from "@clerk/clerk-react"; // Importar useAuth y useUser de Clerk
+import oracleLogo from "../assets/oracleLogo.svg";
 
 export function Sidebar() {
   const navigate = useNavigate();
@@ -65,7 +66,7 @@ export function Sidebar() {
         <Avatar className="w-20 h-20 border-2 border-white shadow-lg">
           <AvatarImage
             src={
-              userData.profilePicture || "/placeholder.svg?height=80&width=80"
+              userData.profilePicture || oracleLogo
             }
             alt={`${userData.firstName} ${userData.lastName}`}
           />
@@ -98,7 +99,7 @@ export function Sidebar() {
               location.pathname === "/sprints" ? "bg-white/20 font-medium" : ""
             }`}
           >
-            <CircleDot className="mr-2 h-5 w-5" />
+            <Zap className="mr-2 h-5 w-5" />
             Sprints
           </Button>
 
@@ -109,7 +110,7 @@ export function Sidebar() {
               location.pathname === "/calendar" ? "bg-white/20 font-medium" : ""
             }`}
           >
-            <CircleDot className="mr-2 h-5 w-5" />
+            <Calendar className="mr-2 h-5 w-5" />
             Calendar
           </Button>
 

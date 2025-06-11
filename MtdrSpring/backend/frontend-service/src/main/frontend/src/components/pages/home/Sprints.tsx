@@ -11,6 +11,7 @@ import { AddSprintDialog } from "@/components/pages/home/AddSprint"
 import { useProjects } from "../../../context/ProjectContext"
 import { TaskItem } from "@/components/ui/Task-item"
 import { useUser } from "@clerk/clerk-react"
+import oracleLogo from "../../../assets/oracleLogo.svg"
 
 interface Task {
   id: string
@@ -311,10 +312,10 @@ export default function Sprints() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#f8f8fb] flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#ff6767] mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading sprints...</p>
+      <div className="min-h-screen flex items-center justify-center bg-[#f8f8fb]">
+        <div className="flex flex-col items-center gap-4">
+          <img src={oracleLogo} alt="Oracle Logo" className="w-32 h-32 animate-pulse" />
+          <div className="animate-spin rounded-full h-8 w-8 border-4 border-[#ff6767] border-t-transparent"></div>
         </div>
       </div>
     );
