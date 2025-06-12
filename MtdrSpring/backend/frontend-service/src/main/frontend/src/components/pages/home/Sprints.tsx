@@ -121,7 +121,7 @@ export default function Sprints() {
       
       const data = await response.json();
       
-      // Obtener todos los IDs de usuarios únicos que tienen asignee - VERSIÓN MEJORADA
+      // Obtener todos los IDs de usuarios únicos que tienen assignee - VERSIÓN MEJORADA
     const assigneeIds = [...new Set(
       data
         .map((task: ServerTask) => task.assignee)
@@ -411,9 +411,8 @@ export default function Sprints() {
             ) : (
               filteredSprints
                 .sort((a, b) => {
-                  const rateA = getCompletionRate(a.id);
-                  const rateB = getCompletionRate(b.id);
-                  return rateB - rateA; // Sort in descending order
+                  // Sort by start date in descending order (most recent first)
+                  return new Date(b.startDate).getTime() - new Date(a.startDate).getTime();
                 })
                 .map((sprint) => {
                   const completionRate = getCompletionRate(sprint.id);
