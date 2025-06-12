@@ -109,6 +109,7 @@ export function AddTaskDialog({ onAddTask, sprintId, projectId }: AddTaskDialogP
       endDate: date.toISOString(),
       comments: description, // Si no tienes campo comments específico
       storyPoints: parseInt(storyPoints),
+      priority: priority,   // Add priority to backend request
       estimatedHours: estimatedHours ? parseInt(estimatedHours) : 0,
       realHours: realHours ? parseInt(realHours) : 0,
     };
@@ -237,21 +238,28 @@ export function AddTaskDialog({ onAddTask, sprintId, projectId }: AddTaskDialogP
                 <div className="flex items-center space-x-6">
                   <div className="flex items-center space-x-2">
                     <div
-                      className={`w-4 h-4 rounded-full ${priority === "Extreme" ? "bg-[#ff6767]" : "border border-gray-300"}`}
+                      className={`w-4 h-4 rounded-full cursor-pointer ${priority === "Extreme" ? "bg-[#ff6767]" : "border border-gray-300"}`}
                       onClick={() => setPriority("Extreme")}
                     />
                     <span className="text-sm">Extreme</span>
                   </div>
                   <div className="flex items-center space-x-2">
                     <div
-                      className={`w-4 h-4 rounded-full ${priority === "Moderate" ? "bg-[#ffef3a]" : "border border-gray-300"}`}
+                      className={`w-4 h-4 rounded-full cursor-pointer ${priority === "High" ? "bg-[#ff9f43]" : "border border-gray-300"}`}
+                      onClick={() => setPriority("High")}
+                    />
+                    <span className="text-sm">High</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <div
+                      className={`w-4 h-4 rounded-full cursor-pointer ${priority === "Moderate" ? "bg-[#ffef3a]" : "border border-gray-300"}`}
                       onClick={() => setPriority("Moderate")}
                     />
                     <span className="text-sm">Moderate</span>
                   </div>
                   <div className="flex items-center space-x-2">
                     <div
-                      className={`w-4 h-4 rounded-full ${priority === "Low" ? "bg-[#4ed64c]" : "border border-gray-300"}`}
+                      className={`w-4 h-4 rounded-full cursor-pointer ${priority === "Low" ? "bg-[#4ed64c]" : "border border-gray-300"}`}
                       onClick={() => setPriority("Low")}
                     />
                     <span className="text-sm">Low</span>

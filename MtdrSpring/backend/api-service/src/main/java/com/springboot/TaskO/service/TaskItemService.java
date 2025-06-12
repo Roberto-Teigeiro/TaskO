@@ -89,6 +89,9 @@ public class TaskItemService {
             if (t.getEstimatedHours() != null) {
                 toDoItem.setEstimatedHours(t.getEstimatedHours());
             }
+            if (t.getPriority() != null) {
+                toDoItem.setPriority(t.getPriority());
+            }
             
             TaskItem savedTask = toDoItemRepository.save(toDoItem);
             System.out.println("Updated task state: " + savedTask);

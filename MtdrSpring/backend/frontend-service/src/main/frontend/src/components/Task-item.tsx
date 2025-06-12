@@ -3,6 +3,7 @@ import { CircleDot } from "lucide-react"
 import { AssignUserDialog } from "@/components/pages/home/AssignUserDialog"
 import { ChangeStatusDialog } from "@/components/pages/home/ChangeStatusDialog"
 import { useState, useEffect } from "react"
+import { DeleteTaskDialog } from "./pages/home/DeleteTaskDialog"
 
 // Tipo de estado para el backend
 export type BackendStatus = "TODO" | "IN_PROGRESS" | "COMPLETED";
@@ -46,11 +47,14 @@ export interface TaskItemProps {
   readonly date: string;
   readonly image: string;
   readonly assignee?: string;
+  readonly assigneeId?: string;
   readonly sprintId?: string;
   readonly onTaskUpdated?: () => void;
   readonly estimatedHours?: number;
   readonly realHours?: number;
   readonly currentUserId?: string;
+  readonly storyPoints?: number;
+  readonly isManager?: boolean;
 }
 
 export function TaskItem({
@@ -62,10 +66,13 @@ export function TaskItem({
   date,
   image,
   assignee,
+  assigneeId,
   estimatedHours = 0,
   realHours = 0,
   currentUserId,
-  onTaskUpdated
+  onTaskUpdated,
+  storyPoints = 0,
+  isManager = false
 }: TaskItemProps) {
   const [localRealHours, setLocalRealHours] = useState<number>(realHours);
 
@@ -254,6 +261,12 @@ export function TaskItem({
     }
   };
 
+  const handleDeleteTask = () => {
+    if (onTaskUpdated) {
+      onTaskUpdated();
+    }
+  };
+
   return (
     <div className="border border-gray-100 rounded-lg p-3">
       <div className="flex justify-between items-start">
@@ -278,6 +291,12 @@ export function TaskItem({
               </div>
               <div className="text-gray-400">Created: {date}</div>
               
+              {/* Story Points */}
+              <div className="flex items-center gap-2">
+                <span className="text-gray-500">Story Points: </span>
+                <span className="font-medium">{storyPoints}</span>
+              </div>
+              
               {/* Hours information */}
               <div className="flex items-center gap-2">
                 <span className="text-gray-500">Est. Hours: </span>
@@ -287,14 +306,14 @@ export function TaskItem({
               {/* Real hours display/input - only show input to assigned user */}
               <div className="flex items-center gap-2">
                 <span className="text-gray-500">Real Hours: </span>
-                {assignee && currentUserId === assignee ? (
+                {assigneeId && currentUserId === assigneeId ? (
                   <input
                     type="number"
                     min="0"
                     step="0.5"
                     value={localRealHours}
                     onChange={(e) => {
-                      const value = parseFloat(e.target.value);
+                      const value = parseFloat(e.target.value) || 0;
                       setLocalRealHours(value);
                       handleRealHoursUpdate(id, value);
                     }}
@@ -325,6 +344,15 @@ export function TaskItem({
                     currentAssignee={assignee}
                     onAssign={handleAssignUser}
                   />
+
+                  {/* Delete button - only visible to managers */}
+                  {isManager && (
+                    <DeleteTaskDialog
+                      taskId={id}
+                      taskTitle={title}
+                      onDelete={handleDeleteTask}
+                    />
+                  )}
                 </div>
               )}
             </div>

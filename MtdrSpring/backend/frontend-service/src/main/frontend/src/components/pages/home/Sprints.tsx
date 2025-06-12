@@ -9,9 +9,11 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { AddTaskDialog } from "@/components/pages/home/AddTask"
 import { AddSprintDialog } from "@/components/pages/home/AddSprint"
 import { useProjects } from "../../../context/ProjectContext"
-import { TaskItem } from "@/components/ui/Task-item"
+import { TaskItem } from "@/components/Task-item"
 import { useUser } from "@clerk/clerk-react"
 import { useUserResolver } from "../../hooks/useUserResolver";
+import { useManager } from "../../hooks/useManager";
+import { DeleteSprintDialog } from "./DeleteSprintDialog";
 import oracleLogo from "../../../assets/oracleLogo.svg"
 
 interface Task {
@@ -25,6 +27,7 @@ interface Task {
   createdOn: string
   image: string
   assignee: string
+  assigneeId: string
   storyPoints: number
   objective?: string
   fullDescription?: string
@@ -89,6 +92,9 @@ export default function Sprints() {
   const [userProject, setUserProject] = useState<string | null>(null)
   const [tasksBySprint, setTasksBySprint] = useState<Record<string, Task[]>>({});
   const [loadedSprints, setLoadedSprints] = useState<Record<string, boolean>>({});
+  
+  // Check if current user is a manager
+  const { isManager } = useManager(userProject);
 
   // Coloca primero fetchTasks
   const fetchTasks = useCallback(async (sprintId: string) => {
@@ -119,7 +125,7 @@ export default function Sprints() {
     const assigneeIds = [...new Set(
       data
         .map((task: ServerTask) => task.assignee)
-        .filter((assignee:any): assignee is string => Boolean(assignee) && typeof assignee === 'string')
+        .filter((assignee: string | undefined): assignee is string => Boolean(assignee) && typeof assignee === 'string')
     )] as string[];
       // Resolver nombres de usuario si hay assignees
       let userNames: Record<string, string> = {};
@@ -139,6 +145,7 @@ export default function Sprints() {
         createdOn: task.createdAt ? new Date(task.createdAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
         image: task.image ?? "/placeholder.svg",
         assignee: task.assignee ? (userNames[task.assignee] || task.assignee) : "",
+        assigneeId: task.assignee || "", // Keep original assignee ID for comparison
         storyPoints: task.storyPoints ?? 0,
         estimatedHours: task.estimatedHours ?? 0,
         realHours: task.realHours ?? 0,
@@ -277,6 +284,16 @@ export default function Sprints() {
     setExpandedSprint(newSprint.id);
   };
 
+  const handleDeleteSprint = (sprintId: string) => {
+    setSprints((prevSprints) => prevSprints.filter(sprint => sprint.id !== sprintId));
+    // Clear tasks for this sprint
+    setTasksBySprint((prev) => {
+      const updated = { ...prev };
+      delete updated[sprintId];
+      return updated;
+    });
+  };
+
   const filteredSprints = useMemo(() => {
     return activeTab === "all"
       ? sprints
@@ -413,27 +430,36 @@ export default function Sprints() {
                         tabIndex={0}
                         role="button"
                       >
-                        <div className="flex justify-between items-center">
-                          <div className="flex items-center gap-4">
-                            <ChevronRight
-                              className={`h-5 w-5 transition-transform ${
-                                expandedSprint === sprint.id ? "rotate-90" : ""
-                              }`}
-                            />
-                            <div>
-                              <h3 className="font-semibold">{sprint.name}</h3>
-                              <div className="flex items-center gap-2 mt-1">
-                                <Calendar className="h-4 w-4 text-gray-500" />
-                                <span className="text-sm text-gray-500">
-                                  {new Date(
-                                    sprint.startDate,
-                                  ).toLocaleDateString()}{" "}
-                                  -{" "}
-                                  {new Date(sprint.endDate).toLocaleDateString()}
-                                </span>
+                                                  <div className="flex justify-between items-center">
+                            <div className="flex items-center gap-4">
+                              <ChevronRight
+                                className={`h-5 w-5 transition-transform ${
+                                  expandedSprint === sprint.id ? "rotate-90" : ""
+                                }`}
+                              />
+                              <div>
+                                <h3 className="font-semibold">{sprint.name}</h3>
+                                <div className="flex items-center gap-2 mt-1">
+                                  <Calendar className="h-4 w-4 text-gray-500" />
+                                  <span className="text-sm text-gray-500">
+                                    {new Date(
+                                      sprint.startDate,
+                                    ).toLocaleDateString()}{" "}
+                                    -{" "}
+                                    {new Date(sprint.endDate).toLocaleDateString()}
+                                  </span>
+                                </div>
                               </div>
                             </div>
-                          </div>
+                            
+                            {/* Delete sprint button - only visible to managers */}
+                            {isManager && (
+                              <DeleteSprintDialog
+                                sprintId={sprint.id}
+                                sprintName={sprint.name}
+                                onDelete={handleDeleteSprint}
+                              />
+                            )}
                           <div className="flex items-center gap-4">
                             <div className="flex items-center gap-2">
                               <div className="w-32 bg-gray-200 rounded-full h-2.5">
@@ -483,10 +509,13 @@ export default function Sprints() {
                                 date={task.date}
                                 image={task.image}
                                 assignee={task.assignee}
+                                assigneeId={task.assigneeId}
                                 sprintId={sprint.id}
                                 estimatedHours={task.estimatedHours}
                                 realHours={task.realHours}
+                                storyPoints={task.storyPoints}
                                 currentUserId={user?.id}
+                                isManager={isManager}
                                 onTaskUpdated={() => handleTaskUpdate(sprint.id)}
                               />
                             ))}

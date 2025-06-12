@@ -48,10 +48,12 @@ public class TaskItem {
     private Double estimatedHours;
     @Column(name = "REALHOURS")
     private Double realHours;
+    @Column(name = "PRIORITY")
+    private String priority;
 
     public TaskItem(){
     }
-    public TaskItem(UUID projectId, UUID sprintId, UUID taskId, String title, String description, String assignee, Status status, OffsetDateTime startDate, OffsetDateTime endDate, String comments, Integer storyPoints, Double estimatedHours, Double realHours) {
+    public TaskItem(UUID projectId, UUID sprintId, UUID taskId, String title, String description, String assignee, Status status, OffsetDateTime startDate, OffsetDateTime endDate, String comments, Integer storyPoints, Double estimatedHours, Double realHours, String priority) {
         this.projectId = projectId;
         this.sprintId = sprintId;
         this.taskId = taskId;
@@ -65,6 +67,7 @@ public class TaskItem {
         this.storyPoints = storyPoints;
         this.estimatedHours = estimatedHours;
         this.realHours = realHours;
+        this.priority = priority;
     }
 
     public UUID getProjectId() {
@@ -174,6 +177,14 @@ public class TaskItem {
     public void setRealHours(Double realHours) {
         this.realHours = realHours;
     }
+
+    public String getPriority() {
+        return priority;
+    }
+
+    public void setPriority(String priority) {
+        this.priority = priority;
+    }
    
     @Override
     public String toString() {
@@ -191,6 +202,7 @@ public class TaskItem {
                 ", storyPoints=" + storyPoints +
                 ", estimatedHours=" + estimatedHours +
                 ", realHours=" + realHours +
+                ", priority='" + priority + '\'' +
                 '}';
     }
 }

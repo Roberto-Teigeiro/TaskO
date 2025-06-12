@@ -401,7 +401,7 @@ export default function Dashboard() {
             </div>
             
             {/* Team Management Button - Only show to managers */}
-            {isManager && (
+            {(
               <button
                 onClick={() => setShowTeamModal(true)}
                 className="flex items-center gap-2 px-4 py-2 bg-[#312D2A] text-white rounded-lg hover:bg-[#e55555] transition-colors shadow-sm"
@@ -413,7 +413,7 @@ export default function Dashboard() {
           </div>  
 
           {/* Team Management Modal - Only render for managers */}
-          {isManager && (
+          {(
             <TeamManagementModal
               isOpen={showTeamModal}
               onClose={() => setShowTeamModal(false)}
