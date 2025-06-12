@@ -15,7 +15,7 @@ import {
   BackendStatus,
   FrontendStatus,
   getBackendStatus,
-} from "@/components/ui/Task-item";
+} from "@/components/Task-item";
 
 interface ChangeStatusDialogProps {
   readonly taskId: string;

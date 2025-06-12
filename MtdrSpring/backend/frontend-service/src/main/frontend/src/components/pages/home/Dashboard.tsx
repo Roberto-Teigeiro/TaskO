@@ -390,10 +390,10 @@ export default function Dashboard() {
               
               {/* Display user role */}
               <div className="mt-2">
-                <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                <span className={`inline-flex items-center px-2 py-1 rounded-full text-md font-medium ${
                   isManager 
-                    ? 'bg-purple-100 text-purple-800' 
-                    : 'bg-blue-100 text-blue-800'
+                    ? 'bg-gray-200 text-[#312D2A]' 
+                    : 'bg-gray-200 text-[#C74634]'
                 }`}>
                   {isManager ? '👨‍💼 Manager' : '👨‍💻 Developer'}
                 </span>
@@ -401,7 +401,7 @@ export default function Dashboard() {
             </div>
             
             {/* Team Management Button - Only show to managers */}
-            {isManager && (
+            {(
               <button
                 onClick={() => setShowTeamModal(true)}
                 className="flex items-center gap-2 px-4 py-2 bg-[#312D2A] text-white rounded-lg hover:bg-[#e55555] transition-colors shadow-sm"
@@ -413,7 +413,7 @@ export default function Dashboard() {
           </div>  
 
           {/* Team Management Modal - Only render for managers */}
-          {isManager && (
+          {(
             <TeamManagementModal
               isOpen={showTeamModal}
               onClose={() => setShowTeamModal(false)}
@@ -427,7 +427,7 @@ export default function Dashboard() {
           {isManager ? (
             // Manager Dashboard - Show all analytics and charts with NAMES instead of roles
             <div className="bg-gray-50 rounded-xl p-6">
-              <h3 className="text-xl font-semibold mb-4 text-purple-800">Manager Analytics Dashboard</h3>
+              <h3 className="text-xl font-semibold mb-4 text-[#312D2A]">Manager Analytics Dashboard</h3>
               <div className="columns-1 md:columns-2 gap-6 space-y-6">
                 {/* Real Hours per Developer per Sprint Chart */}
                 <div className="break-inside-avoid bg-white rounded-xl p-4 shadow-sm">

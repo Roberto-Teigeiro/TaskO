@@ -38,4 +38,18 @@ public class SprintItemController {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
+    @DeleteMapping("/sprint/{id}")
+    public ResponseEntity<Void> deleteSprintItem(@PathVariable("id") UUID id) {
+        try {
+            boolean deleted = sprintItemService.deleteSprintItem(id);
+            if (deleted) {
+                return ResponseEntity.noContent().build();
+            } else {
+                return ResponseEntity.notFound().build();
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
 }
