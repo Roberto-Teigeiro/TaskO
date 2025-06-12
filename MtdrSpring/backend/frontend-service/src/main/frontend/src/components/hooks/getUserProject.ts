@@ -12,7 +12,6 @@ export const getUserProject = async (userId: string) => {
       }
 
       const data = await response.json();
-      console.log(data);
       return data;
     } catch (error) {
       console.error("Error fetching projects:", error);

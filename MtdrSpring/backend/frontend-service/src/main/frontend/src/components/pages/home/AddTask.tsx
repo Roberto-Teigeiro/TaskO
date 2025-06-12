@@ -65,15 +65,31 @@ export function AddTaskDialog({ onAddTask, sprintId, projectId }: AddTaskDialogP
     ? 'http://localhost:8080/task/add'
     : '/api/task/add';
 
+  // Debug function to validate UUIDs
+  const isValidUUID = (uuid: string) => {
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    return uuidRegex.test(uuid);
+  };
+
   const handleSubmit = async () => {
     if (!title || !date) {
       setError("Please fill in all required fields");
       return;
     }
 
-    // Verificar que sprintId esté definido
+    // Verificar que sprintId esté definido y sea un UUID válido
     if (!sprintId) {
       setError("No se puede crear una tarea sin un sprint asociado");
+      return;
+    }
+
+    if (!isValidUUID(sprintId)) {
+      setError("Sprint ID inválido. Por favor, selecciona un sprint válido.");
+      return;
+    }
+
+    if (!projectId || !isValidUUID(projectId)) {
+      setError("Project ID inválido. Por favor, selecciona un proyecto válido.");
       return;
     }
 
@@ -81,8 +97,6 @@ export function AddTaskDialog({ onAddTask, sprintId, projectId }: AddTaskDialogP
     setError(null);
 
   try {
-    console.log('Creating task with sprintId:', sprintId);
-    
     // Objeto ajustado a la estructura del backend
     const taskData = {
       projectId: projectId, // UUID
@@ -95,11 +109,9 @@ export function AddTaskDialog({ onAddTask, sprintId, projectId }: AddTaskDialogP
       endDate: date.toISOString(),
       comments: description, // Si no tienes campo comments específico
       storyPoints: parseInt(storyPoints),
-      estimatedHours: estimatedHours,
-      realHours: realHours,
+      estimatedHours: estimatedHours ? parseInt(estimatedHours) : 0,
+      realHours: realHours ? parseInt(realHours) : 0,
     };
-    
-    console.log('Task data:', taskData);
     
     const response = await fetch(API_URL_ADD_TASK, {
       method: 'POST',
@@ -112,8 +124,6 @@ export function AddTaskDialog({ onAddTask, sprintId, projectId }: AddTaskDialogP
       // Mejor manejo de errores
       if (!response.ok) {
         const errorText = await response.text();
-        console.error("Error response:", response.status, response.statusText);
-        console.error("Error details:", errorText);
         throw new Error(
           `Failed to create task: ${response.status} ${errorText}`,
         );
@@ -121,7 +131,6 @@ export function AddTaskDialog({ onAddTask, sprintId, projectId }: AddTaskDialogP
 
       // Registro de respuesta exitosa
       const newTask = await response.json();
-      console.log("Task created successfully:", newTask);
 
       if (onAddTask) {
         onAddTask({
@@ -137,13 +146,12 @@ export function AddTaskDialog({ onAddTask, sprintId, projectId }: AddTaskDialogP
     setTitle("");
     setDate(undefined);
     setPriority("Moderate");
-    setStoryPoints("");
+    setStoryPoints("5");
     setDescription("");
     setImagePreview(null);
     setOpen(false);
     setEstimatedHours("");
   } catch (err) {
-    console.error("Error in task creation:", err);
     setError(err instanceof Error ? err.message : 'An error occurred');
   } finally {
     setIsLoading(false);

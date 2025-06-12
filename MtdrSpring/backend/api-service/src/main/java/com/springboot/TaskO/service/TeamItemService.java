@@ -28,6 +28,9 @@ public class TeamItemService {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
+    public List<TeamItem> getTeamByProjectId(UUID projectId) {
+        return teamItemRepository.findByProjectId(projectId);
+    }
 
     public TeamItem addTeamItem(TeamItem teamItem) {
         return teamItemRepository.save(teamItem);

@@ -1,14 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useEffect, useState } from "react";
-import { useAuth, useUser } from "@clerk/react-router";
+import { useState } from "react";
+import { useAuth } from "@clerk/react-router";
 import NewProjectModal from "./NewProjectModal";
+import JoinProjectModal from "./JoinProjectModal";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { LogOut, Users, FolderPlus } from "lucide-react";
 import { Header } from "../../Header";
 const Choosepath = () => {
-  const { user } = useUser();
-  const [userMetadata, setUserMetadata] = useState<any>(null);
   const [showProjectModal, setProjectModal] = useState(false);
   const [showJoinProjectModal, setJoinProjectModal] = useState(false);
   const { signOut } = useAuth();
@@ -25,24 +24,12 @@ const Choosepath = () => {
     }
   };
 
-  useEffect(() => {
-    const fetchAuth = async () => {
-      if (user) {
-        const publicMetadata = user.publicMetadata;
-        setUserMetadata(publicMetadata);
-        console.log(userMetadata);
-      }
-    };
-
-    fetchAuth();
-  }, [user]);
-
   const toggleCreateModal = () => setProjectModal(!showProjectModal);
   const toggleJoinModal = () => setJoinProjectModal(!showJoinProjectModal);
 
   return (
     <div>
-    <Header title="Choose Path!" />
+    <Header title="Choose your path!" />
     <div className="min-h-screen w-full bg-[#312D2A] flex flex-col">
       {/* Main content */}
       <div className="flex-1 flex flex-col md:flex-row p-8 gap-8">
@@ -150,10 +137,7 @@ const Choosepath = () => {
                 />
               </svg>
             </button>
-            <div className="p-8">
-              <h2 className="text-2xl font-medium text-white mb-4">Join a Project</h2>
-              <p className="text-gray-300 mb-6">This feature is coming soon. Check back later!</p>
-            </div>
+            <JoinProjectModal />
           </div>
         </div>
       )}

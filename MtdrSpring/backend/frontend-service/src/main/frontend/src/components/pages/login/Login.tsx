@@ -10,6 +10,8 @@ import { Label } from "@/components/ui/label";
 import { Lock, User, AlertCircle, Loader2 } from "lucide-react";
 import { useSignIn, useUser } from "@clerk/react-router";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import oracleLogo from "../../../assets/oracleLogo.svg";
+import styles from './Login.module.css';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -80,9 +82,9 @@ export default function Login() {
         setError("Sign in incomplete. Please try again.");
         console.log("Sign in status:", result.status);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error signing in:", error);
-      setError(error.message || "Invalid username or password");
+      setError((error as Error).message || "Invalid username or password");
     } finally {
       setLoading(false);
     }
@@ -100,7 +102,7 @@ export default function Login() {
         redirectUrl: `/sso-callback`, // Use exact URL, not window.location.origin
         redirectUrlComplete: `/dashboard`,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error(`Error signing in with ${provider}:`, error);
       setError(`Failed to sign in with ${provider}. Please try again.`);
       setLoading(false);
@@ -113,10 +115,10 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-r from-red-500 to-red-600 flex items-center justify-center p-4">
-      <div className="w-full max-w-5xl bg-white rounded-3xl shadow-xl overflow-hidden flex">
+    <div className="min-h-screen bg-gradient-to-r from-[#312D2A] to-[#C74634] flex items-center justify-center p-4">
+      <div className="w-full max-w-5xl bg-white rounded-3xl shadow-xl overflow-hidden flex relative">
         {/* Left side - Form */}
-        <div className="w-full md:w-1/2 p-8 md:p-12">
+        <div className="w-full md:w-1/2 p-8 md:p-12 border-r-2 border-white relative">
           <h1 className="text-3xl font-bold mb-8">Welcome Back</h1>
 
           {error && (
@@ -166,7 +168,7 @@ export default function Login() {
               </div>
               <Button
                 variant="link"
-                className="text-red-600 hover:text-red-800 p-0"
+                className="text-[#C74634] hover:text-[#312D2A] p-0"
                 disabled={loading}
               >
                 Forgot Password?
@@ -175,7 +177,7 @@ export default function Login() {
 
             <Button
               type="submit"
-              className="w-full py-6 bg-red-600 hover:bg-red-700 text-white"
+              className="w-full py-6 bg-[#C74634] hover:bg-[#312D2A] text-white"
               disabled={loading}
             >
               {loading ? (
@@ -250,7 +252,7 @@ export default function Login() {
             <Button
               onClick={toRegister}
               variant="link"
-              className="text-red-600 hover:text-red-800 p-0"
+              className="text-[#C74634] hover:text-[#312D2A] p-0"
               disabled={loading}
             >
               Create One
@@ -259,27 +261,34 @@ export default function Login() {
         </div>
 
         {/* Right side - Illustration */}
-        <div className="hidden md:flex md:w-1/2 bg-gradient-to-br from-red-100 to-red-200 items-center justify-center p-8">
-          <div className="text-center">
-            <img
-              src="/placeholder.svg?height=300&width=300"
-              alt="Project Management"
-              className="max-w-full h-auto mb-6"
-            />
-            <h2 className="text-2xl font-bold text-red-600 mb-2">
-              Oracle Project Management - FIX
+        <div className="hidden md:flex md:w-1/2 bg-gradient-to-br from-[#312D2A] to-[#C74634] items-center justify-center p-8 relative">
+          {/* Gradient border overlay */}
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-30 border-l-2 border-white/40"></div>
+          
+          <div className="text-center relative z-10">
+            <div className={styles.neonLogoContainer + " mb-6 mx-auto"}>
+              <img
+                src={oracleLogo}
+                alt="Oracle Logo"
+                className={styles.neonLogo + " max-w-full h-auto mx-auto filter brightness-0 invert"}
+                style={{ maxHeight: '200px' }}
+              />
+            </div>
+            <h2 className="text-5xl font-bold text-white mb-2">
+              TaskO
             </h2>
-            <p className="text-gray-600">
-              Boost your team's productivity with our cloud-native task
-              management solution.
+            <h3 className="text-2xl font-bold text-gray-100 mb-2">Oracle Project Management</h3>
+            <p className="text-gray-200">
+              Manage your development team efficiently with our Cloud Native
+              solution.
             </p>
-            <div className="mt-6 bg-white bg-opacity-50 p-4 rounded-lg">
-              <p className="text-gray-700 text-sm italic">
+            <div className="mt-6 bg-white bg-opacity-10 backdrop-blur-sm p-4 rounded-lg border border-white border-opacity-20">
+              <p className="text-gray-600 text-sm italic">
                 "DevOps is the emerging professional movement that advocates a
                 collaborative working relationship between Development and IT
                 Operations."
               </p>
-              <p className="text-gray-600 text-sm mt-2">— Gene Kim</p>
+              <p className="text-gray-800 text-sm mt-2">— Gene Kim</p>
             </div>
           </div>
         </div>

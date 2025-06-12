@@ -1,5 +1,5 @@
 ///Users/santosa/Documents/GitHub/TaskO/MtdrSpring/backend/frontend-service/src/main/frontend/src/components/pages/home/Sprints.tsx
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useMemo } from "react"
 import { Header } from "@/components/Header"
 import { Sidebar } from "@/components/Sidebar"
 import { Button } from "@/components/ui/button"
@@ -11,6 +11,8 @@ import { AddSprintDialog } from "@/components/pages/home/AddSprint"
 import { useProjects } from "../../../context/ProjectContext"
 import { TaskItem } from "@/components/ui/Task-item"
 import { useUser } from "@clerk/clerk-react"
+import { useUserResolver } from "../../hooks/useUserResolver";
+import oracleLogo from "../../../assets/oracleLogo.svg"
 
 interface Task {
   id: string
@@ -78,6 +80,7 @@ const getFrontendStatus = (backendStatus: string) => {
 export default function Sprints() {
   const { userProjects } = useProjects()
   const { user } = useUser()
+  const { resolveUserNames } = useUserResolver();
   const [expandedSprint, setExpandedSprint] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState("all")
   const [sprints, setSprints] = useState<SprintType[]>([])
@@ -95,16 +98,13 @@ export default function Sprints() {
       setLoadedSprints((prev: Record<string, boolean>) => ({ ...prev, [sprintId]: true }));
       const isLocalhost = window.location.hostname === 'localhost';
 
-        const url = isLocalhost 
+      const url = isLocalhost 
         ? `http://localhost:8080/task/sprint/${sprintId}` 
         : `/api/task/sprint/${sprintId}`;
       const response = await fetch(url)
-        
-      
       
       if (!response.ok) {
         if (response.status === 404) {
-          console.log(`No tasks found for sprint ${sprintId}`);
           setTasksBySprint((prev: Record<string, Task[]>) => ({ ...prev, [sprintId]: [] }));
           return;
         }
@@ -114,6 +114,19 @@ export default function Sprints() {
       }
       
       const data = await response.json();
+      
+      // Obtener todos los IDs de usuarios únicos que tienen asignee - VERSIÓN MEJORADA
+    const assigneeIds = [...new Set(
+      data
+        .map((task: ServerTask) => task.assignee)
+        .filter((assignee:any): assignee is string => Boolean(assignee) && typeof assignee === 'string')
+    )] as string[];
+      // Resolver nombres de usuario si hay assignees
+      let userNames: Record<string, string> = {};
+      if (assigneeIds.length > 0) {
+        userNames = await resolveUserNames(assigneeIds);
+      }
+      
       const transformedTasks = data.map((task: ServerTask) => ({
         id: task.taskId,
         title: task.title,
@@ -125,11 +138,10 @@ export default function Sprints() {
         status: getFrontendStatus(task.status ?? "TODO"),
         createdOn: task.createdAt ? new Date(task.createdAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
         image: task.image ?? "/placeholder.svg",
-        assignee: task.assignee ?? "",
+        assignee: task.assignee ? (userNames[task.assignee] || task.assignee) : "",
         storyPoints: task.storyPoints ?? 0,
         estimatedHours: task.estimatedHours ?? 0,
         realHours: task.realHours ?? 0,
-
       }));
       
       setTasksBySprint((prev: Record<string, Task[]>) => ({
@@ -140,7 +152,7 @@ export default function Sprints() {
       console.error(`Error fetching tasks for sprint ${sprintId}:`, error);
       setTasksBySprint((prev: Record<string, Task[]>) => ({ ...prev, [sprintId]: [] }));
     }
-  }, [loadedSprints]);
+  }, [loadedSprints, resolveUserNames]);
 
   // Ahora sí puedes definir handleTaskUpdate que depende de fetchTasks
   const handleTaskUpdate = useCallback(
@@ -188,15 +200,13 @@ export default function Sprints() {
         }
 
         const data = await response.json();
-        console.log("Received sprints data:", data);
 
         if (!Array.isArray(data)) {
           throw new Error("Invalid response format from server");
         }
 
         const currentDate = new Date();
-        const transformedSprints = data.map((sprint) => {
-          console.log("Processing sprint:", sprint);
+        const transformedSprints = data.map((sprint) => {          
           const startDate = new Date(sprint.startDate);
           const endDate = new Date(sprint.endDate);
 
@@ -210,7 +220,7 @@ export default function Sprints() {
           }
 
           return {
-            id: sprint.sprintId,
+            id: sprint.sprintId || sprint.id, // Try both property names
             name: sprint.name,
             startDate: startDate.toISOString().split("T")[0],
             endDate: endDate.toISOString().split("T")[0],
@@ -244,7 +254,6 @@ export default function Sprints() {
   const handleAddTask = async (newTask: Task) => {
     try {
       if (!newTask.sprintId) {
-        console.error("Error: sprintId is undefined");
         return;
       }
 
@@ -268,10 +277,11 @@ export default function Sprints() {
     setExpandedSprint(newSprint.id);
   };
 
-  const filteredSprints =
-    activeTab === "all"
+  const filteredSprints = useMemo(() => {
+    return activeTab === "all"
       ? sprints
       : sprints.filter((sprint) => sprint.status.toLowerCase() === activeTab);
+  }, [activeTab, sprints]);
 
   const toggleSprint = (sprintId: string) => {
     if (expandedSprint === sprintId) {
@@ -303,21 +313,21 @@ export default function Sprints() {
     }
   };
 
-  const getCompletionRate = (sprintId: string) => {
+  const getCompletionRate = useCallback((sprintId: string) => {
     const tasks = tasksBySprint[sprintId] || [];
     const totalTasks = tasks.length;
     const completedTasks = tasks.filter(
       (task) => task.status === "Completed",
     ).length;
     return totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
-  };
+  }, [tasksBySprint]);
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#f8f8fb] flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#ff6767] mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading sprints...</p>
+      <div className="min-h-screen flex items-center justify-center bg-[#f8f8fb]">
+        <div className="flex flex-col items-center gap-4">
+          <img src={oracleLogo} alt="Oracle Logo" className="w-32 h-32 animate-pulse" />
+          <div className="animate-spin rounded-full h-8 w-8 border-4 border-[#ff6767] border-t-transparent"></div>
         </div>
       </div>
     );
@@ -360,113 +370,136 @@ export default function Sprints() {
           </Tabs>
 
           <div className="space-y-4">
-            {filteredSprints
-              .sort((a, b) => {
-                const rateA = getCompletionRate(a.id);
-                const rateB = getCompletionRate(b.id);
-                return rateB - rateA; // Sort in descending order
-              })
-              .map((sprint) => {
-                const completionRate = getCompletionRate(sprint.id);
-
-                return (
-                  <div
-                    key={sprint.id}
-                    className="bg-white rounded-lg shadow-sm overflow-hidden"
-                  >
-                    <div
-                      className="p-4 cursor-pointer hover:bg-gray-50"
-                      onClick={() => toggleSprint(sprint.id)}
-                      onKeyDown={(e) => handleKeyDown(e, sprint.id)}
-                      tabIndex={0}
-                      role="button"
-                    >
-                      <div className="flex justify-between items-center">
-                        <div className="flex items-center gap-4">
-                          <ChevronRight
-                            className={`h-5 w-5 transition-transform ${
-                              expandedSprint === sprint.id ? "rotate-90" : ""
-                            }`}
-                          />
-                          <div>
-                            <h3 className="font-semibold">{sprint.name}</h3>
-                            <div className="flex items-center gap-2 mt-1">
-                              <Calendar className="h-4 w-4 text-gray-500" />
-                              <span className="text-sm text-gray-500">
-                                {new Date(
-                                  sprint.startDate,
-                                ).toLocaleDateString()}{" "}
-                                -{" "}
-                                {new Date(sprint.endDate).toLocaleDateString()}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-4">
-                          <div className="flex items-center gap-2">
-                            <div className="w-32 bg-gray-200 rounded-full h-2.5">
-                              <div
-                                className="h-2.5 rounded-full"
-                                style={{
-                                  width: `${completionRate}%`,
-                                  backgroundColor:
-                                    completionRate >= 75
-                                      ? "#32CD32"
-                                      : completionRate >= 50
-                                        ? "#4169E1"
-                                        : "#ff6b6b",
-                                }}
-                              ></div>
-                            </div>
-                            <span className="text-sm font-semibold">
-                              {completionRate}%
-                            </span>
-                          </div>
-                          <Badge className={getStatusColor(sprint.status)}>
-                            {sprint.status}
-                          </Badge>
-                        </div>
-                      </div>
-                    </div>
-
-                  {expandedSprint === sprint.id && (
-                    <div className="border-t p-4">
-                      <div className="flex justify-between items-center mb-4">
-                        <h4 className="font-medium">Tasks</h4>
-                        <AddTaskDialog
-                          onAddTask={handleAddTask}
-                          sprintId={sprint.id}
-                          projectId={userProject || ""}
-                        />
-                      </div>
-                      <div className="space-y-4">
-                        {tasksBySprint[sprint.id]?.map((task) => (
-                          <TaskItem
-                            key={task.id}
-                            id={task.id}
-                            title={task.title}
-                            description={task.description}
-                            priority={task.priority}
-                            status={task.status}
-                            date={task.date}
-                            image={task.image}
-                            assignee={task.assignee}
-                            sprintId={sprint.id}
-                            estimatedHours={task.estimatedHours}
-                            realHours={task.realHours}
-                            currentUserId={user?.id}
-                            onTaskUpdated={() => handleTaskUpdate(sprint.id)}
-                          />
-                        ))}
-                        {(!tasksBySprint[sprint.id] || tasksBySprint[sprint.id].length === 0) && (
-                          <p className="text-gray-500 text-center py-4">No tasks in this sprint</p>
-                        )}
-                      </div>
-                    </div>
+            {filteredSprints.length === 0 ? (
+              <div className="bg-white rounded-lg shadow-sm p-8 text-center">
+                <div className="flex flex-col items-center gap-4">
+                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
+                    <Calendar className="h-8 w-8 text-gray-400" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                      No sprints found
+                    </h3>
+                    <p className="text-gray-500 mb-4">
+                      {activeTab === "all" 
+                        ? "You don't have any sprints yet. Create your first sprint to get started!" 
+                        : `No sprints with status "${activeTab}" found.`}
+                    </p>
+                  </div>
+                  {activeTab === "all" && (
+                    <AddSprintDialog onAddSprint={handleAddSprint} />
                   )}
                 </div>
-              );
-            })}
+              </div>
+            ) : (
+              filteredSprints
+                .sort((a, b) => {
+                  const rateA = getCompletionRate(a.id);
+                  const rateB = getCompletionRate(b.id);
+                  return rateB - rateA; // Sort in descending order
+                })
+                .map((sprint) => {
+                  const completionRate = getCompletionRate(sprint.id);
+
+                  return (
+                    <div
+                      key={sprint.id}
+                      className="bg-white rounded-lg shadow-sm overflow-hidden"
+                    >
+                      <div
+                        className="p-4 cursor-pointer hover:bg-gray-50"
+                        onClick={() => toggleSprint(sprint.id)}
+                        onKeyDown={(e) => handleKeyDown(e, sprint.id)}
+                        tabIndex={0}
+                        role="button"
+                      >
+                        <div className="flex justify-between items-center">
+                          <div className="flex items-center gap-4">
+                            <ChevronRight
+                              className={`h-5 w-5 transition-transform ${
+                                expandedSprint === sprint.id ? "rotate-90" : ""
+                              }`}
+                            />
+                            <div>
+                              <h3 className="font-semibold">{sprint.name}</h3>
+                              <div className="flex items-center gap-2 mt-1">
+                                <Calendar className="h-4 w-4 text-gray-500" />
+                                <span className="text-sm text-gray-500">
+                                  {new Date(
+                                    sprint.startDate,
+                                  ).toLocaleDateString()}{" "}
+                                  -{" "}
+                                  {new Date(sprint.endDate).toLocaleDateString()}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-2">
+                              <div className="w-32 bg-gray-200 rounded-full h-2.5">
+                                <div
+                                  className="h-2.5 rounded-full"
+                                  style={{
+                                    width: `${completionRate}%`,
+                                    backgroundColor:
+                                      completionRate >= 75
+                                        ? "#32CD32"
+                                        : completionRate >= 50
+                                          ? "#4169E1"
+                                          : "#ff6b6b",
+                                  }}
+                                ></div>
+                              </div>
+                              <span className="text-sm font-semibold">
+                                {completionRate}%
+                              </span>
+                            </div>
+                            <Badge className={getStatusColor(sprint.status)}>
+                              {sprint.status}
+                            </Badge>
+                          </div>
+                        </div>
+                      </div>
+
+                      {expandedSprint === sprint.id && (
+                        <div className="border-t p-4">
+                          <div className="flex justify-between items-center mb-4">
+                            <h4 className="font-medium">Tasks</h4>
+                            <AddTaskDialog
+                              onAddTask={handleAddTask}
+                              sprintId={sprint.id}
+                              projectId={userProject || ""}
+                            />
+                          </div>
+                          <div className="space-y-4">
+                            {tasksBySprint[sprint.id]?.map((task) => (
+                              <TaskItem
+                                key={task.id}
+                                id={task.id}
+                                title={task.title}
+                                description={task.description}
+                                priority={task.priority}
+                                status={task.status}
+                                date={task.date}
+                                image={task.image}
+                                assignee={task.assignee}
+                                sprintId={sprint.id}
+                                estimatedHours={task.estimatedHours}
+                                realHours={task.realHours}
+                                currentUserId={user?.id}
+                                onTaskUpdated={() => handleTaskUpdate(sprint.id)}
+                              />
+                            ))}
+                            {(!tasksBySprint[sprint.id] || tasksBySprint[sprint.id].length === 0) && (
+                              <p className="text-gray-500 text-center py-4">No tasks in this sprint</p>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })
+            )}
           </div>
         </div>
       </div>
