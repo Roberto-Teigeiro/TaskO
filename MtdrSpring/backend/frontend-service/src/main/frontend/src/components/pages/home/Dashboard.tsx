@@ -242,8 +242,13 @@ export default function Dashboard() {
       }, {});
       setMemberRoles(rolesMap);
 
-      // Extraer IDs de usuario únicos y resolver nombres
-      const userIds = [...new Set(members.map((member: any) => member.userId).filter(Boolean))];
+      // Extraer IDs de usuario únicos y resolver nombres - ALTERNATIVA SIMPLE
+      const userIds: string[] = [...new Set(
+        members
+          .map((member: any) => member.userId)
+          .filter(Boolean)
+      )] as string[];
+
       if (userIds.length > 0) {
         const resolvedNames = await resolveUserNames(userIds);
         setMemberNames(resolvedNames);
@@ -310,59 +315,6 @@ export default function Dashboard() {
   }, [availableTeams]);
 
   // Memoizar datos de los charts para evitar recálculos innecesarios
-  const chartData = useMemo(() => {
-    // Mover toda la lógica de los charts aquí
-    return {
-      hoursBySprintAndDeveloper: sprints.reduce((acc: Record<string, Record<string, number>>, sprint) => {
-        const currentSprintTasks = sprintTasks[sprint.sprintId] || [];
-        
-        if (!acc[sprint.name]) {
-          acc[sprint.name] = {};
-        }
-        
-        currentSprintTasks.forEach((task: Task) => {
-          if (task.assignee && task.realHours) {
-            const developerName = getUserDisplayName(task.assignee);
-            if (!acc[sprint.name][developerName]) {
-              acc[sprint.name][developerName] = 0;
-            }
-            acc[sprint.name][developerName] += task.realHours;
-          }
-        });
-        
-        return acc;
-      }, {}),
-      
-      tasksBySprintAndDeveloper: sprints.reduce((acc: Record<string, Record<string, { total: number; completed: number }>>, sprint) => {
-        const currentSprintTasks = sprintTasks[sprint.sprintId] || [];
-        
-        if (!acc[sprint.name]) {
-          acc[sprint.name] = {};
-        }
-        
-        currentSprintTasks.forEach((task: Task) => {
-          if (task.assignee) {
-            const developerName = getUserDisplayName(task.assignee);
-            if (!acc[sprint.name][developerName]) {
-              acc[sprint.name][developerName] = { total: 0, completed: 0 };
-            }
-            acc[sprint.name][developerName].total++;
-            if (task.status === "COMPLETED") {
-              acc[sprint.name][developerName].completed++;
-            }
-          }
-        });
-        
-        return acc;
-      }, {}),
-      
-      totalRealHoursBySprint: sprints.map(sprint => {
-        const tasks = sprintTasks[sprint.sprintId] || [];
-        return tasks.reduce((total, task) => total + (task.realHours || 0), 0);
-      }),
-    };
-  }, [sprints, sprintTasks, getUserDisplayName]);
-
   // Show a loading state while Clerk is initializing
   if (!isLoaded) {
     return (

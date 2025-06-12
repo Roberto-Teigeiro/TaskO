@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect } from "react";
-import React from "react";
 import { useAuth } from "@clerk/clerk-react";
 import { Users, Plus, X, UserPlus } from "lucide-react";
 

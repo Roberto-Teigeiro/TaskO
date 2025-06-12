@@ -115,12 +115,12 @@ export default function Sprints() {
       
       const data = await response.json();
       
-      // Obtener todos los IDs de usuarios únicos que tienen asignee
-      const assigneeIds = [...new Set(data
+      // Obtener todos los IDs de usuarios únicos que tienen asignee - VERSIÓN MEJORADA
+    const assigneeIds = [...new Set(
+      data
         .map((task: ServerTask) => task.assignee)
-        .filter((assignee): assignee is string => Boolean(assignee))
-      )];
-      
+        .filter((assignee:any): assignee is string => Boolean(assignee) && typeof assignee === 'string')
+    )] as string[];
       // Resolver nombres de usuario si hay assignees
       let userNames: Record<string, string> = {};
       if (assigneeIds.length > 0) {
