@@ -11,7 +11,7 @@ import { Lock, User, AlertCircle, Loader2 } from "lucide-react";
 import { useSignIn, useUser } from "@clerk/react-router";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import oracleLogo from "../../../assets/oracleLogo.svg";
-import styles from './Login.module.css';
+import styles from './login.module.css';
 
 export default function Login() {
   const navigate = useNavigate();
