@@ -35,7 +35,7 @@ export function DeleteSprintDialog({ sprintId, sprintName, onDelete }: DeleteSpr
       }
     } catch (error) {
       console.error('Error deleting sprint:', error)
-      alert('Error deleting sprint. Please try again.')
+      alert('Error deleting sprint, Please try again.')
     } finally {
       setIsDeleting(false)
     }

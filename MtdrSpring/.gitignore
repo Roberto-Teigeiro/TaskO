@@ -2,4 +2,3 @@
 **/build/**
 **/dist/**
 **/target/**
-backend/api-service/src/main/java/com/springboot/TaskO/config/OracleConfiguration.java
